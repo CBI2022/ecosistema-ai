@@ -1,0 +1,10 @@
+STEP 3 — 8 visible fields
+
+[1] input name="address" id="address" type="text" label="Calle *" value="Carrer Barro"
+[2] input name="address_number" id="address_number" type="number" label="Número *" value="7"
+[3] input name="floorNumber" id="floorNumber" type="number" label="Planta"
+[4] input name="door" id="door" type="text" label="Puerta"
+[5] input name="cityId" type="text" placeholder="p. ej. Alicante"
+[6] input name="postal_code" id="postal_code" type="text" label="Código postal*" value="03590"
+[7] input name="viewId" type="text" placeholder="Selecciona una opción"
+[8] input name="promoId" type="text" placeholder="Selecciona una opción"

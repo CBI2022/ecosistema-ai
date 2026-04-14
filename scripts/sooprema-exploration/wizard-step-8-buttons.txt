@@ -1,0 +1,25 @@
+"DATA"  .sysbar-button sysbar-button-url button button-data
+"Soporte"  .sysbar-button sysbar-button-url button button-support
+"Subir Propiedad S"  .topbar-button clearfix button button-new-property
+"Listado Propiedades L"  .topbar-button clearfix button button-property-listing
+"Añadir persona P"  .topbar-button clearfix button button-add-person
+"CRM C"  .topbar-button clearfix button button-crm
+"+ eventActividad A descriptionNota N shareXML Feed X backupI"  .topbar-button clearfix button button-more button-custom
+"keyboard_arrow_down"  .floating-selector__button
+"close"  .searchinputselector__cleaner
+"Cancelar"  .basic-button basic-button--info
+"Guardar"  .basic-button basic-button--success
+"keyboard_arrow_down"  .floating-selector__button
+"close"  .searchinputselector__cleaner
+"Cancelar"  .basic-button basic-button--info
+"Guardar"  .basic-button basic-button--success
+"keyboard_arrow_down"  .floating-selector__button
+"close"  .searchinputselector__cleaner
+"Cancelar"  .basic-button basic-button--info
+"Guardar"  .basic-button basic-button--success
+"Editar mapa"  .systeminfogooglemap__editbutton
+"Siguiente"  .propertyuploadnavigation__submit propertyuploadnavigation__submit--next basic-bu
+"Confirmar y salir"  .propertyuploadhelp__submit basic-button basic-button--success
+"close"  .closebutton
+"Exportar resultados"  .menubutton__button
+"Cerrar"  .closebutton
