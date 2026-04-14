@@ -57,6 +57,14 @@ export function AppNav({ role, notifCount = 0 }: AppNavProps) {
     { href: '/tasks', label: t('tasks') },
   ]
 
+  const DC_TABS: NavTab[] = [
+    { href: '/dashboard', label: t('dashboard') },
+    { href: '/admin', label: t('team') },
+    { href: '/training', label: t('training') },
+    { href: '/kpi', label: t('kpi') },
+    { href: '/tasks', label: t('tasks') },
+  ]
+
   const tabs =
     role === 'photographer'
       ? PHOTOGRAPHER_TABS
@@ -64,7 +72,9 @@ export function AppNav({ role, notifCount = 0 }: AppNavProps) {
         ? [...AGENT_TABS, ...ADMIN_EXTRA]
         : role === 'secretary'
           ? SECRETARY_TABS
-          : AGENT_TABS
+          : role === 'dc'
+            ? DC_TABS
+            : AGENT_TABS
 
   function handleNavClick(e: React.MouseEvent, href: string) {
     if (pathname === href) { e.preventDefault(); return }

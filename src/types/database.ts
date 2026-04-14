@@ -1,4 +1,4 @@
-export type UserRole = 'admin' | 'agent' | 'secretary' | 'photographer'
+export type UserRole = 'admin' | 'agent' | 'secretary' | 'photographer' | 'dc'
 export type UserStatus = 'pending' | 'approved' | 'rejected'
 
 export interface Profile {
@@ -302,31 +302,6 @@ export interface Competitor {
   updated_at: string
 }
 
-export interface TrainingVideo {
-  id: string
-  title: string
-  description: string | null
-  youtube_url: string | null
-  category: 'Prospecting' | 'Closing' | 'Viewings' | 'Mindset' | 'Marketing' | 'Scripts' | 'General'
-  type: 'video' | 'script' | 'how_to'
-  content: string | null
-  duration_minutes: number | null
-  sort_order: number
-  is_active: boolean
-  added_by: string | null
-  created_at: string
-}
-
-export interface TrainingResult {
-  id: string
-  user_id: string
-  score: number
-  total_questions: number
-  passed: boolean
-  answers: Record<string, unknown> | null
-  completed_at: string
-}
-
 export type TaskStatus = 'next_action' | 'waiting' | 'someday' | 'complete'
 export type TaskPriority = 'low' | 'medium' | 'high' | 'urgent'
 
@@ -491,16 +466,6 @@ export interface Database {
         Row: Competitor
         Insert: Omit<Competitor, 'id' | 'created_at' | 'updated_at'>
         Update: Partial<Omit<Competitor, 'id' | 'created_at'>>
-      }
-      training_videos: {
-        Row: TrainingVideo
-        Insert: Omit<TrainingVideo, 'id' | 'created_at'>
-        Update: Partial<Omit<TrainingVideo, 'id' | 'created_at'>>
-      }
-      training_results: {
-        Row: TrainingResult
-        Insert: Omit<TrainingResult, 'id' | 'passed'>
-        Update: Partial<Omit<TrainingResult, 'id' | 'passed'>>
       }
       suprema_jobs: {
         Row: SupremaJob

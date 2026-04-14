@@ -19,6 +19,7 @@ const ROLE_LABELS: Record<string, string> = {
   agent: 'Agent',
   secretary: 'Secretary',
   photographer: 'Photographer',
+  dc: 'Director Comercial',
 }
 
 export function AppHeader({ profile, notifCount = 0 }: AppHeaderProps) {
