@@ -1,20 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { login } from '@/actions/auth'
-import { GoogleSignInButton } from './GoogleSignInButton'
-import { AuthDivider } from './AuthDivider'
 
 export function LoginForm() {
-  const searchParams = useSearchParams()
-  const oauthError = searchParams.get('error')
-  const [error, setError] = useState<string | null>(
-    oauthError === 'auth_callback_failed'
-      ? 'Error al iniciar sesión con Google. Intenta de nuevo.'
-      : null
-  )
+  const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
   async function handleSubmit(formData: FormData) {
@@ -29,10 +20,6 @@ export function LoginForm() {
 
   return (
     <div className="space-y-5">
-      <GoogleSignInButton />
-
-      <AuthDivider />
-
       <form action={handleSubmit} className="space-y-4">
         <div className="space-y-1.5">
           <label
