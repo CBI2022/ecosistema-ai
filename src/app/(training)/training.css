@@ -36,3 +36,145 @@
 .training-root ::-webkit-scrollbar-thumb:hover {
   background: #2A2430;
 }
+
+/* ──────────────────────────────────────────────────────────
+   MOBILE RESPONSIVE
+   ────────────────────────────────────────────────────────── */
+
+/* Tablets and smaller (≤ 900px) */
+@media (max-width: 900px) {
+  .training-root .t-dc-header,
+  .training-root .t-agent-header {
+    padding: 8px 12px !important;
+    gap: 6px !important;
+  }
+  .training-root .t-dc-actions {
+    gap: 6px !important;
+    width: 100%;
+    margin-left: 0 !important;
+    margin-top: 4px;
+    justify-content: flex-start;
+  }
+  .training-root .t-dc-actions button {
+    padding: 7px 10px !important;
+    font-size: 11px !important;
+  }
+}
+
+/* Phones (≤ 640px) */
+@media (max-width: 640px) {
+  /* Header: more compact */
+  .training-root .t-back-link {
+    padding: 5px 8px !important;
+    font-size: 10px !important;
+  }
+
+  /* DC/Agent header actions wrap fully */
+  .training-root .t-dc-actions,
+  .training-root .t-agent-header > div:last-child {
+    width: 100%;
+    margin-left: 0 !important;
+    margin-top: 6px;
+    gap: 6px !important;
+    justify-content: flex-start !important;
+    flex-wrap: wrap;
+  }
+  .training-root .t-dc-actions button {
+    flex: 1 1 auto;
+    min-width: fit-content;
+    padding: 8px 10px !important;
+    font-size: 11px !important;
+  }
+
+  /* Main content padding + max-width */
+  .training-root main,
+  .training-root > div > div > div[style*="maxWidth"] {
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+  }
+
+  /* Week tabs: tighter padding */
+  .training-root button[style*="borderBottom: 3px solid"] {
+    padding: 9px 10px !important;
+    font-size: 10px !important;
+  }
+
+  /* Cards with padding 18-20: reduce */
+  .training-root div[style*="borderRadius: 16"][style*="padding: 20px"],
+  .training-root div[style*="borderRadius: 16"][style*="padding: 18px"] {
+    padding: 14px !important;
+  }
+
+  /* Priority-of-week card: smaller title */
+  .training-root div[style*="fontSize: 19"] {
+    font-size: 16px !important;
+  }
+  .training-root div[style*="fontSize: 17"] {
+    font-size: 15px !important;
+  }
+
+  /* Phase label headings */
+  .training-root div[style*="letterSpacing: \"0.22em\""] {
+    font-size: 9px !important;
+  }
+
+  /* Task rows */
+  .training-root div[style*="padding: \"15px 16px\""],
+  .training-root div[style*="padding: \"14px 14px\""] {
+    padding: 12px 12px !important;
+  }
+
+  /* Grid of agents: stack single column */
+  .training-root div[style*="minmax(180px"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Team stats grid: 2 cols */
+  .training-root div[style*="grid-template-columns: repeat(4, 1fr)"],
+  .training-root div[style*="gridTemplateColumns: \"repeat(4, 1fr)\""] {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* Admin form grid: stack */
+  .training-root div[style*="gridTemplateColumns: \"1fr 1fr\""] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Modals: full width, less padding */
+  .training-root div[style*="position: fixed"][style*="inset: 0"] {
+    padding: 12px !important;
+  }
+
+  /* Week navigation (Wk prev / Wk next) */
+  .training-root div[style*="gap: 10"][style*="marginTop: 28"] button,
+  .training-root div[style*="gap: 10"][style*="marginTop: 24"] button {
+    padding: 12px !important;
+    font-size: 12px !important;
+  }
+
+  /* XP header name/level block */
+  .training-root .t-agent-header > div:nth-child(2) > div > div:first-child {
+    font-size: 12px !important;
+  }
+
+  /* 90-day goal rows */
+  .training-root input[type="range"].goal-slider {
+    height: 8px;
+  }
+
+  /* Agent overview cards text */
+  .training-root div[style*="grid-template-columns: repeat(3, 1fr)"] {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Very small phones (≤ 380px) */
+@media (max-width: 380px) {
+  .training-root .t-dc-actions button {
+    font-size: 10px !important;
+    padding: 7px 8px !important;
+  }
+  .training-root button[style*="borderBottom: 3px solid"] {
+    padding: 8px 8px !important;
+  }
+}

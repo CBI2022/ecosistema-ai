@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useEffect, useState, useTransition } from 'react'
 import { DC_WEEKS, PHASE_COLORS, PHASE_LABELS, TRAINING_VIDEOS } from '../data/constants'
 import {
@@ -195,9 +196,10 @@ export function DCDashboard({ userName, userRole }: { userName: string; userRole
         </div>
       )}
 
-      <div style={{ background: '#0C0B0E', borderBottom: '1px solid #1A1820', padding: '10px 18px', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+      <div className="t-dc-header" style={{ background: '#0C0B0E', borderBottom: '1px solid #1A1820', padding: '10px 18px', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+        <Link href="/dashboard" className="t-back-link" style={{ background: '#1A1820', border: '1px solid #2A2430', color: '#9A9080', borderRadius: 10, padding: '6px 10px', fontSize: 11, fontWeight: 600, textDecoration: 'none', flexShrink: 0 }}>← Dashboard</Link>
         <div style={{ fontSize: 14, color: '#EEE5D5', fontWeight: 700 }}>👩‍💼 {userName}</div>
-        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+        <div className="t-dc-actions" style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
           <div style={{ fontSize: 11, color: '#3A3040' }}>{pct}% done</div>
           <button onClick={() => setShowTrainingVideos(true)} style={{ background: '#E07B6A', color: '#09080A', border: 'none', borderRadius: 10, padding: '8px 14px', cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>🎬 Training Videos</button>
           <button onClick={() => setShowManageUsers(true)} style={{ background: '#9B7EC8', color: '#09080A', border: 'none', borderRadius: 10, padding: '8px 14px', cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>+ Add Agents</button>

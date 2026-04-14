@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useCallback, useEffect, useRef, useState, useTransition } from 'react'
 import confetti from 'canvas-confetti'
 import {
@@ -238,7 +239,8 @@ export function AgentDashboard({ userName }: { userName: string }) {
 
       {showCheckin && <DailyCheckIn agentName={userName} weekAction={week.action} onClose={() => setShowCheckin(false)} />}
 
-      <div style={{ background: '#0C0B0E', borderBottom: '1px solid #1A1820', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+      <div className="t-agent-header" style={{ background: '#0C0B0E', borderBottom: '1px solid #1A1820', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+        <Link href="/dashboard" className="t-back-link" style={{ background: '#1A1820', border: '1px solid #2A2430', color: '#9A9080', borderRadius: 10, padding: '6px 10px', fontSize: 11, fontWeight: 600, textDecoration: 'none', flexShrink: 0 }}>← Dashboard</Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ fontSize: 18, width: 32, height: 32, borderRadius: 10, background: `${level.color}18`, border: `1.5px solid ${level.color}40`, display: 'flex', alignItems: 'center', justifyContent: 'center', animation: pct >= 100 ? 'levelPulse 2s ease-in-out infinite' : 'none' }}>{level.icon}</div>
           <div>
