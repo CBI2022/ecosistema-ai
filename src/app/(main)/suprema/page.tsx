@@ -15,10 +15,11 @@ export default async function SupremaPage() {
     .eq('id', user.id)
     .single()
 
-  if (profile?.role !== 'admin') redirect('/dashboard')
+  const role = profile?.role
+  const canSeeAll = role === 'admin' || role === 'secretary'
 
-  // Fetch jobs with property and agent info via joins
-  const { data: rawJobs } = await admin
+  // Admin/secretary ven todo. Agente/photographer solo los suyos.
+  let query = admin
     .from('suprema_jobs')
     .select(`
       *,
@@ -27,6 +28,12 @@ export default async function SupremaPage() {
     `)
     .order('created_at', { ascending: false })
     .limit(50)
+
+  if (!canSeeAll) {
+    query = query.eq('agent_id', user.id)
+  }
+
+  const { data: rawJobs } = await query
 
   const jobs = (rawJobs || []).map((j) => {
     const p = j.properties as { reference?: string; title?: string; zone?: string } | null

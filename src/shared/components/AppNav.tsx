@@ -34,6 +34,7 @@ export function AppNav({ role, notifCount = 0 }: AppNavProps) {
     { href: '/training', label: t('training') },
     { href: '/competitors', label: t('competitors') },
     { href: '/tasks', label: t('tasks') },
+    { href: '/suprema', label: 'Sooprema' },
   ]
 
   const ADMIN_EXTRA: NavTab[] = [
@@ -49,6 +50,7 @@ export function AppNav({ role, notifCount = 0 }: AppNavProps) {
     { href: '/training', label: t('training') },
     { href: '/contracts', label: t('contracts') },
     { href: '/tasks', label: t('tasks') },
+    { href: '/suprema', label: 'Sooprema' },
   ]
 
   const PHOTOGRAPHER_TABS: NavTab[] = [

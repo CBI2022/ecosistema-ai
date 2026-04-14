@@ -56,6 +56,13 @@ export async function runSupremaJob(jobId: string) {
 
   const admin = createAdminClient()
 
+  // Permisos: admin, secretary o el agente dueño del job
+  const { data: callerProfile } = await admin
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
   // Fetch job + property
   const { data: job } = await admin
     .from('suprema_jobs')
@@ -64,6 +71,11 @@ export async function runSupremaJob(jobId: string) {
     .single()
 
   if (!job) return { error: 'Job not found' }
+
+  const isPrivileged = callerProfile?.role === 'admin' || callerProfile?.role === 'secretary'
+  if (!isPrivileged && job.agent_id !== user.id) {
+    return { error: 'No autorizado' }
+  }
 
   const property = (job as Record<string, unknown>).properties as Property | null
   if (!property) return { error: 'Property data not found' }

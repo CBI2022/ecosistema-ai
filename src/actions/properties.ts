@@ -247,6 +247,24 @@ export async function saveProperty(formData: FormData, publish = false) {
       target_user_id: user.id,
       is_read: false,
     })
+
+    // Notificar a todas las secretarias para que puedan ejecutar el job si el agente no lo hace
+    const { data: secretaries } = await admin
+      .from('profiles')
+      .select('id')
+      .eq('role', 'secretary')
+
+    if (secretaries && secretaries.length > 0) {
+      await admin.from('notifications').insert(
+        secretaries.map((s) => ({
+          type: 'suprema_started',
+          title: '📋 Nueva propiedad pendiente de publicar',
+          message: `${reference} está en cola. Entra a /suprema para ejecutar la publicación.`,
+          target_user_id: s.id,
+          is_read: false,
+        }))
+      )
+    }
   }
 
   revalidatePath('/properties')
