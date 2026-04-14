@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__supabase__get_project_url",
+      "mcp__next-devtools__init"
+    ]
+  }
+}

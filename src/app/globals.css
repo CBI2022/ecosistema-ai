@@ -1,0 +1,57 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================
+   CBI ECO AI — Design Tokens
+   Brand: Black (#000) 70% | Gold (#C9A84C) 10% | Cream (#F5F0E8) 20%
+   Font: Maharlika (single typeface)
+   ============================================ */
+
+:root {
+  --bg: #0a0a0a;
+  --card: #131313;
+  --gold: #c9a84c;
+  --gold-light: #e8c96a;
+  --gold-muted: rgba(201, 168, 76, 0.6);
+  --text: #f5f0e8;
+  --text-muted: rgba(245, 240, 232, 0.5);
+  --text-faint: rgba(245, 240, 232, 0.3);
+  --border: rgba(255, 255, 255, 0.08);
+  --border-gold: rgba(201, 168, 76, 0.2);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: 'Maharlika', Georgia, serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Scrollbar CBI */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: var(--card);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-gold);
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gold-muted);
+}
+
+/* Selection */
+::selection {
+  background: rgba(201, 168, 76, 0.25);
+  color: var(--text);
+}
