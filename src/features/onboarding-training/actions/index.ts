@@ -387,3 +387,106 @@ export async function saveCoreVideoLoom(videoId: string, loomUrl: string) {
   )
   revalidatePath('/training')
 }
+
+export async function uploadCoreVideo(videoId: string, formData: FormData) {
+  const { userId } = await requireRole(['dc', 'admin'])
+  const file = formData.get('file') as File | null
+  if (!file) throw new Error('NO_FILE')
+
+  const supabase = await createClient()
+  const ext = file.name.split('.').pop() || 'mp4'
+  const path = `${videoId}_${Date.now()}.${ext}`
+
+  const { error: upErr } = await supabase.storage
+    .from('training-videos')
+    .upload(path, file, { upsert: true, contentType: file.type })
+  if (upErr) throw new Error(upErr.message)
+
+  // Remove old file if previous was storage
+  const { data: existing } = await supabase
+    .from('training_uploads')
+    .select('kind, path')
+    .eq('video_id', videoId)
+    .maybeSingle()
+  if (existing?.kind === 'storage' && existing.path !== path) {
+    await supabase.storage.from('training-videos').remove([existing.path])
+  }
+
+  await supabase.from('training_uploads').upsert(
+    {
+      video_id: videoId,
+      kind: 'storage',
+      path,
+      original_name: file.name,
+      uploaded_by: userId,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: 'video_id' },
+  )
+  revalidatePath('/training')
+}
+
+// ──────────────────────────────────────────────────────────────
+// Admin / DC — User management
+
+export async function listTrainingUsers() {
+  await requireRole(['dc', 'admin'])
+  const admin = createAdminClient()
+  const { data } = await admin
+    .from('profiles')
+    .select('id, email, full_name, role, created_at')
+    .in('role', ['agent', 'dc', 'admin'])
+    .eq('status', 'approved')
+    .order('created_at')
+  return data ?? []
+}
+
+export async function createTrainingUser(input: {
+  email: string
+  password: string
+  fullName: string
+  role: 'agent' | 'dc'
+}) {
+  const { profile } = await requireRole(['admin'])
+  if (profile.role !== 'admin') throw new Error('FORBIDDEN')
+  const admin = createAdminClient()
+
+  const { data, error } = await admin.auth.admin.createUser({
+    email: input.email.trim().toLowerCase(),
+    password: input.password,
+    email_confirm: true,
+    user_metadata: { full_name: input.fullName, role: input.role },
+  })
+  if (error || !data.user) throw new Error(error?.message ?? 'CREATE_FAILED')
+
+  await admin.from('profiles').upsert(
+    {
+      id: data.user.id,
+      email: input.email.trim().toLowerCase(),
+      full_name: input.fullName,
+      role: input.role,
+      status: 'approved',
+    },
+    { onConflict: 'id' },
+  )
+  revalidatePath('/training')
+  return { id: data.user.id }
+}
+
+export async function deleteTrainingUser(userId: string) {
+  const { userId: me, profile } = await requireRole(['admin'])
+  if (profile.role !== 'admin') throw new Error('FORBIDDEN')
+  if (userId === me) throw new Error('CANNOT_DELETE_SELF')
+  const admin = createAdminClient()
+  await admin.auth.admin.deleteUser(userId)
+  revalidatePath('/training')
+}
+
+export async function resetTrainingUserPassword(userId: string, newPassword: string) {
+  const { profile } = await requireRole(['admin'])
+  if (profile.role !== 'admin') throw new Error('FORBIDDEN')
+  if (!newPassword || newPassword.length < 6) throw new Error('PASSWORD_TOO_SHORT')
+  const admin = createAdminClient()
+  const { error } = await admin.auth.admin.updateUserById(userId, { password: newPassword })
+  if (error) throw new Error(error.message)
+}

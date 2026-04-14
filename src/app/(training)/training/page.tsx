@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { AgentDashboard } from '@/features/onboarding-training/components/AgentDashboard'
 import { DCDashboard } from '@/features/onboarding-training/components/DCDashboard'
+import { AdminDashboard } from '@/features/onboarding-training/components/AdminDashboard'
 
 export default async function TrainingPage() {
   const supabase = await createClient()
@@ -21,31 +22,24 @@ export default async function TrainingPage() {
   const name = profile.full_name ?? profile.email
 
   if (profile.role === 'agent') {
-    return <AgentDashboard userId={profile.id} userName={name} />
+    return <AgentDashboard userName={name} />
   }
 
-  if (profile.role === 'dc' || profile.role === 'admin') {
-    return (
-      <div className="mx-auto w-full max-w-4xl">
-        <div className="mb-6">
-          <div className="text-xs uppercase tracking-[0.2em] text-[var(--text-muted)]">
-            {profile.role === 'admin' ? 'Admin' : 'Director Comercial'}
-          </div>
-          <h1 className="text-2xl font-bold text-[var(--text)]">90-Day Training</h1>
-        </div>
-        <DCDashboard />
-      </div>
-    )
+  if (profile.role === 'admin') {
+    return <AdminDashboard userName={name} />
   }
 
-  // Secretary / photographer — not part of the onboarding program
+  if (profile.role === 'dc') {
+    return <DCDashboard userName={name} isAdmin={false} />
+  }
+
   return (
-    <div className="mx-auto max-w-xl rounded-2xl border border-[var(--border)] bg-[var(--card)] p-8 text-center">
-      <div className="mb-2 text-xs uppercase tracking-[0.2em] text-[var(--gold)]">Training</div>
-      <h2 className="mb-2 text-xl font-bold text-[var(--text)]">Not available for your role</h2>
-      <p className="text-sm text-[var(--text-muted)]">
-        The 90-day program is for agents and directors. Ask Bruno or Darcy if you think you should have access.
-      </p>
+    <div style={{ minHeight: '100vh', background: '#09080A', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+      <div style={{ maxWidth: 420, textAlign: 'center', color: '#DDD5C8', fontFamily: "'Helvetica Neue', Arial, sans-serif" }}>
+        <div style={{ fontSize: 11, letterSpacing: '0.3em', color: '#D4A853', textTransform: 'uppercase', marginBottom: 10 }}>Training</div>
+        <h2 style={{ fontSize: 22, color: '#EEE5D5', marginBottom: 10 }}>Not available for your role</h2>
+        <p style={{ fontSize: 14, color: '#6A6070', lineHeight: 1.6 }}>The 90-day program is for agents, DCs and admins only.</p>
+      </div>
     </div>
   )
 }

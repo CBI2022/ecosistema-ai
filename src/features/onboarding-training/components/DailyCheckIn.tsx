@@ -1,108 +1,86 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState } from 'react'
 import { saveCheckin } from '../actions'
 
 export function DailyCheckIn({
+  agentName,
   weekAction,
   onClose,
 }: {
+  agentName: string
   weekAction: string
   onClose: () => void
 }) {
-  const [step, setStep] = useState<'morning' | 'evening' | 'done'>('morning')
-  const [morning, setMorning] = useState('')
+  const [phase, setPhase] = useState<'morning' | 'locked' | 'evening'>('morning')
+  const [morningQ, setMorningQ] = useState('')
   const [eveningDone, setEveningDone] = useState<boolean | null>(null)
-  const [note, setNote] = useState('')
-  const [pending, start] = useTransition()
+  const [eveningNote, setEveningNote] = useState('')
+  const [submitted, setSubmitted] = useState(false)
 
-  const submitMorning = () => {
-    if (pending) return
-    start(async () => {
-      if (morning.trim()) await saveCheckin({ morningAnswer: morning.trim() })
-      setStep('evening')
+  const submit = async () => {
+    await saveCheckin({
+      morningAnswer: morningQ || undefined,
+      eveningDone: eveningDone ?? undefined,
+      eveningNote: eveningNote || undefined,
     })
-  }
-
-  const submitEvening = () => {
-    if (pending || eveningDone === null) return
-    start(async () => {
-      await saveCheckin({ eveningDone, eveningNote: note.trim() || undefined })
-      setStep('done')
-      setTimeout(onClose, 1500)
-    })
+    setSubmitted(true)
+    setTimeout(onClose, 1800)
   }
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 p-6">
-      <div className="w-full max-w-md rounded-2xl border border-[var(--border-gold)] bg-[var(--card)] p-8">
-        {step === 'morning' && (
-          <>
-            <div className="mb-2 text-[10px] tracking-[0.3em] text-[var(--gold)]">☀️ MORNING</div>
-            <h3 className="mb-2 text-lg font-bold text-[var(--text)]">Today&apos;s priority</h3>
-            <p className="mb-4 text-xs text-[var(--text-muted)]">{weekAction}</p>
-            <textarea
-              value={morning}
-              onChange={e => setMorning(e.target.value)}
-              rows={3}
-              placeholder="What is the ONE thing you will do before lunch?"
-              className="mb-4 w-full resize-none rounded-lg border border-[var(--border)] bg-black/40 p-3 text-sm text-[var(--text)] outline-none focus:border-[var(--gold)]"
-            />
-            <div className="flex gap-2">
-              <button onClick={onClose} className="flex-1 rounded-lg border border-[var(--border)] px-4 py-2 text-sm text-[var(--text-muted)]">
-                Later
-              </button>
-              <button
-                onClick={submitMorning}
-                disabled={pending}
-                className="flex-[2] rounded-lg bg-[var(--gold)] px-4 py-2 text-sm font-bold text-black disabled:opacity-40"
-              >
-                {pending ? '…' : 'Continue'}
-              </button>
-            </div>
-          </>
-        )}
-        {step === 'evening' && (
-          <>
-            <div className="mb-2 text-[10px] tracking-[0.3em] text-[var(--gold)]">🌙 EVENING</div>
-            <h3 className="mb-4 text-lg font-bold text-[var(--text)]">Did you do it?</h3>
-            <div className="mb-4 flex gap-2">
-              <button
-                onClick={() => setEveningDone(true)}
-                className={`flex-1 rounded-lg border px-4 py-3 text-sm font-semibold transition ${eveningDone === true ? 'border-[var(--gold)] bg-[var(--gold)]/10 text-[var(--gold)]' : 'border-[var(--border)] text-[var(--text-muted)]'}`}
-              >
-                ✅ Yes
-              </button>
-              <button
-                onClick={() => setEveningDone(false)}
-                className={`flex-1 rounded-lg border px-4 py-3 text-sm font-semibold transition ${eveningDone === false ? 'border-red-500 bg-red-500/10 text-red-400' : 'border-[var(--border)] text-[var(--text-muted)]'}`}
-              >
-                ❌ No
-              </button>
-            </div>
-            <textarea
-              value={note}
-              onChange={e => setNote(e.target.value)}
-              rows={3}
-              placeholder="What blocked you? (optional)"
-              className="mb-4 w-full resize-none rounded-lg border border-[var(--border)] bg-black/40 p-3 text-sm text-[var(--text)] outline-none focus:border-[var(--gold)]"
-            />
-            <button
-              onClick={submitEvening}
-              disabled={pending || eveningDone === null}
-              className="w-full rounded-lg bg-[var(--gold)] px-4 py-2 text-sm font-bold text-black disabled:opacity-40"
-            >
-              {pending ? '…' : 'Save'}
-            </button>
-          </>
-        )}
-        {step === 'done' && (
-          <div className="py-8 text-center">
-            <div className="mb-2 text-4xl">✓</div>
-            <div className="text-sm text-[var(--text)]">Logged. See you tomorrow.</div>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(9,8,10,0.97)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
+      {submitted ? (
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: 56, marginBottom: 14 }}>{eveningDone ? '🔥' : '💪'}</div>
+          <div style={{ fontSize: 22, color: '#EEE5D5', fontWeight: 700 }}>{eveningDone ? "That's what winners do." : 'Tomorrow is a new day.'}</div>
+          <div style={{ fontSize: 14, color: '#4A4050', marginTop: 8 }}>See you tomorrow, {agentName}.</div>
+        </div>
+      ) : (
+        <div style={{ maxWidth: 460, width: '100%' }}>
+          <div style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
+            {([{ id: 'morning', label: '☀️ Morning' }, { id: 'evening', label: '🌙 Evening' }] as const).map(p => (
+              <button key={p.id} onClick={() => setPhase(p.id)} style={{ flex: 1, background: phase === p.id ? '#D4A853' : '#100F14', border: `1px solid ${phase === p.id ? '#D4A853' : '#1A1820'}`, color: phase === p.id ? '#09080A' : '#3A3040', borderRadius: 10, padding: '10px', cursor: 'pointer', fontSize: 13, fontWeight: phase === p.id ? 700 : 400 }}>{p.label}</button>
+            ))}
           </div>
-        )}
-      </div>
+          {phase === 'morning' && (
+            <div>
+              <h3 style={{ fontSize: 20, color: '#EEE5D5', fontWeight: 700, marginBottom: 8, lineHeight: 1.4 }}>What is the ONE thing you will do today that moves you closer to your first sale?</h3>
+              <div style={{ fontSize: 12, color: '#3A3040', marginBottom: 14 }}>This week: <span style={{ color: '#D4A853' }}>{weekAction}</span></div>
+              <textarea value={morningQ} onChange={e => setMorningQ(e.target.value)} placeholder="Write it down. Be specific." rows={3} style={{ width: '100%', background: '#100F14', border: '1px solid #2A2430', borderRadius: 12, padding: '14px', fontSize: 14, color: '#EEE5D5', outline: 'none', resize: 'none', lineHeight: 1.6 }} />
+              <button onClick={() => morningQ.trim() && (saveCheckin({ morningAnswer: morningQ.trim() }), setPhase('locked'))} style={{ marginTop: 12, width: '100%', background: morningQ.trim() ? '#D4A853' : '#1A1820', color: morningQ.trim() ? '#09080A' : '#2A2430', border: 'none', borderRadius: 12, padding: '14px', fontSize: 15, fontWeight: 700, cursor: morningQ.trim() ? 'pointer' : 'default', transition: 'all 0.2s' }}>Commit to it →</button>
+            </div>
+          )}
+          {phase === 'locked' && (
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 44, marginBottom: 12 }}>🎯</div>
+              <h3 style={{ fontSize: 18, color: '#EEE5D5', fontWeight: 700, marginBottom: 10 }}>Locked in.</h3>
+              <div style={{ background: '#100F14', border: '1px solid #D4A85330', borderRadius: 12, padding: '14px', marginBottom: 16 }}>
+                <div style={{ fontSize: 14, color: '#D4A853', lineHeight: 1.7 }}>{morningQ}</div>
+              </div>
+              <p style={{ fontSize: 13, color: '#4A4050', marginBottom: 16 }}>Now go do it. Come back tonight.</p>
+              <button onClick={onClose} style={{ background: 'transparent', border: '1px solid #2A2430', color: '#6A6070', borderRadius: 12, padding: '10px 24px', cursor: 'pointer', fontSize: 13 }}>Close</button>
+            </div>
+          )}
+          {phase === 'evening' && (
+            <div>
+              <h3 style={{ fontSize: 20, color: '#EEE5D5', fontWeight: 700, marginBottom: 16 }}>Did you do it?</h3>
+              <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
+                {[{ v: true, label: '✅ Yes', color: '#6BAE94' }, { v: false, label: '❌ No', color: '#E07B6A' }].map(o => (
+                  <button key={String(o.v)} onClick={() => setEveningDone(o.v)} style={{ flex: 1, background: eveningDone === o.v ? `${o.color}20` : '#100F14', border: `2px solid ${eveningDone === o.v ? o.color : '#1A1820'}`, color: eveningDone === o.v ? o.color : '#3A3040', borderRadius: 12, padding: '14px', cursor: 'pointer', fontSize: 14, fontWeight: 700, transition: 'all 0.2s' }}>{o.label}</button>
+                ))}
+              </div>
+              {eveningDone !== null && (
+                <>
+                  <textarea value={eveningNote} onChange={e => setEveningNote(e.target.value)} placeholder={eveningDone ? 'What happened? What did you learn?' : 'What got in the way? What will you do differently tomorrow?'} rows={3} style={{ width: '100%', background: '#100F14', border: '1px solid #2A2430', borderRadius: 12, padding: '14px', fontSize: 14, color: '#EEE5D5', outline: 'none', resize: 'none', lineHeight: 1.6, marginBottom: 12 }} />
+                  <button onClick={submit} style={{ width: '100%', background: '#9B7EC8', color: '#09080A', border: 'none', borderRadius: 12, padding: '14px', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>Done for today →</button>
+                </>
+              )}
+            </div>
+          )}
+          <button onClick={onClose} style={{ marginTop: 12, width: '100%', background: 'transparent', border: 'none', color: '#2A2430', cursor: 'pointer', fontSize: 12 }}>Close</button>
+        </div>
+      )}
     </div>
   )
 }

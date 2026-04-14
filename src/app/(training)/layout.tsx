@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import Image from 'next/image'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -12,32 +11,36 @@ export default async function TrainingLayout({ children }: { children: React.Rea
   const admin = createAdminClient()
   const { data: profile } = await admin
     .from('profiles')
-    .select('id, role, status, full_name, email')
+    .select('id, status')
     .eq('id', user.id)
     .single()
 
   if (!profile || profile.status !== 'approved') redirect('/pending-approval')
 
   return (
-    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
-      <header className="sticky top-0 z-40 flex items-center justify-between border-b border-[var(--border)] bg-[var(--bg)]/95 px-4 py-3 backdrop-blur">
-        <Link
-          href="/dashboard"
-          className="inline-flex items-center gap-2 rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs text-[var(--text-muted)] transition hover:border-[var(--border-gold)] hover:text-[var(--gold)]"
-        >
-          ← Dashboard
-        </Link>
-        <div className="flex items-center gap-3">
-          <Image src="/logo-cbi.png" alt="CBI" width={70} height={20} className="h-5 w-auto" priority />
-          <span className="hidden text-[10px] uppercase tracking-[0.3em] text-[var(--gold)] md:inline">
-            90-Day Training
-          </span>
-        </div>
-        <div className="text-[11px] text-[var(--text-muted)]">
-          {profile.full_name ?? profile.email}
-        </div>
-      </header>
-      <main className="px-4 py-6">{children}</main>
+    <div style={{ background: '#09080A', minHeight: '100vh' }}>
+      <Link
+        href="/dashboard"
+        style={{
+          position: 'fixed',
+          top: 12,
+          right: 12,
+          zIndex: 9500,
+          background: 'rgba(26,24,32,0.85)',
+          backdropFilter: 'blur(10px)',
+          border: '1px solid #2A2430',
+          color: '#9A9080',
+          borderRadius: 10,
+          padding: '6px 12px',
+          fontSize: 11,
+          fontWeight: 600,
+          textDecoration: 'none',
+          fontFamily: "'Helvetica Neue', Arial, sans-serif",
+        }}
+      >
+        ← Dashboard
+      </Link>
+      {children}
     </div>
   )
 }

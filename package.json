@@ -12,6 +12,7 @@
     "@sparticuz/chromium": "^147.0.0",
     "@supabase/ssr": "^0.6.0",
     "@supabase/supabase-js": "^2.49.0",
+    "canvas-confetti": "^1.9.4",
     "next": "^16.0.0",
     "next-intl": "^4.9.1",
     "playwright-core": "^1.59.1",
@@ -21,6 +22,7 @@
     "web-push": "^3.6.7"
   },
   "devDependencies": {
+    "@types/canvas-confetti": "^1.9.0",
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
