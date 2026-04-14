@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { signout } from '@/actions/auth'
 import { uploadAvatar } from '@/actions/profile'
 import { NotificationsBell } from '@/features/notifications/components/NotificationsBell'
+import { LanguageSelector } from '@/shared/components/LanguageSelector'
 import type { Profile } from '@/types/database'
 
 interface AppHeaderProps {
@@ -61,6 +62,9 @@ export function AppHeader({ profile, notifCount = 0 }: AppHeaderProps) {
       {/* Right */}
       <div className="flex items-center gap-5">
         <span className="hidden text-[11px] text-[#9A9080] lg:block">{today}</span>
+
+        {/* Language selector */}
+        <LanguageSelector />
 
         {/* Notifications bell with dropdown */}
         <NotificationsBell initialCount={notifCount} />
