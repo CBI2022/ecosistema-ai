@@ -101,7 +101,7 @@ export function AppNav({ role, notifCount = 0 }: AppNavProps) {
         </div>
       )}
 
-      <nav className="sticky top-[57px] z-40 flex justify-center gap-0.5 overflow-x-auto border-b border-[#C9A84C]/12 bg-[#0A0A0A]/98 px-6 py-2 backdrop-blur-xl">
+      <nav className="sticky top-[54px] z-40 flex justify-start gap-0.5 overflow-x-auto border-b border-[#C9A84C]/12 bg-[#0A0A0A]/98 px-2 py-2 backdrop-blur-xl sm:top-[57px] sm:justify-center sm:px-6 [scrollbar-width:none] [&amp;::-webkit-scrollbar]:hidden">
         {tabs.map((tab) => {
           const isActive =
             tab.href === '/dashboard'

@@ -55,3 +55,67 @@ body {
   background: rgba(201, 168, 76, 0.25);
   color: var(--text);
 }
+
+/* ─────────────────────────────────────────────────────────
+   MOBILE-SAFETY — universal rules so nothing breaks the viewport
+   ───────────────────────────────────────────────────────── */
+
+html,
+body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+img,
+video {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Tables: wrap them with horizontal scroll when they don't fit */
+table {
+  max-width: 100%;
+}
+
+/* iframes: never exceed viewport */
+iframe {
+  max-width: 100%;
+}
+
+/* Compact everything on phones */
+@media (max-width: 640px) {
+  /* Fixed-width tailwind utility overrides commonly too wide on phones */
+  .max-w-\[1400px\] {
+    max-width: 100% !important;
+  }
+
+  /* Reduce heavy heading sizes that break on phones */
+  h1 { font-size: clamp(1.25rem, 6vw, 2rem); }
+  h2 { font-size: clamp(1.1rem, 5vw, 1.5rem); }
+
+  /* Prevent iOS zoom-on-focus (but don't override training-root buttons) */
+  input:not([type="range"]):not([type="checkbox"]):not([type="radio"]),
+  textarea,
+  select {
+    font-size: max(16px, 0.875rem);
+  }
+
+  /* Modals wider than viewport — clamp */
+  [class*="max-w-"] {
+    max-width: min(100%, 92vw);
+  }
+
+  /* Grid cells that are set in JS/inline with minmax(>200, 1fr) tend to
+     break — let them collapse */
+  .grid {
+    min-width: 0;
+  }
+
+  /* Long emails / ids overflow — break-all */
+  .truncate-mobile {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+

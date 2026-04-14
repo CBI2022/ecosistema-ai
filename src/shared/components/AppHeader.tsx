@@ -50,20 +50,20 @@ export function AppHeader({ profile, notifCount = 0 }: AppHeaderProps) {
   }
 
   return (
-    <header className="sticky top-0 z-50 flex items-center justify-between border-b border-[#C9A84C]/12 bg-[#0A0A0A]/96 px-8 py-4 backdrop-blur-xl">
+    <header className="sticky top-0 z-50 flex items-center justify-between gap-2 border-b border-[#C9A84C]/12 bg-[#0A0A0A]/96 px-3 py-3 backdrop-blur-xl sm:gap-4 sm:px-6 sm:py-4 md:px-8">
       {/* Left */}
-      <div className="flex items-center gap-4">
+      <div className="flex min-w-0 items-center gap-2 sm:gap-4">
         <img
           src="/logo-cbi.png"
           alt="Costa Blanca Investments"
-          className="h-7 w-auto"
+          className="h-6 w-auto sm:h-7"
         />
-        <div className="hidden h-4 w-px bg-[#C9A84C]/20 sm:block" />
-        <span className="hidden text-[11px] tracking-widest text-[#9A9080] sm:block">Performance Dashboard</span>
+        <div className="hidden h-4 w-px bg-[#C9A84C]/20 md:block" />
+        <span className="hidden text-[11px] tracking-widest text-[#9A9080] md:block">Performance Dashboard</span>
       </div>
 
       {/* Right */}
-      <div className="flex items-center gap-5">
+      <div className="flex items-center gap-2 sm:gap-4 md:gap-5">
         <span className="hidden text-[11px] text-[#9A9080] lg:block">{today}</span>
 
         {/* Language selector */}
