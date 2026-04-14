@@ -1,0 +1,38 @@
+/* Full isolation from CBI globals — replicate the original onboarding-app exactly */
+.training-root,
+.training-root *,
+.training-root *::before,
+.training-root *::after {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif !important;
+  box-sizing: border-box;
+}
+
+.training-root {
+  background: #09080A;
+  color: #DDD5C8;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.training-root input,
+.training-root textarea,
+.training-root select,
+.training-root button {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif !important;
+}
+
+.training-root ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.training-root ::-webkit-scrollbar-track {
+  background: transparent;
+}
+.training-root ::-webkit-scrollbar-thumb {
+  background: #1A1820;
+  border-radius: 4px;
+}
+.training-root ::-webkit-scrollbar-thumb:hover {
+  background: #2A2430;
+}

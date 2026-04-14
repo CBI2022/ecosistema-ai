@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import './training.css'
 
 export default async function TrainingLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -18,13 +19,13 @@ export default async function TrainingLayout({ children }: { children: React.Rea
   if (!profile || profile.status !== 'approved') redirect('/pending-approval')
 
   return (
-    <div style={{ background: '#09080A', minHeight: '100vh' }}>
+    <div className="training-root">
       <Link
         href="/dashboard"
         style={{
           position: 'fixed',
-          top: 12,
-          right: 12,
+          top: 10,
+          right: 10,
           zIndex: 9500,
           background: 'rgba(26,24,32,0.85)',
           backdropFilter: 'blur(10px)',

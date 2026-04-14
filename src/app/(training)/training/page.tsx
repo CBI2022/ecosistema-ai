@@ -3,7 +3,6 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { AgentDashboard } from '@/features/onboarding-training/components/AgentDashboard'
 import { DCDashboard } from '@/features/onboarding-training/components/DCDashboard'
-import { AdminDashboard } from '@/features/onboarding-training/components/AdminDashboard'
 
 export default async function TrainingPage() {
   const supabase = await createClient()
@@ -24,13 +23,8 @@ export default async function TrainingPage() {
   if (profile.role === 'agent') {
     return <AgentDashboard userName={name} />
   }
-
-  if (profile.role === 'admin') {
-    return <AdminDashboard userName={name} />
-  }
-
-  if (profile.role === 'dc') {
-    return <DCDashboard userName={name} isAdmin={false} />
+  if (profile.role === 'dc' || profile.role === 'admin') {
+    return <DCDashboard userName={name} userRole={profile.role} />
   }
 
   return (
