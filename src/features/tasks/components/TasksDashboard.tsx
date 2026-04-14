@@ -5,6 +5,7 @@ import { createTask, updateTask, deleteTask, setTaskStatus, restoreTask, deleteT
 import { TaskModal } from './TaskModal'
 import { CalendarView } from './CalendarView'
 import { TrashModal } from './TrashModal'
+import { CompletedModal } from './CompletedModal'
 import type { ProjectTask, TaskStatus, TaskPriority } from '@/types/database'
 
 interface Assignee {
@@ -78,10 +79,18 @@ export function TasksDashboard({
   const [modalTask, setModalTask] = useState<TaskWithAssignee | null>(null)
   const [showCreate, setShowCreate] = useState(false)
   const [showTrash, setShowTrash] = useState(false)
+  const [showCompleted, setShowCompleted] = useState(false)
   const [, startTransition] = useTransition()
 
+  // Separar tareas completadas (van al modal propio) del resto
+  const activeTasks = useMemo(() => tasks.filter((t) => t.status !== 'complete'), [tasks])
+  const completedTasks = useMemo(() => {
+    const scoped = tasks.filter((t) => t.status === 'complete')
+    return scope === 'mine' ? scoped.filter((t) => t.assigned_to === currentUserId) : scoped
+  }, [tasks, scope, currentUserId])
+
   const filtered = useMemo(() => {
-    const result = tasks.filter((t) => {
+    const result = activeTasks.filter((t) => {
       if (scope === 'mine' && t.assigned_to !== currentUserId) return false
       if (filterCategory !== 'all' && t.category !== filterCategory) return false
       if (filterPriority !== 'all' && t.priority !== filterPriority) return false
@@ -106,19 +115,20 @@ export function TasksDashboard({
     } else if (sortBy === 'title') {
       sorted.sort((a, b) => a.title.localeCompare(b.title))
     } else if (sortBy === 'status') {
-      const order: TaskStatus[] = ['next_action', 'waiting', 'someday', 'complete']
+      const order: TaskStatus[] = ['next_action', 'waiting', 'someday']
       sorted.sort((a, b) => order.indexOf(a.status) - order.indexOf(b.status))
     }
     return sorted
-  }, [tasks, scope, currentUserId, filterCategory, filterPriority, filterAssignee, search, sortBy])
+  }, [activeTasks, scope, currentUserId, filterCategory, filterPriority, filterAssignee, search, sortBy])
 
+  // Stats: activas por columna + completadas aparte (mismo scope que main view)
   const stats = useMemo(() => ({
     total: filtered.length,
     next_action: filtered.filter((t) => t.status === 'next_action').length,
     waiting: filtered.filter((t) => t.status === 'waiting').length,
     someday: filtered.filter((t) => t.status === 'someday').length,
-    complete: filtered.filter((t) => t.status === 'complete').length,
-  }), [filtered])
+    complete: completedTasks.length,
+  }), [filtered, completedTasks])
 
   function updateLocalTask(id: string, patch: Partial<TaskWithAssignee>) {
     setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, ...patch } : t)))
@@ -212,7 +222,20 @@ export function TasksDashboard({
             ))}
           </div>
 
-          {/* Trash button (admin) */}
+          {/* Completadas — para todos */}
+          <button
+            onClick={() => setShowCompleted(true)}
+            className="flex items-center gap-1.5 rounded-xl border border-[#2ECC9A]/25 bg-[#2ECC9A]/5 px-3 py-2 text-xs font-bold text-[#2ECC9A] transition hover:bg-[#2ECC9A]/10"
+          >
+            ✅ Completadas
+            {completedTasks.length > 0 && (
+              <span className="rounded-full bg-[#2ECC9A]/15 px-1.5 py-0.5 text-[10px] font-bold">
+                {completedTasks.length}
+              </span>
+            )}
+          </button>
+
+          {/* Papelera — solo admin */}
           {isAdmin && (
             <button
               onClick={() => setShowTrash(true)}
@@ -355,6 +378,21 @@ export function TasksDashboard({
           onDeleteForever={handleDeleteForever}
         />
       )}
+
+      {showCompleted && (
+        <CompletedModal
+          tasks={completedTasks}
+          canEdit={(t) => isAdmin || t.assigned_to === currentUserId}
+          onClose={() => setShowCompleted(false)}
+          onReopen={(id) => {
+            updateLocalTask(id, { status: 'next_action', completed_at: null })
+          }}
+          onOpenTask={(task) => {
+            setShowCompleted(false)
+            setModalTask(task)
+          }}
+        />
+      )}
     </div>
   )
 }
@@ -372,7 +410,8 @@ function KanbanView({
   onStatusChange: (id: string, status: TaskStatus) => void
   canMove: (t: TaskWithAssignee) => boolean
 }) {
-  const columns: TaskStatus[] = ['next_action', 'waiting', 'someday', 'complete']
+  // Solo 3 columnas en Kanban. Las completadas viven en el modal "Completadas"
+  const columns: TaskStatus[] = ['next_action', 'waiting', 'someday']
 
   function handleDragStart(e: React.DragEvent, taskId: string) {
     e.dataTransfer.setData('taskId', taskId)
@@ -388,7 +427,7 @@ function KanbanView({
   }
 
   return (
-    <div className="grid gap-3 lg:grid-cols-4">
+    <div className="grid gap-3 lg:grid-cols-3">
       {columns.map((status) => {
         const cfg = STATUS_CONFIG[status]
         const colTasks = tasks.filter((t) => t.status === status)
