@@ -8,6 +8,13 @@ const nextConfig: NextConfig = {
   experimental: {
     mcpServer: true,
   },
+  // Sparticuz chromium y playwright-core no deben ser bundleados —
+  // deben resolverse en runtime desde node_modules en la función serverless
+  serverExternalPackages: ['@sparticuz/chromium', 'playwright-core'],
+  // Incluir binarios de chromium (brotli) en el trazado de archivos del server
+  outputFileTracingIncludes: {
+    '/**': ['./node_modules/@sparticuz/chromium/bin/**'],
+  },
 }
 
 export default withNextIntl(nextConfig)
