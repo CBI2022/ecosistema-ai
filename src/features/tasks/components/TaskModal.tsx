@@ -22,9 +22,6 @@ interface TaskModalProps {
   onClose: () => void
 }
 
-const inputClass = 'w-full rounded-lg border border-white/10 bg-[#1C1C1C] px-3.5 py-2.5 text-sm text-[#F5F0E8] outline-none transition focus:border-[#C9A84C]/60 placeholder-[#9A9080]'
-const labelClass = 'block text-[10px] font-bold uppercase tracking-[0.12em] text-[#9A9080] mb-1.5'
-
 export function TaskModal({
   task,
   isAdmin,
@@ -46,8 +43,6 @@ export function TaskModal({
   const [status, setStatus] = useState<TaskStatus>(task?.status || 'todo')
   const [assignedTo, setAssignedTo] = useState(task?.assigned_to || '')
   const [dueDate, setDueDate] = useState(task?.due_date || '')
-  const [notes, setNotes] = useState(task?.notes || '')
-  const [docsUrl, setDocsUrl] = useState(task?.docs_url || '')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -67,190 +62,184 @@ export function TaskModal({
           status,
           assigned_to: assignedTo || null,
           due_date: dueDate || null,
-          notes: notes || null,
-          docs_url: docsUrl || null,
         }
-      : { status, notes: notes || null }
+      : { status, description: description || null }
 
     const res = await onSave(task?.id || null, data)
     setSaving(false)
     if (res?.error) setError(res.error)
   }
 
-  const cat = CATEGORIES.find((c) => c.id === category) || CATEGORIES[CATEGORIES.length - 1]
-  const pri = PRIORITY_CONFIG[priority]
   const st = STATUS_CONFIG[status]
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
-      <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-[#C9A84C]/25 bg-[#131313] shadow-2xl">
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-white/8 px-6 py-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 backdrop-blur-sm" onClick={onClose}>
+      <div
+        className="flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-white/8 bg-[#131313] shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header con status pill + close */}
+        <div className="flex items-center justify-between border-b border-white/6 px-6 py-3">
           <div className="flex items-center gap-2">
-            <span className="text-lg">{isNew ? '➕' : '📋'}</span>
-            <p className="text-base font-bold text-[#F5F0E8]">
-              {isNew ? 'Nueva tarea' : 'Tarea'}
-            </p>
-            {!isNew && (
-              <span
-                className="ml-2 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase"
-                style={{ background: `${st.color}20`, color: st.color }}
-              >
-                {st.emoji} {st.label}
+            <span
+              className="rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider"
+              style={{ background: `${st.color}20`, color: st.color }}
+            >
+              {st.emoji} {st.label}
+            </span>
+            {isNew && (
+              <span className="rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[#9A9080]">
+                Nueva
               </span>
             )}
           </div>
-          <button onClick={onClose} className="text-[#9A9080] hover:text-[#F5F0E8]">✕</button>
+          <button
+            onClick={onClose}
+            className="text-xl leading-none text-[#9A9080] transition hover:text-[#F5F0E8]"
+            aria-label="Cerrar"
+          >
+            ×
+          </button>
         </div>
 
-        {/* Body */}
-        <div className="space-y-4 p-5">
-          {/* Title */}
-          <div>
-            <label className={labelClass}>Título</label>
+        {/* Scrollable content */}
+        <div className="flex-1 overflow-y-auto">
+          {/* Título — grande tipo Notion */}
+          <div className="px-6 pt-5">
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               disabled={!canEditAll}
-              className={`${inputClass} ${!canEditAll ? 'opacity-60' : ''}`}
-              placeholder="Ej: Conectar Google Calendar"
+              placeholder="Título de la tarea..."
+              className="w-full border-0 bg-transparent font-['Maharlika',serif] text-2xl font-bold text-[#F5F0E8] placeholder-[#9A9080]/40 outline-none disabled:text-[#F5F0E8] disabled:opacity-100"
             />
           </div>
 
-          {/* Description */}
-          <div>
-            <label className={labelClass}>Descripción</label>
-            <textarea
-              rows={3}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              disabled={!canEditAll}
-              className={`${inputClass} ${!canEditAll ? 'opacity-60' : ''}`}
-              placeholder="Qué hay que hacer, contexto..."
-            />
-          </div>
-
-          {/* Meta row */}
-          <div className="grid gap-4 sm:grid-cols-3">
-            <div>
-              <label className={labelClass}>Categoría</label>
-              <select
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                disabled={!canEditAll}
-                className={`${inputClass} ${!canEditAll ? 'opacity-60' : ''}`}
-              >
-                {CATEGORIES.map((c) => (
-                  <option key={c.id} value={c.id}>{c.emoji} {c.label}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className={labelClass}>Prioridad</label>
-              <select
-                value={priority}
-                onChange={(e) => setPriority(e.target.value as TaskPriority)}
-                disabled={!canEditAll}
-                className={`${inputClass} ${!canEditAll ? 'opacity-60' : ''}`}
-              >
-                {(Object.keys(PRIORITY_CONFIG) as TaskPriority[]).map((p) => (
-                  <option key={p} value={p}>{PRIORITY_CONFIG[p].label}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className={labelClass}>Estado</label>
-              <select
-                value={status}
-                onChange={(e) => setStatus(e.target.value as TaskStatus)}
-                disabled={!canEditStatus}
-                className={`${inputClass} ${!canEditStatus ? 'opacity-60' : ''}`}
-              >
-                {(Object.keys(STATUS_CONFIG) as TaskStatus[]).map((s) => (
-                  <option key={s} value={s}>{STATUS_CONFIG[s].emoji} {STATUS_CONFIG[s].label}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          {/* Assignee + due date */}
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label className={labelClass}>Asignado a</label>
-              {canEditAll ? (
+          {/* Propiedades — grid compacto tipo Notion */}
+          <div className="mx-6 mt-4 mb-4 rounded-xl border border-white/6 bg-[#0A0A0A]/50 p-4">
+            <div className="grid gap-x-6 gap-y-3 sm:grid-cols-[120px_1fr]">
+              {/* Categoría */}
+              <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-[#9A9080]">
+                <span>🏷️</span> Categoría
+              </div>
+              <div>
                 <select
-                  value={assignedTo}
-                  onChange={(e) => setAssignedTo(e.target.value)}
-                  className={inputClass}
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  disabled={!canEditAll}
+                  className="w-full rounded-md border border-white/10 bg-[#1C1C1C] px-2.5 py-1.5 text-xs text-[#F5F0E8] outline-none focus:border-[#C9A84C]/60 disabled:opacity-60"
                 >
-                  <option value="">Sin asignar</option>
-                  {assignableUsers.map((u) => (
-                    <option key={u.id} value={u.id}>
-                      {u.full_name || u.email} ({u.role})
-                    </option>
+                  {CATEGORIES.map((c) => (
+                    <option key={c.id} value={c.id}>{c.emoji} {c.label}</option>
                   ))}
                 </select>
-              ) : (
-                <div className="rounded-lg border border-white/10 bg-[#0A0A0A] px-3.5 py-2.5 text-sm text-[#9A9080]">
-                  {task?.assignee?.full_name || task?.assignee?.email || '—'}
-                </div>
-              )}
-            </div>
-            <div>
-              <label className={labelClass}>Fecha límite</label>
-              <input
-                type="date"
-                value={dueDate}
-                onChange={(e) => setDueDate(e.target.value)}
-                disabled={!canEditAll}
-                className={`${inputClass} ${!canEditAll ? 'opacity-60' : ''}`}
-              />
+              </div>
+
+              {/* Prioridad */}
+              <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-[#9A9080]">
+                <span>🚩</span> Prioridad
+              </div>
+              <div>
+                <select
+                  value={priority}
+                  onChange={(e) => setPriority(e.target.value as TaskPriority)}
+                  disabled={!canEditAll}
+                  className="w-full rounded-md border border-white/10 bg-[#1C1C1C] px-2.5 py-1.5 text-xs text-[#F5F0E8] outline-none focus:border-[#C9A84C]/60 disabled:opacity-60"
+                >
+                  {(Object.keys(PRIORITY_CONFIG) as TaskPriority[]).map((p) => (
+                    <option key={p} value={p}>{PRIORITY_CONFIG[p].label}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Estado */}
+              <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-[#9A9080]">
+                <span>📍</span> Estado
+              </div>
+              <div>
+                <select
+                  value={status}
+                  onChange={(e) => setStatus(e.target.value as TaskStatus)}
+                  disabled={!canEditStatus}
+                  className="w-full rounded-md border border-white/10 bg-[#1C1C1C] px-2.5 py-1.5 text-xs text-[#F5F0E8] outline-none focus:border-[#C9A84C]/60 disabled:opacity-60"
+                >
+                  {(Object.keys(STATUS_CONFIG) as TaskStatus[]).map((s) => (
+                    <option key={s} value={s}>{STATUS_CONFIG[s].emoji} {STATUS_CONFIG[s].label}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Asignado */}
+              <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-[#9A9080]">
+                <span>👤</span> Asignado
+              </div>
+              <div>
+                {canEditAll ? (
+                  <select
+                    value={assignedTo}
+                    onChange={(e) => setAssignedTo(e.target.value)}
+                    className="w-full rounded-md border border-white/10 bg-[#1C1C1C] px-2.5 py-1.5 text-xs text-[#F5F0E8] outline-none focus:border-[#C9A84C]/60"
+                  >
+                    <option value="">Sin asignar</option>
+                    {assignableUsers.map((u) => (
+                      <option key={u.id} value={u.id}>
+                        {u.full_name || u.email} ({u.role})
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <div className="rounded-md border border-white/6 bg-[#0A0A0A] px-2.5 py-1.5 text-xs text-[#F5F0E8]">
+                    {task?.assignee?.full_name || task?.assignee?.email || '—'}
+                  </div>
+                )}
+              </div>
+
+              {/* Fecha */}
+              <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-[#9A9080]">
+                <span>📅</span> Fecha límite
+              </div>
+              <div>
+                <input
+                  type="date"
+                  value={dueDate}
+                  onChange={(e) => setDueDate(e.target.value)}
+                  disabled={!canEditAll}
+                  className="w-full rounded-md border border-white/10 bg-[#1C1C1C] px-2.5 py-1.5 text-xs text-[#F5F0E8] outline-none focus:border-[#C9A84C]/60 disabled:opacity-60"
+                />
+              </div>
             </div>
           </div>
 
-          {/* Docs URL */}
-          <div>
-            <label className={labelClass}>Docs URL (opcional)</label>
-            <input
-              type="url"
-              value={docsUrl}
-              onChange={(e) => setDocsUrl(e.target.value)}
-              disabled={!canEditAll}
-              className={`${inputClass} ${!canEditAll ? 'opacity-60' : ''}`}
-              placeholder="https://..."
-            />
-          </div>
-
-          {/* Notes - accesible para asignado y admin */}
-          <div>
-            <label className={labelClass}>Notas de progreso</label>
+          {/* Descripción — el bloque grande */}
+          <div className="px-6 pb-6">
+            <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-[#9A9080]">
+              <span>📝</span> Descripción
+            </div>
             <textarea
-              rows={3}
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              className={inputClass}
-              placeholder="Avances, bloqueos, siguientes pasos..."
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Escribe una descripción detallada de la tarea: qué hay que hacer, contexto, pasos, links, etc."
+              rows={14}
+              className="w-full resize-y rounded-xl border border-white/10 bg-[#0A0A0A]/50 px-4 py-3 text-sm leading-relaxed text-[#F5F0E8] outline-none transition focus:border-[#C9A84C]/60 placeholder-[#9A9080]/60"
+              style={{ fontFamily: '-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif' }}
             />
+            {!isAdmin && (
+              <p className="mt-2 text-[11px] text-[#9A9080]">
+                ℹ️ Puedes editar tu progreso/notas en la descripción y cambiar el estado. Los admins gestionan el resto.
+              </p>
+            )}
           </div>
 
-          {/* Error */}
           {error && (
-            <p className="rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-400">
+            <div className="mx-6 mb-4 rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-2.5 text-xs text-red-400">
               {error}
-            </p>
-          )}
-
-          {/* Permissions note for non-admin */}
-          {!isAdmin && (
-            <p className="rounded-lg bg-[#C9A84C]/5 px-3 py-2 text-[11px] text-[#9A9080]">
-              ℹ️ Solo puedes modificar el <strong>estado</strong> y las <strong>notas</strong> de esta tarea. Los admins gestionan el resto.
-            </p>
+            </div>
           )}
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between border-t border-white/8 px-5 py-4">
+        <div className="flex items-center justify-between border-t border-white/6 bg-[#0A0A0A]/50 px-6 py-3">
           {onDelete ? (
             <button
               onClick={onDelete}
