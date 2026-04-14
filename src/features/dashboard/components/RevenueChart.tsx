@@ -13,6 +13,7 @@ import {
   ResponsiveContainer,
 } from 'recharts'
 import { logSale } from '@/actions/sales'
+import { updateAnnualGoal } from '@/actions/goals'
 
 interface MonthData {
   month: string
@@ -53,7 +54,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 
 export function RevenueChart({
   data,
-  annualGoal,
+  annualGoal: initialGoal,
   currentMonth,
 }: RevenueChartProps) {
   const [isPending, startTransition] = useTransition()
@@ -62,8 +63,42 @@ export function RevenueChart({
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
   const [error, setError] = useState<string | null>(null)
 
+  // Annual goal editable
+  const [annualGoal, setAnnualGoal] = useState(initialGoal)
+  const [editingGoal, setEditingGoal] = useState(false)
+  const [goalDraft, setGoalDraft] = useState(String(initialGoal || ''))
+  const [goalSaving, setGoalSaving] = useState(false)
+
+  async function handleSaveGoal() {
+    const n = Number(goalDraft.replace(/[^0-9.]/g, ''))
+    if (isNaN(n) || n < 0) return
+    setGoalSaving(true)
+    const res = await updateAnnualGoal(n)
+    setGoalSaving(false)
+    if (!res?.error) {
+      setAnnualGoal(n)
+      setEditingGoal(false)
+    }
+  }
+
   const chartData = buildChartData(data, currentMonth)
   const monthlyGoalLine = annualGoal / 12
+
+  // Tracking calculation
+  const ytdRevenue = data.slice(0, currentMonth).reduce((sum, m) => sum + m.revenue, 0)
+  const expectedByNow = monthlyGoalLine * currentMonth
+  const deviation = ytdRevenue - expectedByNow
+  const onPace = deviation >= 0
+  const remaining = Math.max(0, annualGoal - ytdRevenue)
+  const monthsLeft = 12 - currentMonth
+  const requiredPerMonth = monthsLeft > 0 ? remaining / monthsLeft : 0
+  const pctAchieved = annualGoal > 0 ? (ytdRevenue / annualGoal) * 100 : 0
+
+  function fmtEur(n: number) {
+    if (n >= 1_000_000) return `€${(n / 1_000_000).toFixed(2)}M`
+    if (n >= 1_000) return `€${(n / 1_000).toFixed(1)}K`
+    return `€${Math.round(n)}`
+  }
 
   function handleLog() {
     if (!amount || isNaN(Number(amount))) {
@@ -101,23 +136,109 @@ export function RevenueChart({
             💰 Revenue Growth · This Year
           </p>
           <p className="mt-0.5 text-[11px] text-[#9A9080]">
-            Monthly commissions vs annual goal
+            Comisiones mensuales vs objetivo anual
           </p>
         </div>
         <div className="flex items-center gap-4 text-[10px] text-[#9A9080]">
           <span className="flex items-center gap-1.5">
             <span className="inline-block h-0.5 w-3 bg-[#2ECC9A]" />
-            Monthly
+            Mensual
           </span>
           <span className="flex items-center gap-1.5">
             <span className="inline-block h-0.5 w-3 bg-[#C9A84C]" />
-            Cumulative
+            Acumulado
           </span>
           {annualGoal > 0 && (
             <span className="flex items-center gap-1.5">
               <span className="inline-block h-0.5 w-3 border-t-2 border-dashed border-[#E05555] bg-transparent" />
-              Goal
+              Objetivo
             </span>
+          )}
+        </div>
+      </div>
+
+      {/* Annual Goal panel — editable + tracking */}
+      <div className="mb-5 grid gap-3 sm:grid-cols-4">
+        {/* Objetivo anual */}
+        <div className="rounded-xl border border-[#C9A84C]/20 bg-[#0A0A0A] p-3.5">
+          <div className="mb-1 flex items-center justify-between">
+            <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-[#9A9080]">🎯 Objetivo anual</p>
+            {!editingGoal && (
+              <button onClick={() => { setGoalDraft(String(annualGoal || '')); setEditingGoal(true) }} className="text-[10px] text-[#C9A84C] hover:underline">
+                {annualGoal > 0 ? 'Editar' : 'Definir'}
+              </button>
+            )}
+          </div>
+          {editingGoal ? (
+            <div className="flex gap-1.5">
+              <input
+                type="number"
+                value={goalDraft}
+                onChange={(e) => setGoalDraft(e.target.value)}
+                placeholder="150000"
+                className="min-w-0 flex-1 rounded-md border border-white/10 bg-[#1C1C1C] px-2 py-1.5 text-sm text-[#F5F0E8] outline-none focus:border-[#C9A84C]/60"
+              />
+              <button
+                onClick={handleSaveGoal}
+                disabled={goalSaving}
+                className="rounded-md bg-[#C9A84C] px-2.5 text-xs font-bold text-black hover:bg-[#E8C96A] disabled:opacity-50"
+              >
+                ✓
+              </button>
+              <button
+                onClick={() => setEditingGoal(false)}
+                className="rounded-md border border-white/10 px-2.5 text-xs text-[#9A9080] hover:text-[#F5F0E8]"
+              >
+                ✕
+              </button>
+            </div>
+          ) : (
+            <p className="font-['Maharlika',serif] text-2xl font-bold text-[#C9A84C]">
+              {annualGoal > 0 ? fmtEur(annualGoal) : '—'}
+            </p>
+          )}
+        </div>
+
+        {/* Media mensual necesaria */}
+        <div className="rounded-xl border border-white/8 bg-[#0A0A0A] p-3.5">
+          <p className="mb-1 text-[9px] font-bold uppercase tracking-[0.12em] text-[#9A9080]">📊 Media mensual</p>
+          <p className="font-['Maharlika',serif] text-2xl font-bold text-[#F5F0E8]">
+            {annualGoal > 0 ? fmtEur(monthlyGoalLine) : '—'}
+          </p>
+          <p className="mt-0.5 text-[10px] text-[#9A9080]">necesario de ticket/mes</p>
+        </div>
+
+        {/* Lo que necesitas de aquí a fin de año */}
+        <div className="rounded-xl border border-white/8 bg-[#0A0A0A] p-3.5">
+          <p className="mb-1 text-[9px] font-bold uppercase tracking-[0.12em] text-[#9A9080]">⏳ Restante / mes</p>
+          <p className="font-['Maharlika',serif] text-2xl font-bold text-[#F5F0E8]">
+            {annualGoal > 0 && monthsLeft > 0 ? fmtEur(requiredPerMonth) : annualGoal > 0 ? '✓' : '—'}
+          </p>
+          <p className="mt-0.5 text-[10px] text-[#9A9080]">
+            {monthsLeft > 0 ? `en los próximos ${monthsLeft} meses` : '¡año cerrado!'}
+          </p>
+        </div>
+
+        {/* Tracking */}
+        <div
+          className="rounded-xl border p-3.5"
+          style={{
+            borderColor: annualGoal === 0 ? 'rgba(255,255,255,0.08)' : onPace ? 'rgba(46,204,154,0.35)' : 'rgba(239,68,68,0.35)',
+            background: annualGoal === 0 ? '#0A0A0A' : onPace ? 'rgba(46,204,154,0.05)' : 'rgba(239,68,68,0.05)',
+          }}
+        >
+          <p className="mb-1 text-[9px] font-bold uppercase tracking-[0.12em] text-[#9A9080]">📈 Tracking</p>
+          {annualGoal === 0 ? (
+            <p className="text-xs text-[#9A9080]">Define tu objetivo anual para ver tracking</p>
+          ) : (
+            <>
+              <p className="font-['Maharlika',serif] text-2xl font-bold" style={{ color: onPace ? '#2ECC9A' : '#EF4444' }}>
+                {onPace ? '✓ En ritmo' : '⚠ Por debajo'}
+              </p>
+              <p className="mt-0.5 text-[10px] text-[#9A9080]">
+                {pctAchieved.toFixed(0)}% · {onPace ? `+${fmtEur(deviation)}` : fmtEur(deviation)}
+              </p>
+            </>
           )}
         </div>
       </div>
