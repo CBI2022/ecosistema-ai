@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { CATEGORIES, STATUS_CONFIG, PRIORITY_CONFIG } from './TasksDashboard'
 import type { ProjectTask, TaskPriority, TaskStatus } from '@/types/database'
 
@@ -31,6 +32,8 @@ export function TaskModal({
   onDelete,
   onClose,
 }: TaskModalProps) {
+  const t = useTranslations('tasks')
+  const tCommon = useTranslations('common')
   const isNew = !task
   const isOwnTask = task?.assigned_to === currentUserId
   const canEditAll = isAdmin
@@ -49,7 +52,7 @@ export function TaskModal({
   async function handleSubmit() {
     setError(null)
     if (canEditAll && !title.trim()) {
-      setError('Título obligatorio')
+      setError(t('titleRequired'))
       return
     }
     setSaving(true)
@@ -89,14 +92,14 @@ export function TaskModal({
             </span>
             {isNew && (
               <span className="rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[#9A9080]">
-                Nueva
+                {tCommon('new')}
               </span>
             )}
           </div>
           <button
             onClick={onClose}
             className="text-xl leading-none text-[#9A9080] transition hover:text-[#F5F0E8]"
-            aria-label="Cerrar"
+            aria-label={tCommon('close')}
           >
             ×
           </button>
@@ -121,7 +124,7 @@ export function TaskModal({
             <div className="grid gap-x-6 gap-y-3 sm:grid-cols-[120px_1fr]">
               {/* Categoría */}
               <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-[#9A9080]">
-                <span>🏷️</span> Categoría
+                <span>🏷️</span> {t('category')}
               </div>
               <div>
                 <select
@@ -138,7 +141,7 @@ export function TaskModal({
 
               {/* Prioridad */}
               <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-[#9A9080]">
-                <span>🚩</span> Prioridad
+                <span>🚩</span> {t('priority')}
               </div>
               <div>
                 <select
@@ -155,7 +158,7 @@ export function TaskModal({
 
               {/* Estado */}
               <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-[#9A9080]">
-                <span>📍</span> Estado
+                <span>📍</span> {t('status')}
               </div>
               <div>
                 <select
@@ -172,7 +175,7 @@ export function TaskModal({
 
               {/* Asignado */}
               <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-[#9A9080]">
-                <span>👤</span> Asignado
+                <span>👤</span> {t('assignee')}
               </div>
               <div>
                 {canEditAll ? (
@@ -181,7 +184,7 @@ export function TaskModal({
                     onChange={(e) => setAssignedTo(e.target.value)}
                     className="w-full rounded-md border border-white/10 bg-[#1C1C1C] px-2.5 py-1.5 text-xs text-[#F5F0E8] outline-none focus:border-[#C9A84C]/60"
                   >
-                    <option value="">Sin asignar</option>
+                    <option value="">{t('unassigned')}</option>
                     {assignableUsers.map((u) => (
                       <option key={u.id} value={u.id}>
                         {u.full_name || u.email} ({u.role})
@@ -197,7 +200,7 @@ export function TaskModal({
 
               {/* Fecha */}
               <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-[#9A9080]">
-                <span>📅</span> Fecha límite
+                <span>📅</span> {t('dueDate')}
               </div>
               <div>
                 <input
@@ -214,19 +217,19 @@ export function TaskModal({
           {/* Descripción — el bloque grande */}
           <div className="px-6 pb-6">
             <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-[#9A9080]">
-              <span>📝</span> Descripción
+              <span>📝</span> {t('description')}
             </div>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Escribe una descripción detallada de la tarea: qué hay que hacer, contexto, pasos, links, etc."
+              placeholder={t('descriptionPlaceholder')}
               rows={14}
               className="w-full resize-y rounded-xl border border-white/10 bg-[#0A0A0A]/50 px-4 py-3 text-sm leading-relaxed text-[#F5F0E8] outline-none transition focus:border-[#C9A84C]/60 placeholder-[#9A9080]/60"
               style={{ fontFamily: '-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif' }}
             />
             {!isAdmin && (
               <p className="mt-2 text-[11px] text-[#9A9080]">
-                ℹ️ Puedes editar tu progreso/notas en la descripción y cambiar el estado. Los admins gestionan el resto.
+                {t('restrictedEdit')}
               </p>
             )}
           </div>
@@ -245,7 +248,7 @@ export function TaskModal({
               onClick={onDelete}
               className="rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-2 text-xs font-bold text-red-400 transition hover:bg-red-500/20"
             >
-              🗑 Eliminar
+              🗑 {tCommon('delete')}
             </button>
           ) : <div />}
           <div className="flex gap-2">
@@ -253,14 +256,14 @@ export function TaskModal({
               onClick={onClose}
               className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-xs font-bold text-[#9A9080] transition hover:text-[#F5F0E8]"
             >
-              Cancelar
+              {tCommon('cancel')}
             </button>
             <button
               onClick={handleSubmit}
               disabled={saving}
               className="rounded-lg bg-[#C9A84C] px-5 py-2 text-xs font-bold uppercase tracking-[0.06em] text-black transition hover:bg-[#E8C96A] disabled:opacity-50"
             >
-              {saving ? 'Guardando...' : (isNew ? 'Crear' : 'Guardar')}
+              {saving ? tCommon('saving') : (isNew ? tCommon('create') : tCommon('save'))}
             </button>
           </div>
         </div>

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useImperativeHandle, useState, forwardRef } from 'react'
+import { useTranslations } from 'next-intl'
 
 const CONFIG_KEY = 'reminder_config'
 
@@ -38,6 +39,7 @@ interface Props {
 }
 
 export const ReminderSettings = forwardRef<ReminderSettingsHandle, Props>(function ReminderSettings({ onDirtyChange }, ref) {
+  const t = useTranslations('settings')
   const [initial, setInitial] = useState<ReminderConfig>({ enabled: true, hour: 19, minute: 0 })
   const [config, setConfig] = useState<ReminderConfig>({ enabled: true, hour: 19, minute: 0 })
 
@@ -82,14 +84,14 @@ export const ReminderSettings = forwardRef<ReminderSettingsHandle, Props>(functi
   return (
     <div className="rounded-2xl border border-white/8 bg-[#131313] p-6">
       <h2 className="mb-4 text-sm font-bold uppercase tracking-[0.08em] text-[#C9A84C]">
-        🔔 Recordatorio de checklist
+        🔔 {t('reminderTitle')}
       </h2>
 
       <label className="flex cursor-pointer items-center justify-between rounded-lg border border-white/10 bg-[#1C1C1C] px-4 py-3">
         <div>
-          <p className="text-sm font-medium text-[#F5F0E8]">Recordatorio activo</p>
+          <p className="text-sm font-medium text-[#F5F0E8]">{t('reminderActive')}</p>
           <p className="text-[10px] text-[#9A9080]">
-            Te avisa si quedan tareas pendientes en tu checklist diario
+            {t('reminderDescription')}
           </p>
         </div>
         <input
@@ -102,7 +104,7 @@ export const ReminderSettings = forwardRef<ReminderSettingsHandle, Props>(functi
 
       <div className="mt-5">
         <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.12em] text-[#9A9080]">
-          Hora del recordatorio
+          {t('reminderTime')}
         </p>
 
         <div className={`flex items-center justify-center gap-3 rounded-2xl border border-white/10 bg-gradient-to-b from-[#1C1C1C] to-[#141414] px-6 py-6 transition ${config.enabled ? '' : 'opacity-40'}`}>
@@ -130,7 +132,7 @@ export const ReminderSettings = forwardRef<ReminderSettingsHandle, Props>(functi
         </div>
 
         <p className="mt-3 text-center text-[11px] text-[#9A9080]">
-          Se mostrará a partir de las <strong className="text-[#C9A84C]">{timeStr}</strong> si aún tienes tareas sin marcar.
+          {t('reminderTimeHint', { time: timeStr })}
         </p>
       </div>
     </div>

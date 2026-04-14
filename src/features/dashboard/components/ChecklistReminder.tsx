@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useTranslations } from 'next-intl'
 
 const CONFIG_KEY = 'reminder_config'
 
@@ -37,6 +38,7 @@ function getTodayKey() {
 }
 
 export function ChecklistReminder() {
+  const t = useTranslations('dashboard')
   const [config, setConfig] = useState<ReminderConfig>({ enabled: true, hour: 19, minute: 0 })
   const [visible, setVisible] = useState(false)
   const [pending, setPending] = useState(0)
@@ -96,7 +98,7 @@ export function ChecklistReminder() {
           <div className="mb-2 flex items-start justify-between gap-3">
             <div className="flex items-center gap-2">
               <span className="text-2xl">⏰</span>
-              <p className="text-sm font-bold text-[#F5F0E8]">Checklist pendiente</p>
+              <p className="text-sm font-bold text-[#F5F0E8]">{t('checklistReminder')}</p>
             </div>
             <button
               onClick={dismissToday}
@@ -107,20 +109,20 @@ export function ChecklistReminder() {
             </button>
           </div>
           <p className="text-xs text-[#9A9080]">
-            Te quedan <strong className="text-[#C9A84C]">{pending} tarea{pending !== 1 ? 's' : ''}</strong> por completar hoy. No rompas tu racha.
+            {t('tasksRemaining', { n: pending, plural: pending !== 1 ? 's' : '' })}
           </p>
           <div className="mt-3 flex gap-2">
             <button
               onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
               className="flex-1 rounded-lg bg-[#C9A84C] py-2 text-xs font-bold uppercase tracking-[0.06em] text-black hover:bg-[#E8C96A]"
             >
-              Ver checklist
+              {t('viewChecklist')}
             </button>
             <button
               onClick={dismissToday}
               className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-[#9A9080] hover:text-[#F5F0E8]"
             >
-              Más tarde
+              {t('later')}
             </button>
           </div>
         </div>

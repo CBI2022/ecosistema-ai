@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo, useTransition } from 'react'
+import { useTranslations } from 'next-intl'
 import { createTask, updateTask, deleteTask, setTaskStatus, restoreTask, deleteTaskForever } from '@/actions/tasks'
 import { TaskModal } from './TaskModal'
 import { CalendarView } from './CalendarView'
@@ -67,6 +68,7 @@ export function TasksDashboard({
   isAdmin,
   assignableUsers,
 }: TasksDashboardProps) {
+  const t = useTranslations('tasks')
   const [tasks, setTasks] = useState(initialTasks)
   const [trashedTasks, setTrashedTasks] = useState(initialTrash)
   const [view, setView] = useState<ViewMode>('kanban')
@@ -163,7 +165,7 @@ export function TasksDashboard({
   }
 
   async function handleDelete(taskId: string) {
-    if (!window.confirm('¿Enviar a la papelera? Podrás restaurarla desde la papelera.')) return
+    if (!window.confirm(t('confirmDelete'))) return
     removeLocalTask(taskId)
     setModalTask(null)
     startTransition(async () => { await deleteTask(taskId) })
@@ -178,7 +180,7 @@ export function TasksDashboard({
   }
 
   async function handleDeleteForever(taskId: string) {
-    if (!window.confirm('¿Eliminar DEFINITIVAMENTE? Esta acción no se puede deshacer.')) return
+    if (!window.confirm(t('confirmDeleteForever'))) return
     setTrashedTasks((prev) => prev.filter((t) => t.id !== taskId))
     startTransition(async () => { await deleteTaskForever(taskId) })
   }
@@ -193,13 +195,13 @@ export function TasksDashboard({
               onClick={() => setScope('mine')}
               className={`rounded-lg px-4 py-2 text-xs font-bold transition ${scope === 'mine' ? 'bg-[#C9A84C] text-black' : 'text-[#9A9080] hover:text-[#F5F0E8]'}`}
             >
-              👤 Mis tareas
+              👤 {t('myTasks')}
             </button>
             <button
               onClick={() => setScope('all')}
               className={`rounded-lg px-4 py-2 text-xs font-bold transition ${scope === 'all' ? 'bg-[#C9A84C] text-black' : 'text-[#9A9080] hover:text-[#F5F0E8]'}`}
             >
-              👥 Todo el equipo
+              👥 {t('allTeam')}
             </button>
           </div>
         ) : (
@@ -217,7 +219,7 @@ export function TasksDashboard({
                 onClick={() => setView(v)}
                 className={`rounded-lg px-3 py-1.5 text-xs font-bold transition ${view === v ? 'bg-[#C9A84C] text-black' : 'text-[#9A9080] hover:text-[#F5F0E8]'}`}
               >
-                {v === 'kanban' ? '📊 Kanban' : v === 'table' ? '📋 Tabla' : '🗓️ Calendario'}
+                {v === 'kanban' ? `📊 ${t('kanban')}` : v === 'table' ? `📋 ${t('table')}` : `🗓️ ${t('calendar')}`}
               </button>
             ))}
           </div>
@@ -227,7 +229,7 @@ export function TasksDashboard({
             onClick={() => setShowCompleted(true)}
             className="flex items-center gap-1.5 rounded-xl border border-[#2ECC9A]/25 bg-[#2ECC9A]/5 px-3 py-2 text-xs font-bold text-[#2ECC9A] transition hover:bg-[#2ECC9A]/10"
           >
-            ✅ Completadas
+            ✅ {t('completed')}
             {completedTasks.length > 0 && (
               <span className="rounded-full bg-[#2ECC9A]/15 px-1.5 py-0.5 text-[10px] font-bold">
                 {completedTasks.length}
@@ -241,7 +243,7 @@ export function TasksDashboard({
               onClick={() => setShowTrash(true)}
               className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-bold text-[#9A9080] transition hover:text-[#F5F0E8]"
             >
-              🗑 Papelera
+              🗑 {t('trash')}
               {trashedTasks.length > 0 && (
                 <span className="rounded-full bg-white/10 px-1.5 py-0.5 text-[10px] font-bold">
                   {trashedTasks.length}
@@ -256,7 +258,7 @@ export function TasksDashboard({
               onClick={() => setShowCreate(true)}
               className="rounded-xl bg-[#C9A84C] px-5 py-2 text-xs font-bold uppercase tracking-[0.06em] text-black transition hover:bg-[#E8C96A]"
             >
-              + Nueva tarea
+              + {t('newTask')}
             </button>
           )}
         </div>
@@ -265,11 +267,11 @@ export function TasksDashboard({
       {/* Stats — 5 columnas GTD */}
       <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-5">
         {[
-          { label: 'Total', value: stats.total, color: '#F5F0E8', emoji: '📋' },
-          { label: 'Next Action', value: stats.next_action, color: STATUS_CONFIG.next_action.color, emoji: STATUS_CONFIG.next_action.emoji },
-          { label: 'Waiting', value: stats.waiting, color: STATUS_CONFIG.waiting.color, emoji: STATUS_CONFIG.waiting.emoji },
-          { label: 'Some Day', value: stats.someday, color: STATUS_CONFIG.someday.color, emoji: STATUS_CONFIG.someday.emoji },
-          { label: 'Complete', value: stats.complete, color: STATUS_CONFIG.complete.color, emoji: STATUS_CONFIG.complete.emoji },
+          { label: t('total'), value: stats.total, color: '#F5F0E8', emoji: '📋' },
+          { label: t('statusNextAction'), value: stats.next_action, color: STATUS_CONFIG.next_action.color, emoji: STATUS_CONFIG.next_action.emoji },
+          { label: t('statusWaiting'), value: stats.waiting, color: STATUS_CONFIG.waiting.color, emoji: STATUS_CONFIG.waiting.emoji },
+          { label: t('statusSomeday'), value: stats.someday, color: STATUS_CONFIG.someday.color, emoji: STATUS_CONFIG.someday.emoji },
+          { label: t('statusComplete'), value: stats.complete, color: STATUS_CONFIG.complete.color, emoji: STATUS_CONFIG.complete.emoji },
         ].map((s) => (
           <div key={s.label} className="rounded-xl border border-white/8 bg-[#131313] p-3" style={{ borderTop: `2px solid ${s.color}` }}>
             <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-[#9A9080]">{s.emoji} {s.label}</p>
@@ -282,7 +284,7 @@ export function TasksDashboard({
       <div className="flex flex-wrap gap-2 rounded-2xl border border-white/8 bg-[#131313] p-3">
         <input
           type="text"
-          placeholder="🔍 Buscar..."
+          placeholder={t('searchPlaceholder')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="min-w-[200px] flex-1 rounded-lg border border-white/10 bg-[#1C1C1C] px-3 py-2 text-sm text-[#F5F0E8] outline-none focus:border-[#C9A84C]/60 placeholder-[#9A9080]"
@@ -292,7 +294,7 @@ export function TasksDashboard({
           onChange={(e) => setFilterCategory(e.target.value)}
           className="rounded-lg border border-white/10 bg-[#1C1C1C] px-3 py-2 text-sm text-[#F5F0E8] outline-none focus:border-[#C9A84C]/60"
         >
-          <option value="all">Todas categorías</option>
+          <option value="all">{t('allCategories')}</option>
           {CATEGORIES.map((c) => <option key={c.id} value={c.id}>{c.emoji} {c.label}</option>)}
         </select>
         <select
@@ -300,7 +302,7 @@ export function TasksDashboard({
           onChange={(e) => setFilterPriority(e.target.value)}
           className="rounded-lg border border-white/10 bg-[#1C1C1C] px-3 py-2 text-sm text-[#F5F0E8] outline-none focus:border-[#C9A84C]/60"
         >
-          <option value="all">Cualquier prioridad</option>
+          <option value="all">{t('anyPriority')}</option>
           {(Object.keys(PRIORITY_CONFIG) as TaskPriority[]).map((p) => (
             <option key={p} value={p}>{PRIORITY_CONFIG[p].label}</option>
           ))}
@@ -311,7 +313,7 @@ export function TasksDashboard({
             onChange={(e) => setFilterAssignee(e.target.value)}
             className="rounded-lg border border-white/10 bg-[#1C1C1C] px-3 py-2 text-sm text-[#F5F0E8] outline-none focus:border-[#C9A84C]/60"
           >
-            <option value="all">Cualquier asignado</option>
+            <option value="all">{t('anyAssignee')}</option>
             {assignableUsers.map((u) => (
               <option key={u.id} value={u.id}>
                 {u.full_name || u.email} ({u.role})
@@ -323,13 +325,13 @@ export function TasksDashboard({
           value={sortBy}
           onChange={(e) => setSortBy(e.target.value as SortBy)}
           className="rounded-lg border border-[#C9A84C]/30 bg-[#C9A84C]/5 px-3 py-2 text-sm font-bold text-[#C9A84C] outline-none focus:border-[#C9A84C]/60"
-          title="Ordenar"
+          title={t('sortBy')}
         >
-          <option value="priority">⬇ Prioridad</option>
-          <option value="due_date">📅 Fecha límite</option>
-          <option value="created">🕒 Más recientes</option>
-          <option value="title">🔤 Título A→Z</option>
-          <option value="status">📍 Estado</option>
+          <option value="priority">{t('sortPriority')}</option>
+          <option value="due_date">{t('sortDueDate')}</option>
+          <option value="created">{t('sortRecent')}</option>
+          <option value="title">{t('sortTitle')}</option>
+          <option value="status">{t('sortStatus')}</option>
         </select>
       </div>
 
@@ -337,7 +339,7 @@ export function TasksDashboard({
       {filtered.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-white/10 bg-[#131313] p-12 text-center">
           <div className="mb-3 text-4xl opacity-30">🎉</div>
-          <p className="text-sm font-semibold text-[#9A9080]">No hay tareas con estos filtros</p>
+          <p className="text-sm font-semibold text-[#9A9080]">{t('noTasksFiltered')}</p>
         </div>
       ) : view === 'kanban' ? (
         <KanbanView
@@ -476,6 +478,7 @@ function KanbanCard({
   onDragStart: (e: React.DragEvent) => void
   onClick: () => void
 }) {
+  const t = useTranslations('tasks')
   const cat = CATEGORIES.find((c) => c.id === task.category) || CATEGORIES[CATEGORIES.length - 1]
   const pri = PRIORITY_CONFIG[task.priority]
   const assignee = task.assignee
@@ -510,7 +513,7 @@ function KanbanCard({
             </span>
           </div>
         ) : (
-          <span className="text-[10px] text-[#9A9080]/50">Sin asignar</span>
+          <span className="text-[10px] text-[#9A9080]/50">{t('unassigned')}</span>
         )}
         {task.due_date && (
           <span className="text-[10px] text-[#9A9080]">
@@ -535,13 +538,14 @@ function TableView({
   onStatusChange: (id: string, status: TaskStatus) => void
   canMove: (t: TaskWithAssignee) => boolean
 }) {
+  const tT = useTranslations('tasks')
   return (
     <div className="overflow-hidden rounded-2xl border border-white/8 bg-[#131313]">
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="border-b border-white/8 bg-[#1C1C1C]">
             <tr>
-              {['Estado', 'Prio.', 'Cat.', 'Título', 'Asignado', 'Fecha', 'Acción'].map((label) => (
+              {[tT('status'), tT('priority'), tT('category'), 'Título', tT('assignee'), tT('dueDate'), 'Acción'].map((label) => (
                 <th key={label} className="px-4 py-3 text-left text-[9px] font-bold uppercase tracking-[0.12em] text-[#9A9080]">
                   {label}
                 </th>
@@ -600,7 +604,7 @@ function TableView({
                         </span>
                       </div>
                     ) : (
-                      <span className="text-xs text-[#9A9080]/50">Sin asignar</span>
+                      <span className="text-xs text-[#9A9080]/50">{tT('unassigned')}</span>
                     )}
                   </td>
                   <td className="px-4 py-3 text-xs text-[#9A9080]">

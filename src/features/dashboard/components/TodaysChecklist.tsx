@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 
 interface UserGoalsLite {
   calls_per_day?: number | null
@@ -13,20 +14,20 @@ interface TodaysChecklistProps {
   goals?: UserGoalsLite | null
 }
 
-function buildTasks(goals?: UserGoalsLite | null) {
+function buildTasks(t: ReturnType<typeof useTranslations<'dashboard'>>, goals?: UserGoalsLite | null) {
   const calls = goals?.calls_per_day ?? 20
   const followups = goals?.followups_per_day ?? 15
   const dailyAppts = Math.max(1, Math.ceil((goals?.appointments_per_week ?? 5) / 5))
 
   return [
-    { id: 'powerstart', emoji: '⚡', label: 'Power Hour — empieza antes de las 9AM' },
-    { id: 'calls', emoji: '📞', label: `${calls} llamadas de prospección` },
-    { id: 'followup', emoji: '🔄', label: `${followups} follow-ups` },
-    { id: 'leads', emoji: '⚡', label: 'Responde nuevos leads en menos de 5 min' },
-    { id: 'prosplist', emoji: '🏠', label: 'Prospecta 1 captación nueva' },
-    { id: 'appt', emoji: '📅', label: `Agenda ${dailyAppts} cita${dailyAppts > 1 ? 's' : ''} hoy` },
-    { id: 'pipeline', emoji: '💾', label: 'Actualiza tu pipeline' },
-    { id: 'prep', emoji: '🗒️', label: `Prepara la lista de llamadas de mañana (${calls} nombres)` },
+    { id: 'powerstart', emoji: '⚡', label: t('enterBefore9') },
+    { id: 'calls', emoji: '📞', label: t('prospectCalls', { n: calls }) },
+    { id: 'followup', emoji: '🔄', label: t('followUps', { n: followups }) },
+    { id: 'leads', emoji: '⚡', label: t('respondLeads') },
+    { id: 'prosplist', emoji: '🏠', label: t('prospectListing') },
+    { id: 'appt', emoji: '📅', label: t('bookAppointments', { n: dailyAppts, plural: dailyAppts > 1 ? 's' : '' }) },
+    { id: 'pipeline', emoji: '💾', label: t('updatePipeline') },
+    { id: 'prep', emoji: '🗒️', label: t('prepareCallList', { n: calls }) },
   ]
 }
 
@@ -35,7 +36,8 @@ function getTodayKey() {
 }
 
 export function TodaysChecklist({ goals }: TodaysChecklistProps = {}) {
-  const TASKS = buildTasks(goals)
+  const t = useTranslations('dashboard')
+  const TASKS = buildTasks(t, goals)
   const [checked, setChecked] = useState<Set<string>>(new Set())
 
   useEffect(() => {
@@ -72,7 +74,7 @@ export function TodaysChecklist({ goals }: TodaysChecklistProps = {}) {
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-[#C9A84C]">
-            ✅ Today&apos;s Checklist
+            ✅ {t('todaysChecklist')}
           </p>
           <span className="rounded-full bg-[#C9A84C] px-2 py-0.5 text-[10px] font-bold text-black">
             {done}/{total}
@@ -82,7 +84,7 @@ export function TodaysChecklist({ goals }: TodaysChecklistProps = {}) {
           href="/kpi"
           className="text-[11px] font-semibold text-[#9A9080] transition hover:text-[#C9A84C]"
         >
-          Full Plan →
+          {t('fullPlan')} →
         </Link>
       </div>
 
@@ -125,7 +127,7 @@ export function TodaysChecklist({ goals }: TodaysChecklistProps = {}) {
               <span
                 className={`text-[10px] font-bold ${isDone ? 'text-[#2ECC9A]' : 'text-[#C9A84C]'}`}
               >
-                {isDone ? 'DONE' : 'TODO'}
+                {isDone ? t('done') : t('todo')}
               </span>
             </button>
           )

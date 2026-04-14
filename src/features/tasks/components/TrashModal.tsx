@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import { CATEGORIES, PRIORITY_CONFIG } from './TasksDashboard'
 import type { ProjectTask } from '@/types/database'
 
@@ -19,6 +20,8 @@ interface TrashModalProps {
 }
 
 export function TrashModal({ tasks, onClose, onRestore, onDeleteForever }: TrashModalProps) {
+  const t = useTranslations('tasks')
+  const tCommon = useTranslations('common')
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 backdrop-blur-sm" onClick={onClose}>
       <div
@@ -28,12 +31,12 @@ export function TrashModal({ tasks, onClose, onRestore, onDeleteForever }: Trash
         {/* Header */}
         <div className="flex items-center justify-between border-b border-white/6 px-6 py-4">
           <div>
-            <p className="text-base font-bold text-[#F5F0E8]">🗑 Papelera</p>
+            <p className="text-base font-bold text-[#F5F0E8]">🗑 {t('trash')}</p>
             <p className="mt-0.5 text-[11px] text-[#9A9080]">
-              Tareas eliminadas — puedes restaurarlas o borrarlas definitivamente
+              {t('trashFooterNote')}
             </p>
           </div>
-          <button onClick={onClose} className="text-xl leading-none text-[#9A9080] hover:text-[#F5F0E8]" aria-label="Cerrar">
+          <button onClick={onClose} className="text-xl leading-none text-[#9A9080] hover:text-[#F5F0E8]" aria-label={tCommon('close')}>
             ×
           </button>
         </div>
@@ -43,8 +46,8 @@ export function TrashModal({ tasks, onClose, onRestore, onDeleteForever }: Trash
           {tasks.length === 0 ? (
             <div className="py-16 text-center">
               <div className="mb-3 text-5xl opacity-20">🗑</div>
-              <p className="text-sm font-semibold text-[#9A9080]">Papelera vacía</p>
-              <p className="mt-1 text-xs text-[#9A9080]/60">Cuando elimines tareas aparecerán aquí</p>
+              <p className="text-sm font-semibold text-[#9A9080]">{t('trashEmpty')}</p>
+              <p className="mt-1 text-xs text-[#9A9080]/60">{t('trashEmptyHint')}</p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -72,7 +75,7 @@ export function TrashModal({ tasks, onClose, onRestore, onDeleteForever }: Trash
                         {task.title}
                       </p>
                       <p className="mt-0.5 text-[10px] text-[#9A9080]">
-                        Eliminada el{' '}
+                        {t('deletedOn')}{' '}
                         {task.deleted_at &&
                           new Date(task.deleted_at).toLocaleDateString('es-ES', {
                             day: 'numeric',
@@ -88,13 +91,13 @@ export function TrashModal({ tasks, onClose, onRestore, onDeleteForever }: Trash
                         onClick={() => onRestore(task.id)}
                         className="rounded-lg bg-[#2ECC9A]/15 px-3 py-1.5 text-[11px] font-bold text-[#2ECC9A] transition hover:bg-[#2ECC9A]/25"
                       >
-                        ↩ Restaurar
+                        ↩ {t('restore')}
                       </button>
                       <button
                         onClick={() => onDeleteForever(task.id)}
                         className="rounded-lg bg-red-500/10 px-3 py-1.5 text-[11px] font-bold text-red-400 transition hover:bg-red-500/20"
                       >
-                        🗑 Borrar
+                        🗑 {t('forceDelete')}
                       </button>
                     </div>
                   </div>
@@ -107,7 +110,7 @@ export function TrashModal({ tasks, onClose, onRestore, onDeleteForever }: Trash
         {/* Footer */}
         <div className="border-t border-white/6 bg-[#0A0A0A]/50 px-6 py-3">
           <p className="text-[11px] text-[#9A9080]">
-            ⚠️ "Borrar" elimina la tarea de forma definitiva. "Restaurar" la vuelve a la lista activa.
+            {t('trashFooterNote')}
           </p>
         </div>
       </div>

@@ -1,10 +1,12 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { updatePassword } from '@/actions/auth'
 import { LoadingOverlay } from './LoadingOverlay'
 
 export function UpdatePasswordForm() {
+  const t = useTranslations('auth')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -20,14 +22,14 @@ export function UpdatePasswordForm() {
 
   return (
     <>
-      {loading && <LoadingOverlay title="Actualizando contraseña..." subtitle="Guardando cambios seguros" />}
+      {loading && <LoadingOverlay title={t('updatingPassword')} subtitle={t('savingSecureChanges')} />}
       <form action={handleSubmit} className="space-y-4">
         <div className="space-y-1.5">
           <label
             htmlFor="password"
             className="block text-xs font-medium uppercase tracking-widest text-[#F5F0E8]/50"
           >
-            Nueva contraseña
+            {t('newPassword')}
           </label>
           <input
             id="password"
@@ -38,7 +40,7 @@ export function UpdatePasswordForm() {
             autoComplete="new-password"
             disabled={loading}
             className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm text-[#F5F0E8] placeholder-[#F5F0E8]/20 outline-none transition focus:border-[#C9A84C]/60 disabled:opacity-50"
-            placeholder="Mínimo 6 caracteres"
+            placeholder={t('passwordMin6')}
           />
         </div>
 
@@ -56,10 +58,10 @@ export function UpdatePasswordForm() {
           {loading ? (
             <>
               <span className="h-4 w-4 animate-spin rounded-full border-2 border-black/30 border-t-black" />
-              Actualizando...
+              {t('updatingPassword')}
             </>
           ) : (
-            'Actualizar contraseña'
+            t('updatePassword')
           )}
         </button>
       </form>

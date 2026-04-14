@@ -1,19 +1,21 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { signup } from '@/actions/auth'
 import { LoadingOverlay } from './LoadingOverlay'
 import type { UserRole } from '@/types/database'
 
-const ROLE_OPTIONS: { value: UserRole; label: string }[] = [
-  { value: 'agent', label: 'Agente Inmobiliario' },
-  { value: 'secretary', label: 'Secretaria' },
-  { value: 'photographer', label: 'Fotógrafo' },
-]
-
 export function SignupForm() {
+  const t = useTranslations('auth')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+
+  const ROLE_OPTIONS: { value: UserRole; label: string }[] = [
+    { value: 'agent', label: t('roleAgent') },
+    { value: 'secretary', label: t('roleSecretary') },
+    { value: 'photographer', label: t('rolePhotographer') },
+  ]
 
   async function handleSubmit(formData: FormData) {
     setLoading(true)
@@ -27,7 +29,7 @@ export function SignupForm() {
 
   return (
     <>
-      {loading && <LoadingOverlay title="Creando cuenta..." subtitle="Enviando solicitud" />}
+      {loading && <LoadingOverlay title={t('requestingAccess')} subtitle={t('signupPendingReview')} />}
       <div className="space-y-5">
       <form action={handleSubmit} className="space-y-4">
         <div className="space-y-1.5">
@@ -35,7 +37,7 @@ export function SignupForm() {
             htmlFor="full_name"
             className="block text-xs font-medium uppercase tracking-widest text-[#F5F0E8]/50"
           >
-            Nombre completo
+            {t('fullName')}
           </label>
           <input
             id="full_name"
@@ -53,7 +55,7 @@ export function SignupForm() {
             htmlFor="email"
             className="block text-xs font-medium uppercase tracking-widest text-[#F5F0E8]/50"
           >
-            Email
+            {t('email')}
           </label>
           <input
             id="email"
@@ -62,7 +64,7 @@ export function SignupForm() {
             required
             autoComplete="email"
             className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm text-[#F5F0E8] placeholder-[#F5F0E8]/20 outline-none transition focus:border-[#C9A84C]/60"
-            placeholder="tu@email.com"
+            placeholder={t('emailPlaceholder')}
           />
         </div>
 
@@ -71,7 +73,7 @@ export function SignupForm() {
             htmlFor="password"
             className="block text-xs font-medium uppercase tracking-widest text-[#F5F0E8]/50"
           >
-            Contraseña
+            {t('password')}
           </label>
           <input
             id="password"
@@ -81,7 +83,7 @@ export function SignupForm() {
             minLength={6}
             autoComplete="new-password"
             className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm text-[#F5F0E8] placeholder-[#F5F0E8]/20 outline-none transition focus:border-[#C9A84C]/60"
-            placeholder="Mínimo 6 caracteres"
+            placeholder={t('passwordMin6')}
           />
         </div>
 
@@ -90,7 +92,7 @@ export function SignupForm() {
             htmlFor="role"
             className="block text-xs font-medium uppercase tracking-widest text-[#F5F0E8]/50"
           >
-            Tu rol en CBI
+            {t('role')}
           </label>
           <select
             id="role"
@@ -121,15 +123,15 @@ export function SignupForm() {
           {loading ? (
             <>
               <span className="h-4 w-4 animate-spin rounded-full border-2 border-black/30 border-t-black" />
-              Enviando...
+              {t('sending')}
             </>
           ) : (
-            'Solicitar acceso'
+            t('requestAccess')
           )}
         </button>
 
         <p className="text-center text-xs text-[#F5F0E8]/30">
-          Tu solicitud será revisada por un administrador de CBI
+          {t('signupPendingReview')}
         </p>
       </form>
     </div>

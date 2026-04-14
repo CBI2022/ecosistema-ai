@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { useTranslations } from 'next-intl'
 import { CATEGORIES, PRIORITY_CONFIG } from './TasksDashboard'
 import { setTaskStatus } from '@/actions/tasks'
 import type { ProjectTask } from '@/types/database'
@@ -22,6 +23,8 @@ interface CompletedModalProps {
 }
 
 export function CompletedModal({ tasks, canEdit, onClose, onReopen, onOpenTask }: CompletedModalProps) {
+  const t = useTranslations('tasks')
+  const tCommon = useTranslations('common')
   const [search, setSearch] = useState('')
   const [, startTransition] = useTransition()
 
@@ -31,7 +34,7 @@ export function CompletedModal({ tasks, canEdit, onClose, onReopen, onOpenTask }
 
   function handleReopen(e: React.MouseEvent, taskId: string) {
     e.stopPropagation()
-    if (!window.confirm('¿Reabrir esta tarea? Volverá a Next Action.')) return
+    if (!window.confirm(t('confirmReopen'))) return
     onReopen(taskId)
     startTransition(async () => { await setTaskStatus(taskId, 'next_action') })
   }
@@ -45,12 +48,12 @@ export function CompletedModal({ tasks, canEdit, onClose, onReopen, onOpenTask }
         {/* Header */}
         <div className="flex items-center justify-between border-b border-white/6 px-6 py-4">
           <div>
-            <p className="text-base font-bold text-[#F5F0E8]">✅ Tareas completadas</p>
+            <p className="text-base font-bold text-[#F5F0E8]">✅ {t('completedTasks')}</p>
             <p className="mt-0.5 text-[11px] text-[#9A9080]">
-              {tasks.length} tarea{tasks.length !== 1 ? 's' : ''} completada{tasks.length !== 1 ? 's' : ''} — puedes reabrirlas si fue un error
+              {t('completedCount', { n: tasks.length, plural: tasks.length !== 1 ? 's' : '' })}
             </p>
           </div>
-          <button onClick={onClose} className="text-xl leading-none text-[#9A9080] hover:text-[#F5F0E8]" aria-label="Cerrar">
+          <button onClick={onClose} className="text-xl leading-none text-[#9A9080] hover:text-[#F5F0E8]" aria-label={tCommon('close')}>
             ×
           </button>
         </div>
@@ -60,7 +63,7 @@ export function CompletedModal({ tasks, canEdit, onClose, onReopen, onOpenTask }
           <div className="border-b border-white/6 px-5 py-3">
             <input
               type="text"
-              placeholder="🔍 Buscar en completadas..."
+              placeholder={t('searchCompleted')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full rounded-lg border border-white/10 bg-[#1C1C1C] px-3 py-2 text-sm text-[#F5F0E8] outline-none focus:border-[#2ECC9A]/40 placeholder-[#9A9080]"
@@ -73,7 +76,7 @@ export function CompletedModal({ tasks, canEdit, onClose, onReopen, onOpenTask }
           {tasks.length === 0 ? (
             <div className="py-16 text-center">
               <div className="mb-3 text-5xl opacity-20">✅</div>
-              <p className="text-sm font-semibold text-[#9A9080]">Aún no has completado ninguna tarea</p>
+              <p className="text-sm font-semibold text-[#9A9080]">{t('noCompletedTasks')}</p>
               <p className="mt-1 text-xs text-[#9A9080]/60">Las tareas marcadas como "Complete" aparecerán aquí</p>
             </div>
           ) : filtered.length === 0 ? (
@@ -115,7 +118,7 @@ export function CompletedModal({ tasks, canEdit, onClose, onReopen, onOpenTask }
                       <div className="mt-0.5 flex items-center gap-2 text-[10px] text-[#9A9080]">
                         {task.completed_at && (
                           <span>
-                            Completada el {new Date(task.completed_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}
+                            {t('completedOn')} {new Date(task.completed_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}
                           </span>
                         )}
                         {assignee && (
@@ -132,7 +135,7 @@ export function CompletedModal({ tasks, canEdit, onClose, onReopen, onOpenTask }
                         onClick={(e) => handleReopen(e, task.id)}
                         className="shrink-0 rounded-lg bg-[#C9A84C]/15 px-3 py-1.5 text-[11px] font-bold text-[#C9A84C] transition hover:bg-[#C9A84C]/25"
                       >
-                        ↩ Reabrir
+                        ↩ {t('reopen')}
                       </button>
                     )}
                   </div>

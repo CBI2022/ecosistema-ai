@@ -2,10 +2,12 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 import { login } from '@/actions/auth'
 import { LoadingOverlay } from './LoadingOverlay'
 
 export function LoginForm() {
+  const t = useTranslations('auth')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -22,7 +24,7 @@ export function LoginForm() {
 
   return (
     <>
-      {loading && <LoadingOverlay title="Accediendo..." subtitle="Verificando credenciales" />}
+      {loading && <LoadingOverlay title={t('loggingIn')} subtitle={t('verifyingCredentials')} />}
 
       <div className="space-y-5">
         <form action={handleSubmit} className="space-y-4">
@@ -31,7 +33,7 @@ export function LoginForm() {
               htmlFor="email"
               className="block text-xs font-medium uppercase tracking-widest text-[#F5F0E8]/50"
             >
-              Email
+              {t('email')}
             </label>
             <input
               id="email"
@@ -41,7 +43,7 @@ export function LoginForm() {
               autoComplete="email"
               disabled={loading}
               className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm text-[#F5F0E8] placeholder-[#F5F0E8]/20 outline-none transition focus:border-[#C9A84C]/60 focus:bg-white/8 disabled:opacity-50"
-              placeholder="tu@email.com"
+              placeholder={t('emailPlaceholder')}
             />
           </div>
 
@@ -51,13 +53,13 @@ export function LoginForm() {
                 htmlFor="password"
                 className="block text-xs font-medium uppercase tracking-widest text-[#F5F0E8]/50"
               >
-                Contraseña
+                {t('password')}
               </label>
               <Link
                 href="/forgot-password"
                 className="text-xs text-[#C9A84C]/70 transition hover:text-[#C9A84C]"
               >
-                ¿Olvidaste tu contraseña?
+                {t('forgotPassword')}
               </Link>
             </div>
             <input
@@ -68,7 +70,7 @@ export function LoginForm() {
               autoComplete="current-password"
               disabled={loading}
               className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm text-[#F5F0E8] placeholder-[#F5F0E8]/20 outline-none transition focus:border-[#C9A84C]/60 focus:bg-white/8 disabled:opacity-50"
-              placeholder="••••••••"
+              placeholder={t('passwordPlaceholder')}
             />
           </div>
 
@@ -86,10 +88,10 @@ export function LoginForm() {
             {loading ? (
               <>
                 <span className="h-4 w-4 animate-spin rounded-full border-2 border-black/30 border-t-black" />
-                Entrando...
+                {t('loggingIn')}
               </>
             ) : (
-              'Iniciar sesión'
+              t('login')
             )}
           </button>
         </form>

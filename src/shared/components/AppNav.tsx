@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
+import { useTranslations } from 'next-intl'
 import type { UserRole } from '@/types/database'
 
 interface NavTab {
@@ -11,49 +12,50 @@ interface NavTab {
   roles?: UserRole[]
 }
 
-const AGENT_TABS: NavTab[] = [
-  { href: '/dashboard', label: 'Dashboard' },
-  { href: '/kpi', label: 'KPI' },
-  { href: '/properties', label: 'Properties' },
-  { href: '/valuation', label: 'Valuation' },
-  { href: '/contracts', label: 'Contracts' },
-  { href: '/invoice', label: 'Invoice' },
-  { href: '/training', label: 'Training' },
-  { href: '/competitors', label: 'Competitors' },
-  { href: '/tasks', label: 'Tasks' },
-]
-
-const ADMIN_EXTRA: NavTab[] = [
-  { href: '/admin', label: 'Team', roles: ['admin', 'secretary'] },
-  { href: '/social', label: 'Social', roles: ['admin'] },
-]
-
-const SECRETARY_TABS: NavTab[] = [
-  { href: '/dashboard', label: 'Dashboard' },
-  { href: '/admin', label: 'Team' },
-  { href: '/kpi', label: 'KPI' },
-  { href: '/competitors', label: 'Competitors' },
-  { href: '/training', label: 'Training' },
-  { href: '/contracts', label: 'Contracts' },
-  { href: '/tasks', label: 'Tasks' },
-]
-
-const PHOTOGRAPHER_TABS: NavTab[] = [
-  { href: '/photographer', label: 'My Shoots' },
-  { href: '/photographer/upload', label: 'Upload Photos' },
-  { href: '/tasks', label: 'Tasks' },
-]
-
 interface AppNavProps {
   role: UserRole
   notifCount?: number
 }
 
 export function AppNav({ role, notifCount = 0 }: AppNavProps) {
+  const t = useTranslations('nav')
   const pathname = usePathname()
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [clickedHref, setClickedHref] = useState<string | null>(null)
+
+  const AGENT_TABS: NavTab[] = [
+    { href: '/dashboard', label: t('dashboard') },
+    { href: '/kpi', label: t('kpi') },
+    { href: '/properties', label: t('properties') },
+    { href: '/valuation', label: t('valuation') },
+    { href: '/contracts', label: t('contracts') },
+    { href: '/invoice', label: t('invoice') },
+    { href: '/training', label: t('training') },
+    { href: '/competitors', label: t('competitors') },
+    { href: '/tasks', label: t('tasks') },
+  ]
+
+  const ADMIN_EXTRA: NavTab[] = [
+    { href: '/admin', label: t('team'), roles: ['admin', 'secretary'] },
+    { href: '/social', label: t('social'), roles: ['admin'] },
+  ]
+
+  const SECRETARY_TABS: NavTab[] = [
+    { href: '/dashboard', label: t('dashboard') },
+    { href: '/admin', label: t('team') },
+    { href: '/kpi', label: t('kpi') },
+    { href: '/competitors', label: t('competitors') },
+    { href: '/training', label: t('training') },
+    { href: '/contracts', label: t('contracts') },
+    { href: '/tasks', label: t('tasks') },
+  ]
+
+  const PHOTOGRAPHER_TABS: NavTab[] = [
+    { href: '/photographer', label: t('myShoots') },
+    { href: '/photographer/upload', label: t('uploadPhotos') },
+    { href: '/tasks', label: t('tasks') },
+  ]
 
   const tabs =
     role === 'photographer'

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { saveSubscription, unsubscribe, sendTestPush } from '@/actions/push'
 
 function urlBase64ToUint8Array(base64String: string) {
@@ -13,6 +14,7 @@ function urlBase64ToUint8Array(base64String: string) {
 }
 
 export function PushSettings() {
+  const t = useTranslations('settings')
   const [supported, setSupported] = useState(false)
   const [permission, setPermission] = useState<NotificationPermission>('default')
   const [subscribed, setSubscribed] = useState(false)
@@ -46,7 +48,7 @@ export function PushSettings() {
       const perm = await Notification.requestPermission()
       setPermission(perm)
       if (perm !== 'granted') {
-        setToast('Permiso denegado. Revisa la configuración del navegador.')
+        setToast(t('permissionDenied'))
         setLoading(false)
         return
       }
@@ -113,29 +115,29 @@ export function PushSettings() {
     setLoading(false)
     if (res && 'error' in res && res.error) setToast('Error: ' + res.error)
     else if (res && 'skipped' in res) setToast('No hay suscripciones activas')
-    else setToast('✓ Test enviado — revisa tu dispositivo')
+    else setToast(t('testSent'))
   }
 
   return (
     <div className="rounded-2xl border border-white/8 bg-[#131313] p-6">
       <h2 className="mb-4 text-sm font-bold uppercase tracking-[0.08em] text-[#C9A84C]">
-        📱 Notificaciones push
+        📱 {t('pushNotifications')}
       </h2>
 
       {!supported ? (
         <div className="rounded-lg border border-white/10 bg-[#1C1C1C] p-4 text-sm text-[#9A9080]">
-          Este navegador no soporta notificaciones push.<br/>
-          <span className="text-xs text-[#9A9080]/60">Para iOS: instala la app desde Safari → Compartir → Añadir a pantalla de inicio.</span>
+          {t('pushNotSupported')}<br/>
+          <span className="text-xs text-[#9A9080]/60">{t('pushIOSNote')}</span>
         </div>
       ) : (
         <>
           <div className="mb-4 flex items-center justify-between rounded-lg border border-white/10 bg-[#1C1C1C] px-4 py-3">
             <div>
               <p className="text-sm font-medium text-[#F5F0E8]">
-                Estado: {subscribed ? <span className="text-[#2ECC9A]">Activas</span> : <span className="text-[#9A9080]">Inactivas</span>}
+                {t('pushStatus')}: {subscribed ? <span className="text-[#2ECC9A]">{t('pushActive')}</span> : <span className="text-[#9A9080]">{t('pushInactive')}</span>}
               </p>
               <p className="text-[10px] text-[#9A9080]">
-                Recibirás alertas de aprobaciones, publicaciones en Suprema, shoots, etc.
+                {t('pushDescription')}
               </p>
             </div>
             {!subscribed ? (
@@ -144,7 +146,7 @@ export function PushSettings() {
                 disabled={loading}
                 className="rounded-xl bg-[#C9A84C] px-5 py-2.5 text-xs font-bold uppercase tracking-[0.06em] text-black transition hover:bg-[#E8C96A] disabled:opacity-50"
               >
-                {loading ? 'Activando...' : 'Activar'}
+                {loading ? t('activating') : t('activate')}
               </button>
             ) : (
               <div className="flex gap-2">
@@ -153,14 +155,14 @@ export function PushSettings() {
                   disabled={loading}
                   className="rounded-xl border border-[#C9A84C]/30 bg-[#C9A84C]/10 px-4 py-2.5 text-xs font-bold text-[#C9A84C] transition hover:bg-[#C9A84C]/20 disabled:opacity-50"
                 >
-                  🔔 Probar
+                  {t('test')}
                 </button>
                 <button
                   onClick={handleDisable}
                   disabled={loading}
                   className="rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs font-bold text-[#9A9080] transition hover:text-[#F5F0E8] disabled:opacity-50"
                 >
-                  Desactivar
+                  {t('deactivate')}
                 </button>
               </div>
             )}
@@ -172,7 +174,7 @@ export function PushSettings() {
           )}
           {permission === 'denied' && (
             <p className="mt-2 text-[11px] text-red-400">
-              El navegador tiene los permisos bloqueados. Actívalos desde la configuración del sitio.
+              {t('permissionBlocked')}
             </p>
           )}
         </>

@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import {
   ComposedChart,
   Bar,
@@ -73,6 +74,8 @@ export function RevenueChart({
   sales = [],
   canEdit = true,
 }: RevenueChartProps) {
+  const t = useTranslations('dashboard')
+  const tCommon = useTranslations('common')
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [address, setAddress] = useState('')
@@ -217,25 +220,25 @@ export function RevenueChart({
       <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#C9A84C]">
-            💰 Revenue Growth · This Year
+            💰 {t('revenueGrowth')}
           </p>
           <p className="mt-0.5 text-[11px] text-[#9A9080]">
-            Comisiones mensuales vs objetivo anual
+            {t('revenueSubtitle')}
           </p>
         </div>
         <div className="flex items-center gap-4 text-[10px] text-[#9A9080]">
           <span className="flex items-center gap-1.5">
             <span className="inline-block h-0.5 w-3 bg-[#2ECC9A]" />
-            Mensual
+            {t('legendMonthly')}
           </span>
           <span className="flex items-center gap-1.5">
             <span className="inline-block h-0.5 w-3 bg-[#C9A84C]" />
-            Acumulado
+            {t('legendCumulative')}
           </span>
           {annualGoal > 0 && (
             <span className="flex items-center gap-1.5">
               <span className="inline-block h-0.5 w-3 border-t-2 border-dashed border-[#E05555] bg-transparent" />
-              Objetivo
+              {t('legendGoal')}
             </span>
           )}
         </div>
@@ -249,7 +252,7 @@ export function RevenueChart({
           {editingGoal ? (
             <div className="mx-auto max-w-md">
               <p className="mb-3 text-xs font-bold uppercase tracking-[0.15em] text-[#C9A84C]">
-                ¿Cuál es tu objetivo de facturación este año?
+                {t('defineGoalQuestion')}
               </p>
               <div className="flex gap-2">
                 <div className="relative flex-1">
@@ -269,7 +272,7 @@ export function RevenueChart({
                   disabled={goalSaving || !goalDraft}
                   className="rounded-xl bg-[#C9A84C] px-5 text-sm font-bold uppercase text-black transition hover:bg-[#E8C96A] disabled:opacity-50"
                 >
-                  {goalSaving ? 'Guardando...' : 'Guardar'}
+                  {goalSaving ? tCommon('saving') : tCommon('save')}
                 </button>
                 <button
                   onClick={() => setEditingGoal(false)}
@@ -282,7 +285,7 @@ export function RevenueChart({
                 <p className="mt-2 text-xs text-red-400">{goalError}</p>
               )}
               <p className="mt-3 text-[11px] text-[#9A9080]">
-                Ej: 200000 → Sabrás cuánto necesitas facturar cada mes para llegar
+                {t('defineGoalHint')}
               </p>
             </div>
           ) : (
@@ -292,13 +295,13 @@ export function RevenueChart({
             >
               <span className="text-5xl">🎯</span>
               <p className="font-['Maharlika',serif] text-2xl font-bold text-[#C9A84C]">
-                Define tu objetivo anual
+                {t('defineGoalTitle')}
               </p>
               <p className="text-sm text-[#9A9080]">
-                Pon tu meta de facturación y verás tu progreso en el gráfico →
+                {t('defineGoalSubtitle')}
               </p>
               <span className="mt-2 rounded-xl bg-[#C9A84C] px-6 py-2.5 text-sm font-bold uppercase tracking-[0.08em] text-black transition group-hover:bg-[#E8C96A]">
-                👉 Definir objetivo
+                {t('defineGoalButton')}
               </span>
             </button>
           )}
@@ -308,10 +311,10 @@ export function RevenueChart({
         {/* Objetivo anual */}
         <div className="rounded-xl border border-[#C9A84C]/30 bg-gradient-to-br from-[#C9A84C]/10 to-[#0A0A0A] p-3.5">
           <div className="mb-1 flex items-center justify-between">
-            <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-[#C9A84C]">🎯 Objetivo anual</p>
+            <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-[#C9A84C]">🎯 {t('annualGoal')}</p>
             {!editingGoal && (
               <button onClick={() => { setGoalDraft(String(annualGoal || '')); setEditingGoal(true) }} className="rounded border border-[#C9A84C]/40 bg-[#C9A84C]/10 px-2 py-0.5 text-[10px] font-bold text-[#C9A84C] hover:bg-[#C9A84C]/20">
-                Editar
+                {tCommon('edit')}
               </button>
             )}
           </div>
@@ -354,21 +357,21 @@ export function RevenueChart({
 
         {/* Media mensual necesaria */}
         <div className="rounded-xl border border-white/8 bg-[#0A0A0A] p-3.5">
-          <p className="mb-1 text-[9px] font-bold uppercase tracking-[0.12em] text-[#9A9080]">📊 Media mensual</p>
+          <p className="mb-1 text-[9px] font-bold uppercase tracking-[0.12em] text-[#9A9080]">📊 {t('monthlyAvg')}</p>
           <p className="font-['Maharlika',serif] text-2xl font-bold text-[#F5F0E8]">
             {annualGoal > 0 ? fmtEur(monthlyGoalLine) : '—'}
           </p>
-          <p className="mt-0.5 text-[10px] text-[#9A9080]">necesario de ticket/mes</p>
+          <p className="mt-0.5 text-[10px] text-[#9A9080]">{t('requiredPerTicket')}</p>
         </div>
 
         {/* Lo que necesitas de aquí a fin de año */}
         <div className="rounded-xl border border-white/8 bg-[#0A0A0A] p-3.5">
-          <p className="mb-1 text-[9px] font-bold uppercase tracking-[0.12em] text-[#9A9080]">⏳ Restante / mes</p>
+          <p className="mb-1 text-[9px] font-bold uppercase tracking-[0.12em] text-[#9A9080]">⏳ {t('remainingPerMonth')}</p>
           <p className="font-['Maharlika',serif] text-2xl font-bold text-[#F5F0E8]">
             {annualGoal > 0 && monthsLeft > 0 ? fmtEur(requiredPerMonth) : annualGoal > 0 ? '✓' : '—'}
           </p>
           <p className="mt-0.5 text-[10px] text-[#9A9080]">
-            {monthsLeft > 0 ? `en los próximos ${monthsLeft} meses` : '¡año cerrado!'}
+            {monthsLeft > 0 ? t('nextMonths', { n: monthsLeft }) : t('yearClosed')}
           </p>
         </div>
 
@@ -380,9 +383,9 @@ export function RevenueChart({
             background: annualGoal === 0 ? '#0A0A0A' : onPace ? 'rgba(46,204,154,0.05)' : 'rgba(239,68,68,0.05)',
           }}
         >
-          <p className="mb-1 text-[9px] font-bold uppercase tracking-[0.12em] text-[#9A9080]">📈 Tracking</p>
+          <p className="mb-1 text-[9px] font-bold uppercase tracking-[0.12em] text-[#9A9080]">📈 {t('tracking')}</p>
           <p className="font-['Maharlika',serif] text-2xl font-bold" style={{ color: onPace ? '#2ECC9A' : '#EF4444' }}>
-            {onPace ? '✓ En ritmo' : '⚠ Por debajo'}
+            {onPace ? t('onPace') : t('belowPace')}
           </p>
           <p className="mt-0.5 text-[10px] text-[#9A9080]">
             {pctAchieved.toFixed(0)}% · {onPace ? `+${fmtEur(deviation)}` : fmtEur(deviation)}
@@ -420,7 +423,7 @@ export function RevenueChart({
                   strokeWidth={2}
                   strokeOpacity={0.9}
                   label={{
-                    value: `🎯 Objetivo ${fmtEur(monthlyGoalLine)}/mes`,
+                    value: `🎯 ${t('legendGoal')} ${fmtEur(monthlyGoalLine)}/mes`,
                     position: 'insideTopRight',
                     fill: '#C9A84C',
                     fontSize: 10,
@@ -446,19 +449,19 @@ export function RevenueChart({
       {/* Log closing */}
       <div className="mt-4 border-t border-white/6 pt-4">
         <p className="mb-3 text-[9px] font-bold uppercase tracking-[0.15em] text-[#9A9080]">
-          + Log Closing
+          + {t('logClosing')}
         </p>
         <div className="flex flex-wrap items-end gap-2">
           <input
             type="text"
-            placeholder="Property address"
+            placeholder={t('propertyAddress')}
             value={address}
             onChange={(e) => setAddress(e.target.value)}
             className={`${inputClass} min-w-[160px] flex-[2]`}
           />
           <input
             type="number"
-            placeholder="Commission €"
+            placeholder={t('commission')}
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             className={`${inputClass} min-w-[110px] flex-1`}
@@ -474,7 +477,7 @@ export function RevenueChart({
             disabled={isPending}
             className="rounded-lg bg-[#C9A84C] px-4 py-2 text-sm font-bold text-black transition hover:bg-[#E8C96A] disabled:opacity-50"
           >
-            {isPending ? '...' : '+ Log'}
+            {isPending ? '...' : `+ ${t('log')}`}
           </button>
         </div>
         {error && <p className="mt-2 text-xs text-red-400">{error}</p>}

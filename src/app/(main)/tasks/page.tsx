@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
+import { getTranslations } from 'next-intl/server'
 import { TasksDashboard } from '@/features/tasks/components/TasksDashboard'
 import type { ProjectTask } from '@/types/database'
 
@@ -14,6 +15,7 @@ interface Profile {
 type TaskWithAssignee = ProjectTask & { assignee: Profile | null }
 
 export default async function TasksPage() {
+  const t = await getTranslations('tasks')
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
@@ -83,9 +85,9 @@ export default async function TasksPage() {
     <div>
       <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold text-[#F5F0E8]">Tasks</h1>
+          <h1 className="text-xl font-bold text-[#F5F0E8]">{t('title')}</h1>
           <p className="mt-1 text-sm text-[#9A9080]">
-            {isAdmin ? 'Panel GTD del proyecto — tú ves todo' : 'Tus tareas asignadas'}
+            {isAdmin ? t('adminSubtitle') : t('userSubtitle')}
           </p>
         </div>
       </div>

@@ -1,10 +1,12 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { resetPassword } from '@/actions/auth'
 import { LoadingOverlay } from './LoadingOverlay'
 
 export function ForgotPasswordForm() {
+  const t = useTranslations('auth')
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -26,7 +28,7 @@ export function ForgotPasswordForm() {
     return (
       <div className="rounded-lg border border-[#C9A84C]/20 bg-[#C9A84C]/10 px-5 py-4 text-center">
         <p className="text-sm text-[#C9A84C]">
-          Revisa tu email — te hemos enviado un enlace para restablecer tu contraseña.
+          {t('checkEmail')}
         </p>
       </div>
     )
@@ -34,14 +36,14 @@ export function ForgotPasswordForm() {
 
   return (
     <>
-      {loading && <LoadingOverlay title="Enviando enlace..." subtitle="Generando reset de contraseña" />}
+      {loading && <LoadingOverlay title={t('sending')} subtitle={t('generatingResetLink')} />}
       <form action={handleSubmit} className="space-y-4">
         <div className="space-y-1.5">
           <label
             htmlFor="email"
             className="block text-xs font-medium uppercase tracking-widest text-[#F5F0E8]/50"
           >
-            Email
+            {t('email')}
           </label>
           <input
             id="email"
@@ -51,7 +53,7 @@ export function ForgotPasswordForm() {
             autoComplete="email"
             disabled={loading}
             className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm text-[#F5F0E8] placeholder-[#F5F0E8]/20 outline-none transition focus:border-[#C9A84C]/60 disabled:opacity-50"
-            placeholder="tu@email.com"
+            placeholder={t('emailPlaceholder')}
           />
         </div>
 
@@ -69,10 +71,10 @@ export function ForgotPasswordForm() {
           {loading ? (
             <>
               <span className="h-4 w-4 animate-spin rounded-full border-2 border-black/30 border-t-black" />
-              Enviando...
+              {t('sending')}
             </>
           ) : (
-            'Enviar enlace'
+            t('sendLink')
           )}
         </button>
       </form>

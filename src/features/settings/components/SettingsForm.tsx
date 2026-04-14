@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import {
   updateEmail,
   updateUserPassword,
@@ -24,6 +25,7 @@ const sectionTitleClass =
   'text-sm font-bold uppercase tracking-[0.08em] text-[#C9A84C] mb-4'
 
 export function SettingsForm({ profile }: SettingsFormProps) {
+  const t = useTranslations('settings')
   // Datos personales
   const [fullName, setFullName] = useState(profile.full_name || '')
   const [phone, setPhone] = useState(profile.phone || '')
@@ -81,7 +83,7 @@ export function SettingsForm({ profile }: SettingsFormProps) {
     // Validations
     if (passwordDirty) {
       if (password !== passwordConfirm) {
-        setToast({ type: 'error', text: 'Las contraseñas no coinciden' })
+        setToast({ type: 'error', text: t('passwordsDontMatch') })
         return
       }
       if (password.length < 8) {
@@ -147,7 +149,7 @@ export function SettingsForm({ profile }: SettingsFormProps) {
       <div className="space-y-6">
         {/* Avatar */}
         <div className={sectionClass}>
-          <h2 className={sectionTitleClass}>Foto de perfil</h2>
+          <h2 className={sectionTitleClass}>{t('profilePhoto')}</h2>
           <div className="flex items-center gap-5">
             <button
               type="button"
@@ -174,17 +176,17 @@ export function SettingsForm({ profile }: SettingsFormProps) {
             <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
             <div>
               <p className="text-sm font-medium text-[#F5F0E8]">{profile.full_name || 'Sin nombre'}</p>
-              <p className="text-xs text-[#9A9080]">La foto se guarda al instante</p>
+              <p className="text-xs text-[#9A9080]">{t('photoAutoSaves')}</p>
             </div>
           </div>
         </div>
 
         {/* Datos personales */}
         <div className={sectionClass}>
-          <h2 className={sectionTitleClass}>Datos personales</h2>
+          <h2 className={sectionTitleClass}>{t('personalInfo')}</h2>
           <div className="space-y-4">
             <div>
-              <label className={labelClass}>Nombre completo</label>
+              <label className={labelClass}>{t('fullName')}</label>
               <input
                 type="text"
                 value={fullName}
@@ -194,7 +196,7 @@ export function SettingsForm({ profile }: SettingsFormProps) {
               />
             </div>
             <div>
-              <label className={labelClass}>Teléfono / WhatsApp</label>
+              <label className={labelClass}>{t('phone')}</label>
               <input
                 type="tel"
                 value={phone}
@@ -208,10 +210,10 @@ export function SettingsForm({ profile }: SettingsFormProps) {
 
         {/* Email */}
         <div className={sectionClass}>
-          <h2 className={sectionTitleClass}>Cambiar email</h2>
+          <h2 className={sectionTitleClass}>{t('changeEmail')}</h2>
           <div className="space-y-4">
             <div>
-              <label className={labelClass}>Email actual</label>
+              <label className={labelClass}>{t('currentEmail')}</label>
               <input
                 type="email"
                 value={initialEmail}
@@ -220,7 +222,7 @@ export function SettingsForm({ profile }: SettingsFormProps) {
               />
             </div>
             <div>
-              <label className={labelClass}>Nuevo email</label>
+              <label className={labelClass}>{t('newEmail')}</label>
               <input
                 type="email"
                 value={newEmail}
@@ -234,10 +236,10 @@ export function SettingsForm({ profile }: SettingsFormProps) {
 
         {/* Password */}
         <div className={sectionClass}>
-          <h2 className={sectionTitleClass}>Cambiar contraseña</h2>
+          <h2 className={sectionTitleClass}>{t('changePassword')}</h2>
           <div className="space-y-4">
             <div>
-              <label className={labelClass}>Nueva contraseña (mín. 8 caracteres)</label>
+              <label className={labelClass}>{t('newPassword')}</label>
               <input
                 type="password"
                 value={password}
@@ -247,7 +249,7 @@ export function SettingsForm({ profile }: SettingsFormProps) {
               />
             </div>
             <div>
-              <label className={labelClass}>Confirmar nueva contraseña</label>
+              <label className={labelClass}>{t('confirmNewPassword')}</label>
               <input
                 type="password"
                 value={passwordConfirm}
@@ -266,18 +268,18 @@ export function SettingsForm({ profile }: SettingsFormProps) {
 
         {/* Info rol */}
         <div className={sectionClass}>
-          <h2 className={sectionTitleClass}>Información de la cuenta</h2>
+          <h2 className={sectionTitleClass}>{t('accountInfo')}</h2>
           <div className="grid gap-3 sm:grid-cols-3">
             <div>
-              <p className="text-[10px] uppercase tracking-wider text-[#9A9080]">Rol</p>
+              <p className="text-[10px] uppercase tracking-wider text-[#9A9080]">{t('role')}</p>
               <p className="mt-1 text-sm font-medium capitalize text-[#F5F0E8]">{profile.role}</p>
             </div>
             <div>
-              <p className="text-[10px] uppercase tracking-wider text-[#9A9080]">Estado</p>
+              <p className="text-[10px] uppercase tracking-wider text-[#9A9080]">{t('status')}</p>
               <p className="mt-1 text-sm font-medium capitalize text-[#2ECC9A]">{profile.status}</p>
             </div>
             <div>
-              <p className="text-[10px] uppercase tracking-wider text-[#9A9080]">Miembro desde</p>
+              <p className="text-[10px] uppercase tracking-wider text-[#9A9080]">{t('memberSince')}</p>
               <p className="mt-1 text-sm font-medium text-[#F5F0E8]">
                 {new Date(profile.created_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}
               </p>
@@ -295,9 +297,9 @@ export function SettingsForm({ profile }: SettingsFormProps) {
                 {toast.text}
               </p>
             ) : anyDirty ? (
-              <p className="text-xs text-[#9A9080]">Tienes cambios sin guardar</p>
+              <p className="text-xs text-[#9A9080]">{t('unsavedChanges')}</p>
             ) : (
-              <p className="text-xs text-[#9A9080]/60">Sin cambios pendientes</p>
+              <p className="text-xs text-[#9A9080]/60">{t('noChanges')}</p>
             )}
           </div>
           <button
@@ -305,7 +307,7 @@ export function SettingsForm({ profile }: SettingsFormProps) {
             disabled={!anyDirty || saving}
             className="rounded-xl bg-[#C9A84C] px-6 py-3 text-sm font-bold uppercase tracking-[0.08em] text-black transition hover:bg-[#E8C96A] disabled:cursor-not-allowed disabled:opacity-40"
           >
-            {saving ? 'Guardando...' : '💾 Guardar cambios'}
+            {saving ? t('saving') : t('saveAll')}
           </button>
         </div>
       </div>

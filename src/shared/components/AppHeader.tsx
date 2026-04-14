@@ -2,6 +2,7 @@
 
 import { useRef, useState } from 'react'
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 import { signout } from '@/actions/auth'
 import { uploadAvatar } from '@/actions/profile'
 import { NotificationsBell } from '@/features/notifications/components/NotificationsBell'
@@ -21,6 +22,7 @@ const ROLE_LABELS: Record<string, string> = {
 }
 
 export function AppHeader({ profile, notifCount = 0 }: AppHeaderProps) {
+  const t = useTranslations('header')
   const [avatarUrl, setAvatarUrl] = useState(profile.avatar_url)
   const [uploading, setUploading] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
@@ -72,7 +74,7 @@ export function AppHeader({ profile, notifCount = 0 }: AppHeaderProps) {
         {/* Settings icon */}
         <Link
           href="/settings"
-          title="Configuración"
+          title={t('settings')}
           className="flex h-8 w-8 items-center justify-center rounded-full border border-white/8 bg-white/4 text-[#9A9080] transition hover:border-[#C9A84C]/40 hover:text-[#F5F0E8]"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -114,7 +116,7 @@ export function AppHeader({ profile, notifCount = 0 }: AppHeaderProps) {
             type="submit"
             className="rounded-lg border border-white/8 bg-white/4 px-3 py-1.5 text-[11px] font-medium text-[#9A9080] transition hover:border-white/15 hover:text-[#F5F0E8]"
           >
-            Salir
+            {t('signOut')}
           </button>
         </form>
       </div>
