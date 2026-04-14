@@ -20,6 +20,28 @@ async function getAuthContext() {
   return { user, admin, isAdmin: profile?.role === 'admin' }
 }
 
+async function notifyAssignment(
+  admin: ReturnType<typeof createAdminClient>,
+  creatorId: string,
+  assigneeId: string,
+  taskTitle: string,
+) {
+  if (!assigneeId || assigneeId === creatorId) return
+  const { data: creator } = await admin
+    .from('profiles')
+    .select('full_name, email')
+    .eq('id', creatorId)
+    .single()
+  const creatorName = creator?.full_name || creator?.email || 'Alguien'
+  await admin.from('notifications').insert({
+    type: 'task_assigned',
+    title: 'Nueva tarea asignada',
+    message: `${creatorName} te asignó: "${taskTitle}"`,
+    target_user_id: assigneeId,
+    is_read: false,
+  })
+}
+
 export async function createTask(formData: FormData) {
   const ctx = await getAuthContext()
   if ('error' in ctx) return { error: ctx.error }
@@ -28,19 +50,27 @@ export async function createTask(formData: FormData) {
   const title = (formData.get('title') as string)?.trim()
   if (!title) return { error: 'Título obligatorio' }
 
+  const assignedTo = (formData.get('assigned_to') as string) || null
+
   const { error } = await ctx.admin.from('project_tasks').insert({
     title,
     description: (formData.get('description') as string) || null,
     category: (formData.get('category') as string) || 'general',
     priority: (formData.get('priority') as TaskPriority) || 'medium',
     status: (formData.get('status') as TaskStatus) || 'next_action',
-    assigned_to: (formData.get('assigned_to') as string) || null,
+    assigned_to: assignedTo,
     due_date: (formData.get('due_date') as string) || null,
     created_by: ctx.user.id,
   })
 
   if (error) return { error: error.message }
+
+  if (assignedTo) {
+    await notifyAssignment(ctx.admin, ctx.user.id, assignedTo, title)
+  }
+
   revalidatePath('/tasks')
+  revalidatePath('/notifications')
   return { success: true }
 }
 
@@ -87,8 +117,32 @@ export async function updateTask(taskId: string, updates: {
   if (updates.status === 'complete') patch.completed_at = new Date().toISOString()
   if (updates.status && updates.status !== 'complete') patch.completed_at = null
 
+  // If assignment changed to another user, send a notification
+  let prevAssignee: string | null = null
+  let currentTitle = ''
+  if (updates.assigned_to !== undefined) {
+    const { data: prev } = await ctx.admin
+      .from('project_tasks')
+      .select('assigned_to, title')
+      .eq('id', taskId)
+      .single()
+    prevAssignee = prev?.assigned_to ?? null
+    currentTitle = prev?.title ?? ''
+  }
+
   const { error } = await ctx.admin.from('project_tasks').update(patch).eq('id', taskId)
   if (error) return { error: error.message }
+
+  if (
+    updates.assigned_to !== undefined &&
+    updates.assigned_to &&
+    updates.assigned_to !== prevAssignee
+  ) {
+    const title = (updates.title as string | undefined) ?? currentTitle
+    await notifyAssignment(ctx.admin, ctx.user.id, updates.assigned_to, title)
+    revalidatePath('/notifications')
+  }
+
   revalidatePath('/tasks')
   return { success: true }
 }

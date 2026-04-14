@@ -63,8 +63,9 @@ export function CalendarView({
     const map = new Map<string, TaskWithAssignee[]>()
     for (const t of tasks) {
       if (!t.due_date) continue
-      if (!map.has(t.due_date)) map.set(t.due_date, [])
-      map.get(t.due_date)!.push(t)
+      const day = t.due_date.slice(0, 10)
+      if (!map.has(day)) map.set(day, [])
+      map.get(day)!.push(t)
     }
     return map
   }, [tasks])

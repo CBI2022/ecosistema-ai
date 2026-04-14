@@ -45,7 +45,8 @@ export function TaskModal({
   const [priority, setPriority] = useState<TaskPriority>(task?.priority || 'medium')
   const [status, setStatus] = useState<TaskStatus>(task?.status || 'next_action')
   const [assignedTo, setAssignedTo] = useState(task?.assigned_to || '')
-  const [dueDate, setDueDate] = useState(task?.due_date || '')
+  // datetime-local expects "YYYY-MM-DDTHH:MM" — trim any zone/seconds
+  const [dueDate, setDueDate] = useState(task?.due_date ? task.due_date.slice(0, 16) : '')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -204,11 +205,11 @@ export function TaskModal({
               </div>
               <div>
                 <input
-                  type="date"
+                  type="datetime-local"
                   value={dueDate}
                   onChange={(e) => setDueDate(e.target.value)}
                   disabled={!canEditAll}
-                  className="w-full rounded-md border border-white/10 bg-[#1C1C1C] px-2.5 py-1.5 text-xs text-[#F5F0E8] outline-none focus:border-[#C9A84C]/60 disabled:opacity-60"
+                  className="w-full rounded-md border border-white/10 bg-[#1C1C1C] px-2.5 py-1.5 text-xs text-[#F5F0E8] outline-none focus:border-[#C9A84C]/60 disabled:opacity-60 [color-scheme:dark]"
                 />
               </div>
             </div>
