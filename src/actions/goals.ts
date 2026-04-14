@@ -22,12 +22,15 @@ export async function updateAnnualGoal(annualGoal: number) {
     .eq('user_id', user.id)
     .maybeSingle()
 
+  // annual_revenue_goal es una columna GENERATED (auto = monthly * 12)
+  // Solo seteamos monthly_income_goal y la anual se calcula sola
+  const monthlyGoal = Math.round(annualGoal / 12)
+
   if (existing) {
     const { error } = await admin
       .from('user_goals')
       .update({
-        annual_revenue_goal: annualGoal,
-        monthly_income_goal: Math.round(annualGoal / 12),
+        monthly_income_goal: monthlyGoal,
         updated_at: new Date().toISOString(),
       })
       .eq('user_id', user.id)
@@ -35,8 +38,7 @@ export async function updateAnnualGoal(annualGoal: number) {
   } else {
     const { error } = await admin.from('user_goals').insert({
       user_id: user.id,
-      annual_revenue_goal: annualGoal,
-      monthly_income_goal: Math.round(annualGoal / 12),
+      monthly_income_goal: monthlyGoal,
       closings_per_month: 0,
       listings_per_month: 0,
       appointments_per_week: 0,

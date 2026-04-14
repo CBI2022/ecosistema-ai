@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { changeInitialCredentials } from '@/actions/profile'
+import { LoadingOverlay } from './LoadingOverlay'
 
 interface FirstLoginModalProps {
   currentEmail: string
@@ -34,11 +35,15 @@ export function FirstLoginModal({ currentEmail }: FirstLoginModalProps) {
       return
     }
 
+    // Tras cambiar credenciales, el action hace signOut y hay que redirigir a /login
+    router.push('/login')
     router.refresh()
   }
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4">
+    <>
+      {loading && <LoadingOverlay title="Guardando credenciales..." subtitle="Actualizando email y contraseña" />}
+      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4">
       <div className="w-full max-w-md rounded-2xl border border-[#C9A84C]/30 bg-[#131313] p-8 shadow-2xl">
         <div className="mb-6 text-center">
           <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-[#C9A84C]/15">
@@ -111,12 +116,20 @@ export function FirstLoginModal({ currentEmail }: FirstLoginModalProps) {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-xl bg-[#C9A84C] py-3.5 text-sm font-bold uppercase tracking-[0.06em] text-black transition hover:bg-[#E8C96A] disabled:opacity-50"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#C9A84C] py-3.5 text-sm font-bold uppercase tracking-[0.06em] text-black transition hover:bg-[#E8C96A] disabled:opacity-50"
           >
-            {loading ? 'Guardando...' : 'Guardar y continuar'}
+            {loading ? (
+              <>
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-black/30 border-t-black" />
+                Guardando...
+              </>
+            ) : (
+              'Guardar y continuar'
+            )}
           </button>
         </form>
       </div>
     </div>
+    </>
   )
 }

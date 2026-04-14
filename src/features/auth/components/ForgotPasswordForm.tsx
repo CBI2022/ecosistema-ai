@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { resetPassword } from '@/actions/auth'
+import { LoadingOverlay } from './LoadingOverlay'
 
 export function ForgotPasswordForm() {
   const [error, setError] = useState<string | null>(null)
@@ -32,38 +33,49 @@ export function ForgotPasswordForm() {
   }
 
   return (
-    <form action={handleSubmit} className="space-y-4">
-      <div className="space-y-1.5">
-        <label
-          htmlFor="email"
-          className="block text-xs font-medium uppercase tracking-widest text-[#F5F0E8]/50"
+    <>
+      {loading && <LoadingOverlay title="Enviando enlace..." subtitle="Generando reset de contraseña" />}
+      <form action={handleSubmit} className="space-y-4">
+        <div className="space-y-1.5">
+          <label
+            htmlFor="email"
+            className="block text-xs font-medium uppercase tracking-widest text-[#F5F0E8]/50"
+          >
+            Email
+          </label>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            required
+            autoComplete="email"
+            disabled={loading}
+            className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm text-[#F5F0E8] placeholder-[#F5F0E8]/20 outline-none transition focus:border-[#C9A84C]/60 disabled:opacity-50"
+            placeholder="tu@email.com"
+          />
+        </div>
+
+        {error && (
+          <p className="rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+            {error}
+          </p>
+        )}
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#C9A84C] px-4 py-3 text-sm font-bold uppercase tracking-widest text-black transition hover:bg-[#E8C96A] disabled:opacity-50"
         >
-          Email
-        </label>
-        <input
-          id="email"
-          name="email"
-          type="email"
-          required
-          autoComplete="email"
-          className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm text-[#F5F0E8] placeholder-[#F5F0E8]/20 outline-none transition focus:border-[#C9A84C]/60"
-          placeholder="tu@email.com"
-        />
-      </div>
-
-      {error && (
-        <p className="rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400">
-          {error}
-        </p>
-      )}
-
-      <button
-        type="submit"
-        disabled={loading}
-        className="w-full rounded-lg bg-[#C9A84C] px-4 py-3 text-sm font-bold uppercase tracking-widest text-black transition hover:bg-[#E8C96A] disabled:opacity-50"
-      >
-        {loading ? 'Enviando...' : 'Enviar enlace'}
-      </button>
-    </form>
+          {loading ? (
+            <>
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-black/30 border-t-black" />
+              Enviando...
+            </>
+          ) : (
+            'Enviar enlace'
+          )}
+        </button>
+      </form>
+    </>
   )
 }

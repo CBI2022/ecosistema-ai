@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { signup } from '@/actions/auth'
+import { LoadingOverlay } from './LoadingOverlay'
 import type { UserRole } from '@/types/database'
 
 const ROLE_OPTIONS: { value: UserRole; label: string }[] = [
@@ -25,7 +26,9 @@ export function SignupForm() {
   }
 
   return (
-    <div className="space-y-5">
+    <>
+      {loading && <LoadingOverlay title="Creando cuenta..." subtitle="Enviando solicitud" />}
+      <div className="space-y-5">
       <form action={handleSubmit} className="space-y-4">
         <div className="space-y-1.5">
           <label
@@ -113,9 +116,16 @@ export function SignupForm() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-lg bg-[#C9A84C] px-4 py-3 text-sm font-bold uppercase tracking-widest text-black transition hover:bg-[#E8C96A] disabled:opacity-50"
+          className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#C9A84C] px-4 py-3 text-sm font-bold uppercase tracking-widest text-black transition hover:bg-[#E8C96A] disabled:opacity-50"
         >
-          {loading ? 'Enviando solicitud...' : 'Solicitar acceso'}
+          {loading ? (
+            <>
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-black/30 border-t-black" />
+              Enviando...
+            </>
+          ) : (
+            'Solicitar acceso'
+          )}
         </button>
 
         <p className="text-center text-xs text-[#F5F0E8]/30">
@@ -123,5 +133,6 @@ export function SignupForm() {
         </p>
       </form>
     </div>
+    </>
   )
 }
