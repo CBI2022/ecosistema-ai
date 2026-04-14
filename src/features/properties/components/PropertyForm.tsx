@@ -193,8 +193,7 @@ export function PropertyForm({ availablePhotos = [], storageBaseUrl = '' }: Prop
       </div>
 
       {/* ═══ TAB: Datos básicos ═══ */}
-      {activeTab === 'basics' && (
-        <section className={sectionClass} style={{ borderTop: '1px solid #C9A84C' }}>
+      <section hidden={activeTab !== 'basics'} className={sectionClass} style={{ borderTop: '1px solid #C9A84C' }}>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <div>
               <label className={labelClass}>Tipo de operación</label>
@@ -270,12 +269,10 @@ export function PropertyForm({ availablePhotos = [], storageBaseUrl = '' }: Prop
               </select>
             </div>
           </div>
-        </section>
-      )}
+      </section>
 
       {/* ═══ TAB: Estructura ═══ */}
-      {activeTab === 'structure' && (
-        <section className={sectionClass}>
+      <section hidden={activeTab !== 'structure'} className={sectionClass}>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
             <div>
               <label className={labelClass}>Habitaciones</label>
@@ -346,12 +343,10 @@ export function PropertyForm({ availablePhotos = [], storageBaseUrl = '' }: Prop
               <input name="garden_area_m2" type="number" className={inputClass} />
             </div>
           </div>
-        </section>
-      )}
+      </section>
 
       {/* ═══ TAB: Equipamiento ═══ */}
-      {activeTab === 'equipment' && (
-        <section className={sectionClass}>
+      <section hidden={activeTab !== 'equipment'} className={sectionClass}>
           <h3 className="mb-3 text-[10px] font-bold uppercase tracking-[0.18em] text-[#C9A84C]">Principales</h3>
           <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-4">
             <CheckField name="has_pool" label="🏊 Piscina" />
@@ -418,12 +413,10 @@ export function PropertyForm({ availablePhotos = [], storageBaseUrl = '' }: Prop
             <CheckField name="has_guest_apartment" label="🏡 Apt. invitados" />
             <CheckField name="has_summer_kitchen" label="🌞 Cocina verano" />
           </div>
-        </section>
-      )}
+      </section>
 
       {/* ═══ TAB: Precio ═══ */}
-      {activeTab === 'price' && (
-        <section className={sectionClass}>
+      <section hidden={activeTab !== 'price'} className={sectionClass}>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <div>
               <label className={labelClass}>Precio € *</label>
@@ -516,22 +509,18 @@ export function PropertyForm({ availablePhotos = [], storageBaseUrl = '' }: Prop
               </select>
             </div>
           </div>
-        </section>
-      )}
+      </section>
 
       {/* ═══ TAB: Propietario ═══ */}
-      {activeTab === 'owner' && (
-        <section className={sectionClass}>
-          <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.18em] text-[#C9A84C]">👤 Propietario</p>
-          <p className="mb-4 text-xs text-[#9A9080]">Busca un propietario existente o crea uno nuevo. Estos datos se reusan en futuras propiedades del mismo propietario.</p>
-          <OwnerPicker value={ownerId} onChange={(id) => setOwnerId(id)} />
-        </section>
-      )}
+      <section hidden={activeTab !== 'owner'} className={sectionClass}>
+        <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.18em] text-[#C9A84C]">👤 Propietario</p>
+        <p className="mb-4 text-xs text-[#9A9080]">Busca un propietario existente o crea uno nuevo. Estos datos se reusan en futuras propiedades del mismo propietario.</p>
+        <OwnerPicker value={ownerId} onChange={(id) => setOwnerId(id)} />
+      </section>
 
       {/* ═══ TAB: Dirección ═══ */}
-      {activeTab === 'address' && (
-        <section className={sectionClass}>
-          <div className="grid gap-4 sm:grid-cols-[2fr_1fr]">
+      <section hidden={activeTab !== 'address'} className={sectionClass}>
+        <div className="grid gap-4 sm:grid-cols-[2fr_1fr]">
             <div>
               <label className={labelClass}>Calle</label>
               <input name="street_name" className={inputClass} placeholder="Carrer Barro" />
@@ -555,15 +544,13 @@ export function PropertyForm({ availablePhotos = [], storageBaseUrl = '' }: Prop
               <input name="location" className={inputClass} placeholder="Paradiso, Altea" />
             </div>
           </div>
-          <p className="mt-3 text-[11px] text-[#9A9080]/70">
-            💡 Si Sooprema marca la dirección en rojo, prueba variantes (ej: &quot;Carrer Barro&quot; vs &quot;Calle La Basa&quot;). Población debe ser la oficial (Altea, Moraira...).
-          </p>
-        </section>
-      )}
+        <p className="mt-3 text-[11px] text-[#9A9080]/70">
+          💡 Si Sooprema marca la dirección en rojo, prueba variantes (ej: &quot;Carrer Barro&quot; vs &quot;Calle La Basa&quot;). Población debe ser la oficial (Altea, Moraira...).
+        </p>
+      </section>
 
       {/* ═══ TAB: Descripciones ═══ */}
-      {activeTab === 'descriptions' && (
-        <section className={sectionClass}>
+      <section hidden={activeTab !== 'descriptions'} className={sectionClass}>
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <label className={labelClass}>Título principal (web header)</label>
@@ -602,12 +589,10 @@ export function PropertyForm({ availablePhotos = [], storageBaseUrl = '' }: Prop
           <p className="mt-3 text-[11px] text-[#9A9080]/70">
             💡 Sooprema traduce automáticamente a 7 idiomas desde el inglés. Basta con tener EN bien escrito, pero ES/NL ayudan con el SEO en local.
           </p>
-        </section>
-      )}
+      </section>
 
       {/* ═══ TAB: Fotos ═══ */}
-      {activeTab === 'photos' && (
-        <section className={sectionClass}>
+      <section hidden={activeTab !== 'photos'} className={sectionClass}>
           <div className="mb-4 flex items-center justify-between">
             <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#C9A84C]">
               📸 Fotos de Jelle ({availablePhotos.length} disponibles) · {selectedPhotoIds.size} seleccionadas
@@ -651,15 +636,13 @@ export function PropertyForm({ availablePhotos = [], storageBaseUrl = '' }: Prop
               })}
             </div>
           )}
-          <p className="mt-3 text-[11px] text-[#9A9080]/70">
-            💡 Las fotos de drone se ordenan automáticamente al final (Idealista no las acepta como principal).
-          </p>
-        </section>
-      )}
+        <p className="mt-3 text-[11px] text-[#9A9080]/70">
+          💡 Las fotos de drone se ordenan automáticamente al final (Idealista no las acepta como principal).
+        </p>
+      </section>
 
       {/* ═══ TAB: Portales ═══ */}
-      {activeTab === 'portals' && (
-        <section className={sectionClass}>
+      <section hidden={activeTab !== 'portals'} className={sectionClass}>
           <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.18em] text-[#C9A84C]">🌐 Publicar en</p>
           <div className="grid gap-3 sm:grid-cols-3">
             <CheckField name="publish_sooprema" label="✓ Web CBI (Sooprema)" defaultChecked />
@@ -676,12 +659,10 @@ export function PropertyForm({ availablePhotos = [], storageBaseUrl = '' }: Prop
               </label>
             ))}
           </div>
-        </section>
-      )}
+      </section>
 
       {/* ═══ TAB: Llaves ═══ */}
-      {activeTab === 'keys' && (
-        <section className={sectionClass}>
+      <section hidden={activeTab !== 'keys'} className={sectionClass}>
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <label className={labelClass}>¿Quién tiene las llaves?</label>
@@ -716,8 +697,7 @@ export function PropertyForm({ availablePhotos = [], storageBaseUrl = '' }: Prop
               <textarea name="internal_note" rows={3} className={inputClass} />
             </div>
           </div>
-        </section>
-      )}
+      </section>
 
       {/* Feedback */}
       {error && <p className="rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400">{error}</p>}
