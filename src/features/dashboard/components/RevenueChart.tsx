@@ -68,16 +68,33 @@ export function RevenueChart({
   const [editingGoal, setEditingGoal] = useState(false)
   const [goalDraft, setGoalDraft] = useState(String(initialGoal || ''))
   const [goalSaving, setGoalSaving] = useState(false)
+  const [goalError, setGoalError] = useState<string | null>(null)
 
   async function handleSaveGoal() {
+    setGoalError(null)
     const n = Number(goalDraft.replace(/[^0-9.]/g, ''))
-    if (isNaN(n) || n < 0) return
+    if (isNaN(n) || n < 0) {
+      setGoalError('Introduce un número válido (ej: 150000)')
+      return
+    }
+    if (n === 0) {
+      setGoalError('El objetivo debe ser mayor que 0')
+      return
+    }
     setGoalSaving(true)
-    const res = await updateAnnualGoal(n)
-    setGoalSaving(false)
-    if (!res?.error) {
+    try {
+      const res = await updateAnnualGoal(n)
+      setGoalSaving(false)
+      if (res?.error) {
+        setGoalError(res.error)
+        return
+      }
       setAnnualGoal(n)
       setEditingGoal(false)
+      setGoalDraft(String(n))
+    } catch (err) {
+      setGoalSaving(false)
+      setGoalError((err as Error)?.message || 'Error al guardar')
     }
   }
 
@@ -157,44 +174,113 @@ export function RevenueChart({
         </div>
       </div>
 
-      {/* Annual Goal panel — editable + tracking */}
+      {/* Annual Goal — Banner grande si está vacío, cards si ya tiene valor */}
+      {annualGoal === 0 ? (
+        <div
+          className="mb-5 rounded-2xl border-2 border-dashed border-[#C9A84C]/50 bg-gradient-to-br from-[#C9A84C]/10 via-[#1a1510] to-[#C9A84C]/5 p-6 text-center"
+        >
+          {editingGoal ? (
+            <div className="mx-auto max-w-md">
+              <p className="mb-3 text-xs font-bold uppercase tracking-[0.15em] text-[#C9A84C]">
+                ¿Cuál es tu objetivo de facturación este año?
+              </p>
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-xl font-bold text-[#C9A84C]">€</span>
+                  <input
+                    type="number"
+                    autoFocus
+                    value={goalDraft}
+                    onChange={(e) => setGoalDraft(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') handleSaveGoal() }}
+                    placeholder="200000"
+                    className="w-full rounded-xl border border-[#C9A84C]/40 bg-[#0A0A0A] py-3 pl-10 pr-4 text-xl font-bold text-[#F5F0E8] outline-none focus:border-[#C9A84C]"
+                  />
+                </div>
+                <button
+                  onClick={handleSaveGoal}
+                  disabled={goalSaving || !goalDraft}
+                  className="rounded-xl bg-[#C9A84C] px-5 text-sm font-bold uppercase text-black transition hover:bg-[#E8C96A] disabled:opacity-50"
+                >
+                  {goalSaving ? 'Guardando...' : 'Guardar'}
+                </button>
+                <button
+                  onClick={() => setEditingGoal(false)}
+                  className="rounded-xl border border-white/10 px-4 text-xs text-[#9A9080] hover:text-[#F5F0E8]"
+                >
+                  ✕
+                </button>
+              </div>
+              {goalError && (
+                <p className="mt-2 text-xs text-red-400">{goalError}</p>
+              )}
+              <p className="mt-3 text-[11px] text-[#9A9080]">
+                Ej: 200000 → Sabrás cuánto necesitas facturar cada mes para llegar
+              </p>
+            </div>
+          ) : (
+            <button
+              onClick={() => { setGoalDraft(''); setEditingGoal(true) }}
+              className="group inline-flex flex-col items-center gap-2 transition hover:scale-[1.02]"
+            >
+              <span className="text-5xl">🎯</span>
+              <p className="font-['Maharlika',serif] text-2xl font-bold text-[#C9A84C]">
+                Define tu objetivo anual
+              </p>
+              <p className="text-sm text-[#9A9080]">
+                Pon tu meta de facturación y verás tu progreso en el gráfico →
+              </p>
+              <span className="mt-2 rounded-xl bg-[#C9A84C] px-6 py-2.5 text-sm font-bold uppercase tracking-[0.08em] text-black transition group-hover:bg-[#E8C96A]">
+                👉 Definir objetivo
+              </span>
+            </button>
+          )}
+        </div>
+      ) : (
       <div className="mb-5 grid gap-3 sm:grid-cols-4">
         {/* Objetivo anual */}
-        <div className="rounded-xl border border-[#C9A84C]/20 bg-[#0A0A0A] p-3.5">
+        <div className="rounded-xl border border-[#C9A84C]/30 bg-gradient-to-br from-[#C9A84C]/10 to-[#0A0A0A] p-3.5">
           <div className="mb-1 flex items-center justify-between">
-            <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-[#9A9080]">🎯 Objetivo anual</p>
+            <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-[#C9A84C]">🎯 Objetivo anual</p>
             {!editingGoal && (
-              <button onClick={() => { setGoalDraft(String(annualGoal || '')); setEditingGoal(true) }} className="text-[10px] text-[#C9A84C] hover:underline">
-                {annualGoal > 0 ? 'Editar' : 'Definir'}
+              <button onClick={() => { setGoalDraft(String(annualGoal || '')); setEditingGoal(true) }} className="rounded border border-[#C9A84C]/40 bg-[#C9A84C]/10 px-2 py-0.5 text-[10px] font-bold text-[#C9A84C] hover:bg-[#C9A84C]/20">
+                Editar
               </button>
             )}
           </div>
           {editingGoal ? (
-            <div className="flex gap-1.5">
-              <input
-                type="number"
-                value={goalDraft}
-                onChange={(e) => setGoalDraft(e.target.value)}
-                placeholder="150000"
-                className="min-w-0 flex-1 rounded-md border border-white/10 bg-[#1C1C1C] px-2 py-1.5 text-sm text-[#F5F0E8] outline-none focus:border-[#C9A84C]/60"
-              />
-              <button
-                onClick={handleSaveGoal}
-                disabled={goalSaving}
-                className="rounded-md bg-[#C9A84C] px-2.5 text-xs font-bold text-black hover:bg-[#E8C96A] disabled:opacity-50"
-              >
-                ✓
-              </button>
-              <button
-                onClick={() => setEditingGoal(false)}
-                className="rounded-md border border-white/10 px-2.5 text-xs text-[#9A9080] hover:text-[#F5F0E8]"
-              >
-                ✕
-              </button>
-            </div>
+            <>
+              <div className="flex gap-1.5">
+                <input
+                  type="number"
+                  autoFocus
+                  value={goalDraft}
+                  onChange={(e) => setGoalDraft(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') handleSaveGoal() }}
+                  placeholder="150000"
+                  className="min-w-0 flex-1 rounded-md border border-white/10 bg-[#1C1C1C] px-2 py-1.5 text-sm text-[#F5F0E8] outline-none focus:border-[#C9A84C]/60"
+                />
+                <button
+                  onClick={handleSaveGoal}
+                  disabled={goalSaving}
+                  className="rounded-md bg-[#C9A84C] px-2.5 text-xs font-bold text-black hover:bg-[#E8C96A] disabled:opacity-50"
+                >
+                  {goalSaving ? '…' : '✓'}
+                </button>
+                <button
+                  onClick={() => { setEditingGoal(false); setGoalError(null) }}
+                  className="rounded-md border border-white/10 px-2.5 text-xs text-[#9A9080] hover:text-[#F5F0E8]"
+                >
+                  ✕
+                </button>
+              </div>
+              {goalError && (
+                <p className="mt-1.5 text-[10px] text-red-400">{goalError}</p>
+              )}
+            </>
           ) : (
             <p className="font-['Maharlika',serif] text-2xl font-bold text-[#C9A84C]">
-              {annualGoal > 0 ? fmtEur(annualGoal) : '—'}
+              {fmtEur(annualGoal)}
             </p>
           )}
         </div>
@@ -228,20 +314,15 @@ export function RevenueChart({
           }}
         >
           <p className="mb-1 text-[9px] font-bold uppercase tracking-[0.12em] text-[#9A9080]">📈 Tracking</p>
-          {annualGoal === 0 ? (
-            <p className="text-xs text-[#9A9080]">Define tu objetivo anual para ver tracking</p>
-          ) : (
-            <>
-              <p className="font-['Maharlika',serif] text-2xl font-bold" style={{ color: onPace ? '#2ECC9A' : '#EF4444' }}>
-                {onPace ? '✓ En ritmo' : '⚠ Por debajo'}
-              </p>
-              <p className="mt-0.5 text-[10px] text-[#9A9080]">
-                {pctAchieved.toFixed(0)}% · {onPace ? `+${fmtEur(deviation)}` : fmtEur(deviation)}
-              </p>
-            </>
-          )}
+          <p className="font-['Maharlika',serif] text-2xl font-bold" style={{ color: onPace ? '#2ECC9A' : '#EF4444' }}>
+            {onPace ? '✓ En ritmo' : '⚠ Por debajo'}
+          </p>
+          <p className="mt-0.5 text-[10px] text-[#9A9080]">
+            {pctAchieved.toFixed(0)}% · {onPace ? `+${fmtEur(deviation)}` : fmtEur(deviation)}
+          </p>
         </div>
       </div>
+      )}
 
       {/* Chart */}
       <div className="h-[200px]">
@@ -263,12 +344,23 @@ export function RevenueChart({
             />
             <Tooltip content={<CustomTooltip />} />
             {annualGoal > 0 && (
-              <ReferenceLine
-                y={monthlyGoalLine}
-                stroke="#E05555"
-                strokeDasharray="4 4"
-                strokeOpacity={0.7}
-              />
+              <>
+                {/* Línea objetivo mensual (lo que deberías hacer CADA mes) */}
+                <ReferenceLine
+                  y={monthlyGoalLine}
+                  stroke="#C9A84C"
+                  strokeDasharray="6 4"
+                  strokeWidth={2}
+                  strokeOpacity={0.9}
+                  label={{
+                    value: `🎯 Objetivo ${fmtEur(monthlyGoalLine)}/mes`,
+                    position: 'insideTopRight',
+                    fill: '#C9A84C',
+                    fontSize: 10,
+                    fontWeight: 'bold',
+                  }}
+                />
+              </>
             )}
             <Bar dataKey="revenue" name="Monthly" fill="#2ECC9A" fillOpacity={0.7} radius={[4, 4, 0, 0]} />
             <Line

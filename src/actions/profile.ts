@@ -35,6 +35,7 @@ export async function uploadAvatar(formData: FormData) {
 }
 
 // Primer login forzado: cambia email + password y desactiva el flag
+// CRÍTICO: usa admin API para bypassear email confirmation (si no, el email queda en pending)
 export async function changeInitialCredentials(formData: FormData) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -50,15 +51,17 @@ export async function changeInitialCredentials(formData: FormData) {
     return { error: 'La contraseña debe tener al menos 8 caracteres' }
   }
 
-  // Update Auth (email + password)
-  const { error: authError } = await supabase.auth.updateUser({
+  const admin = createAdminClient()
+
+  // Update auth.users via admin API (email directo + password, sin confirmación)
+  const { error: authError } = await admin.auth.admin.updateUserById(user.id, {
     email: newEmail,
     password: newPassword,
+    email_confirm: true, // marca el email como ya confirmado
   })
-  if (authError) return { error: authError.message }
+  if (authError) return { error: 'No se pudo actualizar credenciales: ' + authError.message }
 
-  // Update profiles row + desactivar flag
-  const admin = createAdminClient()
+  // Update profiles row para mantener sincronía + desactivar flag
   const { error: profileError } = await admin
     .from('profiles')
     .update({
@@ -70,11 +73,14 @@ export async function changeInitialCredentials(formData: FormData) {
 
   if (profileError) return { error: profileError.message }
 
+  // Invalidar la sesión actual para forzar re-login con nuevas credenciales
+  await supabase.auth.signOut()
+
   revalidatePath('/', 'layout')
   return { success: true }
 }
 
-// Settings: actualizar email
+// Settings: actualizar email (usa admin API para bypassear confirmation email)
 export async function updateEmail(formData: FormData) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -85,10 +91,14 @@ export async function updateEmail(formData: FormData) {
     return { error: 'Email inválido' }
   }
 
-  const { error: authError } = await supabase.auth.updateUser({ email: newEmail })
+  const admin = createAdminClient()
+
+  const { error: authError } = await admin.auth.admin.updateUserById(user.id, {
+    email: newEmail,
+    email_confirm: true,
+  })
   if (authError) return { error: authError.message }
 
-  const admin = createAdminClient()
   const { error } = await admin
     .from('profiles')
     .update({ email: newEmail, updated_at: new Date().toISOString() })
