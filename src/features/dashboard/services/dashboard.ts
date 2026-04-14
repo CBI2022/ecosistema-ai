@@ -102,6 +102,7 @@ export async function getDashboardData(userId: string, teamView = false) {
     annualGoal,
     totalClosings,
     goals,
+    sales: sales || [],
     photoShoots: photoShoots || [],
     exclusiveHomes: exclusiveHomes || [],
     monthlyGoal: goals?.monthly_income_goal ?? 0,

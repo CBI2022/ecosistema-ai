@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import {
   ComposedChart,
   Bar,
@@ -12,7 +13,7 @@ import {
   ReferenceLine,
   ResponsiveContainer,
 } from 'recharts'
-import { logSale } from '@/actions/sales'
+import { logSale, deleteSale, updateSale } from '@/actions/sales'
 import { updateAnnualGoal } from '@/actions/goals'
 
 interface MonthData {
@@ -21,10 +22,23 @@ interface MonthData {
   closings: number
 }
 
+interface Sale {
+  id: string
+  agent_id: string
+  property_address: string | null
+  sale_price: number
+  commission: number | null
+  closing_date: string
+  notes: string | null
+  created_at: string
+}
+
 interface RevenueChartProps {
   data: MonthData[]
   annualGoal: number
   currentMonth: number
+  sales?: Sale[]
+  canEdit?: boolean
 }
 
 function buildChartData(data: MonthData[], currentMonth: number) {
@@ -56,7 +70,10 @@ export function RevenueChart({
   data,
   annualGoal: initialGoal,
   currentMonth,
+  sales = [],
+  canEdit = true,
 }: RevenueChartProps) {
+  const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [address, setAddress] = useState('')
   const [amount, setAmount] = useState('')
@@ -137,9 +154,59 @@ export function RevenueChart({
         setAddress('')
         setAmount('')
         setDate(new Date().toISOString().split('T')[0])
+        router.refresh()
       }
     })
   }
+
+  // Sales list — editar/eliminar
+  const [editingSaleId, setEditingSaleId] = useState<string | null>(null)
+  const [editDraft, setEditDraft] = useState({ address: '', commission: '', date: '' })
+  const [saleError, setSaleError] = useState<string | null>(null)
+
+  function beginEdit(sale: Sale) {
+    setEditingSaleId(sale.id)
+    setEditDraft({
+      address: sale.property_address || '',
+      commission: String(sale.commission ?? sale.sale_price ?? ''),
+      date: sale.closing_date,
+    })
+    setSaleError(null)
+  }
+
+  async function handleSaveEdit() {
+    if (!editingSaleId) return
+    const commission = Number(editDraft.commission)
+    if (isNaN(commission) || commission <= 0) {
+      setSaleError('Importe inválido')
+      return
+    }
+    setSaleError(null)
+    startTransition(async () => {
+      const res = await updateSale(editingSaleId, {
+        property_address: editDraft.address || null,
+        commission,
+        closing_date: editDraft.date,
+      })
+      if (res?.error) setSaleError(res.error)
+      else {
+        setEditingSaleId(null)
+        router.refresh()
+      }
+    })
+  }
+
+  async function handleDeleteSale(saleId: string) {
+    if (!window.confirm('¿Eliminar esta venta? No se puede recuperar.')) return
+    startTransition(async () => {
+      const res = await deleteSale(saleId)
+      if (res?.error) setSaleError(res.error)
+      else router.refresh()
+    })
+  }
+
+  // Ordenar sales por fecha descendente
+  const sortedSales = [...sales].sort((a, b) => b.closing_date.localeCompare(a.closing_date))
 
   const inputClass =
     'rounded-lg border border-white/10 bg-[#1C1C1C] px-3 py-2 text-sm text-[#F5F0E8] outline-none transition focus:border-[#C9A84C]/60 placeholder-[#9A9080]'
@@ -412,6 +479,125 @@ export function RevenueChart({
         </div>
         {error && <p className="mt-2 text-xs text-red-400">{error}</p>}
       </div>
+
+      {/* Lista de ventas registradas */}
+      {canEdit && (
+        <div className="mt-5 border-t border-white/6 pt-4">
+          <div className="mb-3 flex items-center justify-between">
+            <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-[#9A9080]">
+              📋 Ventas registradas ({sortedSales.length})
+            </p>
+            {saleError && <span className="text-[10px] text-red-400">{saleError}</span>}
+          </div>
+
+          {sortedSales.length === 0 ? (
+            <p className="py-4 text-center text-xs text-[#9A9080]/60">
+              Aún no has registrado ninguna venta. Usa el formulario de arriba.
+            </p>
+          ) : (
+            <div className="overflow-hidden rounded-xl border border-white/8 bg-[#0A0A0A]">
+              <div className="max-h-[400px] overflow-y-auto">
+                <table className="w-full text-sm">
+                  <thead className="sticky top-0 bg-[#1C1C1C] text-left text-[9px] font-bold uppercase tracking-[0.12em] text-[#9A9080]">
+                    <tr>
+                      <th className="px-3 py-2">Fecha</th>
+                      <th className="px-3 py-2">Propiedad</th>
+                      <th className="px-3 py-2 text-right">Comisión</th>
+                      <th className="px-3 py-2"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sortedSales.map((sale) => {
+                      const isEditing = editingSaleId === sale.id
+                      return (
+                        <tr key={sale.id} className="border-t border-white/5 hover:bg-white/[0.02]">
+                          {isEditing ? (
+                            <>
+                              <td className="px-3 py-2">
+                                <input
+                                  type="date"
+                                  value={editDraft.date}
+                                  onChange={(e) => setEditDraft({ ...editDraft, date: e.target.value })}
+                                  className="w-full rounded border border-white/10 bg-[#1C1C1C] px-2 py-1 text-xs text-[#F5F0E8] outline-none focus:border-[#C9A84C]/60"
+                                />
+                              </td>
+                              <td className="px-3 py-2">
+                                <input
+                                  type="text"
+                                  value={editDraft.address}
+                                  onChange={(e) => setEditDraft({ ...editDraft, address: e.target.value })}
+                                  placeholder="Dirección"
+                                  className="w-full rounded border border-white/10 bg-[#1C1C1C] px-2 py-1 text-xs text-[#F5F0E8] outline-none focus:border-[#C9A84C]/60"
+                                />
+                              </td>
+                              <td className="px-3 py-2">
+                                <input
+                                  type="number"
+                                  value={editDraft.commission}
+                                  onChange={(e) => setEditDraft({ ...editDraft, commission: e.target.value })}
+                                  className="w-24 rounded border border-white/10 bg-[#1C1C1C] px-2 py-1 text-right text-xs text-[#F5F0E8] outline-none focus:border-[#C9A84C]/60"
+                                />
+                              </td>
+                              <td className="px-3 py-2">
+                                <div className="flex justify-end gap-1">
+                                  <button
+                                    onClick={handleSaveEdit}
+                                    disabled={isPending}
+                                    className="rounded bg-[#2ECC9A]/15 px-2 py-1 text-[10px] font-bold text-[#2ECC9A] hover:bg-[#2ECC9A]/25"
+                                  >
+                                    ✓
+                                  </button>
+                                  <button
+                                    onClick={() => { setEditingSaleId(null); setSaleError(null) }}
+                                    className="rounded border border-white/10 px-2 py-1 text-[10px] text-[#9A9080] hover:text-[#F5F0E8]"
+                                  >
+                                    ✕
+                                  </button>
+                                </div>
+                              </td>
+                            </>
+                          ) : (
+                            <>
+                              <td className="whitespace-nowrap px-3 py-2 text-xs text-[#9A9080]">
+                                {new Date(sale.closing_date + 'T00:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: '2-digit' })}
+                              </td>
+                              <td className="px-3 py-2 text-xs text-[#F5F0E8]">
+                                {sale.property_address || <span className="text-[#9A9080]/60">—</span>}
+                              </td>
+                              <td className="whitespace-nowrap px-3 py-2 text-right text-xs font-bold text-[#C9A84C]">
+                                {fmtEur(sale.commission ?? sale.sale_price ?? 0)}
+                              </td>
+                              <td className="px-3 py-2">
+                                <div className="flex justify-end gap-1">
+                                  <button
+                                    onClick={() => beginEdit(sale)}
+                                    className="rounded border border-white/10 bg-white/5 px-2 py-1 text-[10px] text-[#9A9080] hover:border-[#C9A84C]/40 hover:text-[#F5F0E8]"
+                                    title="Editar"
+                                  >
+                                    ✎
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeleteSale(sale.id)}
+                                    disabled={isPending}
+                                    className="rounded border border-red-500/20 bg-red-500/10 px-2 py-1 text-[10px] text-red-400 hover:bg-red-500/20 disabled:opacity-50"
+                                    title="Eliminar"
+                                  >
+                                    🗑
+                                  </button>
+                                </div>
+                              </td>
+                            </>
+                          )}
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }

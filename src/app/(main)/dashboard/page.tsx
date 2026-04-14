@@ -76,6 +76,8 @@ export default async function DashboardPage({
             data={data.monthlyRevenue}
             annualGoal={data.annualGoal}
             currentMonth={data.currentMonth}
+            sales={data.sales}
+            canEdit={!teamView}
           />
           <AgentPhotosGallery photos={agentPhotos || []} />
           <PhotoShootsSection shoots={data.photoShoots} />
