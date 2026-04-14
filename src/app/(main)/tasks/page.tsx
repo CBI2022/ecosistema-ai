@@ -2,6 +2,16 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
 import { TasksDashboard } from '@/features/tasks/components/TasksDashboard'
+import type { ProjectTask } from '@/types/database'
+
+interface Profile {
+  id: string
+  full_name: string | null
+  email: string
+  role: string
+  avatar_url: string | null
+}
+type TaskWithAssignee = ProjectTask & { assignee: Profile | null }
 
 export default async function TasksPage() {
   const supabase = await createClient()
@@ -18,32 +28,47 @@ export default async function TasksPage() {
 
   const isAdmin = profile?.role === 'admin'
 
-  // Admin ve todas; resto solo las suyas
-  const tasksQuery = admin
+  // Tareas activas (no eliminadas)
+  const activeQuery = admin
     .from('project_tasks')
     .select('*')
+    .is('deleted_at', null)
     .order('position', { ascending: true })
 
-  const { data: rawTasks } = isAdmin
-    ? await tasksQuery
-    : await tasksQuery.eq('assigned_to', user.id)
+  // Papelera (solo admin)
+  const trashQuery = admin
+    .from('project_tasks')
+    .select('*')
+    .not('deleted_at', 'is', null)
+    .order('deleted_at', { ascending: false })
 
-  // Join manual con profiles (el FK apunta a auth.users, no a profiles, así que hacemos merge en código)
-  const assigneeIds = [...new Set((rawTasks || []).map((t) => t.assigned_to).filter(Boolean))] as string[]
-  const profilesMap = new Map<string, { id: string; full_name: string | null; email: string; role: string; avatar_url: string | null }>()
+  const [{ data: rawTasks }, trashResult] = await Promise.all([
+    isAdmin ? activeQuery : activeQuery.eq('assigned_to', user.id),
+    isAdmin ? trashQuery : Promise.resolve({ data: [] }),
+  ])
+
+  const rawTrash = ('data' in trashResult ? trashResult.data : []) as ProjectTask[] | null
+
+  const allTaskRows = [...(rawTasks || []), ...(rawTrash || [])]
+  const assigneeIds = [...new Set(allTaskRows.map((t) => t.assigned_to).filter(Boolean))] as string[]
+  const profilesMap = new Map<string, Profile>()
   if (assigneeIds.length > 0) {
     const { data: profilesData } = await admin
       .from('profiles')
       .select('id, full_name, email, role, avatar_url')
       .in('id', assigneeIds)
-    for (const p of profilesData || []) profilesMap.set(p.id, p)
+    for (const p of profilesData || []) profilesMap.set(p.id, p as Profile)
   }
-  const tasks = (rawTasks || []).map((t) => ({
+
+  const attachAssignee = (t: ProjectTask): TaskWithAssignee => ({
     ...t,
     assignee: t.assigned_to ? profilesMap.get(t.assigned_to) || null : null,
-  }))
+  })
 
-  // Lista de usuarios para asignar (solo admins lo necesitan)
+  const tasks: TaskWithAssignee[] = (rawTasks || []).map(attachAssignee)
+  const trashedTasks: TaskWithAssignee[] = (rawTrash || []).map(attachAssignee)
+
+  // Usuarios asignables (solo admin)
   let assignableUsers: Array<{ id: string; full_name: string | null; email: string; role: string }> = []
   if (isAdmin) {
     const { data } = await admin
@@ -60,15 +85,14 @@ export default async function TasksPage() {
         <div>
           <h1 className="text-xl font-bold text-[#F5F0E8]">Tasks</h1>
           <p className="mt-1 text-sm text-[#9A9080]">
-            {isAdmin
-              ? 'Panel de tareas del proyecto — tú ves todo'
-              : 'Tus tareas asignadas'}
+            {isAdmin ? 'Panel GTD del proyecto — tú ves todo' : 'Tus tareas asignadas'}
           </p>
         </div>
       </div>
 
       <TasksDashboard
-        initialTasks={tasks || []}
+        initialTasks={tasks}
+        trashedTasks={trashedTasks}
         currentUserId={user.id}
         currentUserName={profile?.full_name || profile?.email || 'Usuario'}
         isAdmin={isAdmin}

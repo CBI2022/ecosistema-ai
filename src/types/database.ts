@@ -197,7 +197,7 @@ export interface TrainingResult {
   completed_at: string
 }
 
-export type TaskStatus = 'todo' | 'in_progress' | 'blocked' | 'done'
+export type TaskStatus = 'next_action' | 'waiting' | 'someday' | 'complete'
 export type TaskPriority = 'low' | 'medium' | 'high' | 'urgent'
 
 export interface ProjectTask {
@@ -216,6 +216,7 @@ export interface ProjectTask {
   created_at: string
   updated_at: string
   completed_at: string | null
+  deleted_at: string | null
 }
 
 export type SocialPlatform = 'instagram' | 'youtube' | 'tiktok'

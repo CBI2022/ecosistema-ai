@@ -20,7 +20,6 @@ async function getAuthContext() {
   return { user, admin, isAdmin: profile?.role === 'admin' }
 }
 
-// Solo admin puede crear
 export async function createTask(formData: FormData) {
   const ctx = await getAuthContext()
   if ('error' in ctx) return { error: ctx.error }
@@ -34,11 +33,9 @@ export async function createTask(formData: FormData) {
     description: (formData.get('description') as string) || null,
     category: (formData.get('category') as string) || 'general',
     priority: (formData.get('priority') as TaskPriority) || 'medium',
-    status: (formData.get('status') as TaskStatus) || 'todo',
+    status: (formData.get('status') as TaskStatus) || 'next_action',
     assigned_to: (formData.get('assigned_to') as string) || null,
     due_date: (formData.get('due_date') as string) || null,
-    notes: (formData.get('notes') as string) || null,
-    docs_url: (formData.get('docs_url') as string) || null,
     created_by: ctx.user.id,
   })
 
@@ -47,7 +44,6 @@ export async function createTask(formData: FormData) {
   return { success: true }
 }
 
-// Admin puede editar todo; asignado puede editar solo status + notes
 export async function updateTask(taskId: string, updates: {
   title?: string
   description?: string | null
@@ -56,13 +52,10 @@ export async function updateTask(taskId: string, updates: {
   status?: TaskStatus
   assigned_to?: string | null
   due_date?: string | null
-  notes?: string | null
-  docs_url?: string | null
 }) {
   const ctx = await getAuthContext()
   if ('error' in ctx) return { error: ctx.error }
 
-  // Si no es admin, solo puede cambiar status/notes y debe ser el asignado
   if (!ctx.isAdmin) {
     const { data: task } = await ctx.admin
       .from('project_tasks')
@@ -76,10 +69,10 @@ export async function updateTask(taskId: string, updates: {
 
     const safe: Record<string, unknown> = {}
     if (updates.status !== undefined) safe.status = updates.status
-    if (updates.notes !== undefined) safe.notes = updates.notes
+    if (updates.description !== undefined) safe.description = updates.description
     if (Object.keys(safe).length === 0) return { error: 'Sin permiso' }
     safe.updated_at = new Date().toISOString()
-    if (updates.status === 'done') safe.completed_at = new Date().toISOString()
+    if (updates.status === 'complete') safe.completed_at = new Date().toISOString()
 
     const { error } = await ctx.admin.from('project_tasks').update(safe).eq('id', taskId)
     if (error) return { error: error.message }
@@ -87,13 +80,12 @@ export async function updateTask(taskId: string, updates: {
     return { success: true }
   }
 
-  // Admin: actualiza cualquier campo
   const patch: Record<string, unknown> = {
     ...updates,
     updated_at: new Date().toISOString(),
   }
-  if (updates.status === 'done') patch.completed_at = new Date().toISOString()
-  if (updates.status && updates.status !== 'done') patch.completed_at = null
+  if (updates.status === 'complete') patch.completed_at = new Date().toISOString()
+  if (updates.status && updates.status !== 'complete') patch.completed_at = null
 
   const { error } = await ctx.admin.from('project_tasks').update(patch).eq('id', taskId)
   if (error) return { error: error.message }
@@ -101,10 +93,43 @@ export async function updateTask(taskId: string, updates: {
   return { success: true }
 }
 
+// Soft delete → envía a papelera
 export async function deleteTask(taskId: string) {
   const ctx = await getAuthContext()
   if ('error' in ctx) return { error: ctx.error }
   if (!ctx.isAdmin) return { error: 'Solo admins pueden eliminar tareas' }
+
+  const { error } = await ctx.admin
+    .from('project_tasks')
+    .update({ deleted_at: new Date().toISOString() })
+    .eq('id', taskId)
+
+  if (error) return { error: error.message }
+  revalidatePath('/tasks')
+  return { success: true }
+}
+
+// Restaurar de la papelera
+export async function restoreTask(taskId: string) {
+  const ctx = await getAuthContext()
+  if ('error' in ctx) return { error: ctx.error }
+  if (!ctx.isAdmin) return { error: 'Solo admins pueden restaurar tareas' }
+
+  const { error } = await ctx.admin
+    .from('project_tasks')
+    .update({ deleted_at: null })
+    .eq('id', taskId)
+
+  if (error) return { error: error.message }
+  revalidatePath('/tasks')
+  return { success: true }
+}
+
+// Eliminar definitivamente (desde la papelera)
+export async function deleteTaskForever(taskId: string) {
+  const ctx = await getAuthContext()
+  if ('error' in ctx) return { error: ctx.error }
+  if (!ctx.isAdmin) return { error: 'Solo admins pueden eliminar tareas definitivamente' }
 
   const { error } = await ctx.admin.from('project_tasks').delete().eq('id', taskId)
   if (error) return { error: error.message }
@@ -112,7 +137,6 @@ export async function deleteTask(taskId: string) {
   return { success: true }
 }
 
-// Cambio rápido de status (para kanban drag & drop o checkboxes)
 export async function setTaskStatus(taskId: string, status: TaskStatus) {
   return updateTask(taskId, { status })
 }

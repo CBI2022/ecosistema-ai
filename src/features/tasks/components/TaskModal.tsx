@@ -40,7 +40,7 @@ export function TaskModal({
   const [description, setDescription] = useState(task?.description || '')
   const [category, setCategory] = useState(task?.category || 'general')
   const [priority, setPriority] = useState<TaskPriority>(task?.priority || 'medium')
-  const [status, setStatus] = useState<TaskStatus>(task?.status || 'todo')
+  const [status, setStatus] = useState<TaskStatus>(task?.status || 'next_action')
   const [assignedTo, setAssignedTo] = useState(task?.assigned_to || '')
   const [dueDate, setDueDate] = useState(task?.due_date || '')
   const [saving, setSaving] = useState(false)
