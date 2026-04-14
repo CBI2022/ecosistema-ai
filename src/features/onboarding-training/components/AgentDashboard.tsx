@@ -369,7 +369,7 @@ export function AgentDashboard({ userName }: { userName: string }) {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
             <div style={{ fontSize: 11, letterSpacing: '0.2em', color: ac, textTransform: 'uppercase', fontWeight: 700 }}>🎯 90-Day Goals</div>
             {(() => {
-              const fields: GoalKey[] = ['doors', 'contacts', 'appointments', 'viewings', 'offers']
+              const fields: GoalKey[] = ['doors', 'contacts', 'appointments', 'viewings', 'offers', 'listings']
               const overallPct = Math.round(fields.reduce((sum, k) => sum + Math.min(((totals[k] ?? 0) / GOALS_90D[k]) * 100, 100), 0) / fields.length)
               return <span style={{ fontSize: 14, color: overallPct >= 100 ? '#6BAE94' : ac, fontWeight: 800 }}>{overallPct}%</span>
             })()}

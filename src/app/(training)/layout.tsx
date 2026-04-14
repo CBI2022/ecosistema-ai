@@ -24,19 +24,20 @@ export default async function TrainingLayout({ children }: { children: React.Rea
         href="/dashboard"
         style={{
           position: 'fixed',
-          top: 10,
-          right: 10,
+          bottom: 16,
+          left: 16,
           zIndex: 9500,
-          background: 'rgba(26,24,32,0.85)',
+          background: 'rgba(26,24,32,0.9)',
           backdropFilter: 'blur(10px)',
           border: '1px solid #2A2430',
           color: '#9A9080',
           borderRadius: 10,
-          padding: '6px 12px',
+          padding: '8px 14px',
           fontSize: 11,
           fontWeight: 600,
           textDecoration: 'none',
           fontFamily: "'Helvetica Neue', Arial, sans-serif",
+          boxShadow: '0 4px 16px rgba(0,0,0,0.4)',
         }}
       >
         ← Dashboard
