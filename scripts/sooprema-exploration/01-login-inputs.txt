@@ -1,0 +1,3 @@
+input name="user" id="user" type="text" placeholder="Escribe tu nombre de usuario"
+input name="password" id="password" type="password" placeholder="Introduce tu contraseña"
+input type="submit"

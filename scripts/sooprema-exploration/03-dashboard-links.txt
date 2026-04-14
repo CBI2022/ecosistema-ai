@@ -1,0 +1,89 @@
+[a] "Haz clic aquí para configurarlo" → #  class=mail-config-detector__link
+[a] "euro_symbolNegocios" → #/  class=sysbar-button d-none router-link-exact-active router-link-active
+[a] "601 Correo" → #/inbox  class=sysbar-button email
+[a] "Actividades" → #/crm/activities  class=sysbar-button
+[a] "DATA" → https://www.costablancainvestments.com/data/  class=sysbar-button sysbar-button-url button button-data
+[a] "Soporte"   class=sysbar-button sysbar-button-url button button-support
+[a] "Ajustes generales" → https://www.costablancainvestments.com/admin/ajustes/general/  class=sysbaruser__link
+[a] "UsuariosAñadir" → #/users  class=sysbaruser__link
+[a] "Añadir" → #  class=sysbaruser__link--direct
+[a] "Seguridad" → #/security  class=sysbaruser__link
+[a] "Marketplace" → #/marketplace  class=sysbaruser__link sysbaruser__link--marketplace
+[a] "Mejoras de Sooprema"   class=sysbaruser__link
+[a] "Español" → #  class=sysbaruser__link sysbaruser__link--active
+[a] "English" → #  class=sysbaruser__link
+[a] "logoutCerrar sesión" → #  class=sysbaruser__link sysbaruser__link--logout
+[a] "" → https://www.costablancainvestments.com  class=front
+[a] "Subir Propiedad S" → #  class=topbar-button clearfix button button-new-property
+[a] "Listado Propiedades L" → #/properties  class=topbar-button clearfix button button-property-listing
+[a] "Añadir persona P" → #  class=topbar-button clearfix button button-add-person
+[a] "CRM C" → #/crm  class=topbar-button clearfix button button-crm
+[a] "+ eventActividad A descriptionNota N shareXML Feed X backupImportación I"   class=topbar-button clearfix button button-more button-custom
+[a] "eventActividad A" → /  
+[a] "descriptionNota N" → /  
+[a] "shareXML Feed X" → https://www.costablancainvestments.com/admin/xml/listado/  
+[a] "backupImportación I" → https://www.costablancainvestments.com/admin/importar/  
+[a] "" → #  
+[a] "desktop_windowsEscritorio H" → #/  class=router-link-exact-active router-link-active active
+[a] "GESTIÓN WEB expand_moreexpand_less" → #  
+[a] "view_carouselHome/Destacados" → https://www.costablancainvestments.com/admin/destacados/  
+[a] "view_quiltBloques Home" → https://www.costablancainvestments.com/admin/bloques/  
+[a] "view_compactBloques Footer" → https://www.costablancainvestments.com/admin/bloquesfooter/  
+[a] "filterBanners" → https://www.costablancainvestments.com/admin/banners/  
+[a] "assignmentNoticias" → https://www.costablancainvestments.com/admin/noticias/  
+[a] "format_align_leftSecciones Web" → https://www.costablancainvestments.com/admin/secciones/inicio/  
+[a] "linkEnlaces" → https://www.costablancainvestments.com/admin/enlaces/  
+[a] "rate_reviewTestimonios" → https://www.costablancainvestments.com/admin/testimonios/  
+[a] "perm_mediaEntornos" → https://www.costablancainvestments.com/admin/entornos/  
+[a] "format_list_bulletedCategorías Pro" → https://www.costablancainvestments.com/admin/categoriapro/  
+[a] "home_workProyectos" → #/projects  
+[a] "businessPromociones" → #/promos  
+[a] "SEO expand_moreexpand_less" → #  
+[a] "publicSEO Páginas" → https://www.costablancainvestments.com/admin/seo/  
+[a] "format_list_bulletedCategorías" → https://www.costablancainvestments.com/admin/categoria/  
+[a] "XML FEED expand_moreexpand_less" → #  
+[a] "shareXML Feed" → https://www.costablancainvestments.com/admin/xml/listado/  
+[a] "syncImportaciones" → #/live-imports  
+[a] "warningConflictos" → #/feeds-imports-conflicts  
+[a] "check_circle_outlineConflictos resueltos" → #/resolved-conflicts-mapping  
+[a] "OTRAS OPCIONES expand_moreexpand_less" → #  
+[a] "center_focus_weakCódigos QR" → https://www.costablancainvestments.com/admin/imagenesqr/  
+[a] "" → #  
+[a] "desktop_windows Paagees" → https://app.paagees.com  
+[a] "" → #  
+[a] "schoolFormación" → #/learning/tutorials  
+[a] "1198Total consultas"   class=filter-button clearfix button button-requests
+[a] "508Propiedades propias" → #/properties?status=active&criteriaUid=OOW  class=filter-button clearfix button button-published
+[a] "362Propiedades ocultas" → #/properties?status=hidden&criteriaUid=OOWH  class=filter-button clearfix button button-hidden
+[a] "9Propiedades privadas" → #/properties?status=active-hidden&criteriaUid=PRVP  class=filter-button clearfix button button-private
+[a] "164Propiedades vendidas" → #/properties?status=active-hidden&criteriaUid=SLDP  class=filter-button clearfix button button-sold
+[a] "1Propiedades alquiladas" → #/properties?status=active-hidden&criteriaUid=RTDP  class=filter-button clearfix button button-rented
+[a] "139Propiedades importadas" → #/properties?status=active-hidden&criteriaUid=IP  class=filter-button clearfix button button-imported
+[button] "Escritorio"  id=pill-desktop class=pill pill--active
+[button] "Ventas"  id=pill-sell class=pill
+[button] "Propietarios"  id=pill-owners class=pill
+[a] "Ver Calendario >" → #/crm/activities/weekly  class=go-calendar
+[a] "toggle_ontoggle_offSolo tareas propias" → #  
+[a] "" → https://www.costablancainvestments.com/admin/propiedades/editar/MTQ4MjczMDM2MzkzNDI5NjA=/  
+[a] "visibility" → #  
+[a] "cloud_upload" → #  
+[a] "report_problem" → #  
+[a] "delete" → #  
+[a] "" → https://www.costablancainvestments.com/admin/propiedades/editar/MTMyMDcwMjA2NDU2NzI2NDA=/  
+[a] "visibility" → #  
+[a] "cloud_upload" → #  
+[a] "report_problem" → #  
+[a] "delete" → #  
+[a] "" → https://www.costablancainvestments.com/admin/propiedades/editar/MTQxOTg0MTUzMjY4Mzg0ODA=/  
+[a] "visibility" → #  
+[a] "cloud_upload" → #  
+[a] "report_problem" → #  
+[a] "delete" → #  
+[a] "" → https://www.costablancainvestments.com/admin/propiedades/editar/MTMyMDcwMjA2NDU2NzI2NDA=/  
+[a] "visibility" → #  
+[a] "cloud_upload" → #  
+[a] "report_problem" → #  
+[a] "delete" → #  
+[button] "close"   class=closebutton
+[button] "Exportar resultados"   class=menubutton__button
+[button] "Cerrar"   class=closebutton

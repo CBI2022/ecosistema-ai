@@ -63,35 +63,165 @@ export interface Sale {
   created_at: string
 }
 
+export interface Owner {
+  id: string
+  first_name: string | null
+  last_name: string | null
+  full_name: string
+  email: string | null
+  phone: string | null
+  nif: string | null
+  language: string | null
+  notes: string | null
+  sooprema_owner_id: string | null
+  created_by: string | null
+  created_at: string
+  updated_at: string
+}
+
+export type ListingType = 'sale' | 'rental' | 'rental_temporary'
+export type PropertyType =
+  | 'villa' | 'apartment' | 'townhouse' | 'land' | 'commercial' | 'penthouse'
+  | 'flat' | 'bungalow' | 'duplex' | 'finca' | 'plot' | 'loft'
+  | 'country_house' | 'detached_house' | 'semi_detached' | 'terraced_house'
+export type Orientation = 'N' | 'NE' | 'E' | 'SE' | 'S' | 'SW' | 'W' | 'NW'
+export type FurnitureStatus = 'none' | 'some' | 'full'
+export type OccupationStatus = 'free' | 'empty' | 'rented' | 'occupied_illegally'
+export type EnergyCertificate = 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G'
+export type ExpensePeriod = 'annual' | 'monthly' | 'bimonthly' | 'quarterly' | 'weekly' | 'none'
+
 export interface Property {
   id: string
   agent_id: string
+
+  // Identificación
   reference: string | null
   title: string | null
-  price: number | null
-  property_type: 'villa' | 'apartment' | 'townhouse' | 'land' | 'commercial' | 'penthouse' | null
+  title_headline: string | null
+  title_in_text: string | null
+
+  // Tipo / estado
+  property_type: PropertyType | null
+  listing_type: ListingType
   status: 'draft' | 'published' | 'archived'
+  status_tags: string[] | null
+  occupation_status: OccupationStatus | null
+
+  // Precios
+  price: number | null
+  price_net: number | null
+  price_final: number | null
+  price_counter_offer: number | null
+  rental_amount: number | null
+  commission_amount: number | null
+  commission_percentage: number | null
+
+  // Estructura
   bedrooms: number | null
   bathrooms: number | null
+  toilets: number | null
+  living_rooms: number | null
+  dining_rooms: number | null
+  kitchen_type: string | null
+  floor_number: number | null
+  total_floors: number | null
+  orientation: Orientation | null
+
+  // Áreas
   build_area_m2: number | null
   plot_area_m2: number | null
+  useful_area_m2: number | null
+  terrace_area_m2: number | null
+  garden_area_m2: number | null
+
+  // Años
+  year_built: number | null
+  year_reformed: number | null
+
+  // Ubicación
   location: string | null
   zone: string | null
+  street_name: string | null
+  street_number: string | null
+  postal_code: string | null
+  city: string | null
   latitude: number | null
   longitude: number | null
+
+  // Descripciones
   description_es: string | null
   description_en: string | null
+  description_nl: string | null
+  views: string | null
+
+  // Features core
   has_pool: boolean
+  pool_type: string | null
   has_garage: boolean
+  garage_spaces: number | null
   has_garden: boolean
+  garden_type: string | null
   has_terrace: boolean
+  terrace_type: string | null
   has_ac: boolean
+  ac_type: string | null
   has_sea_view: boolean
+
+  // Features extra
+  has_fireplace: boolean
+  has_storage: boolean
+  has_bbq: boolean
+  has_alarm: boolean
+  has_elevator: boolean
+  has_jacuzzi: boolean
+  has_balcony: boolean
+  has_bar: boolean
+  has_guest_apartment: boolean
+  has_summer_kitchen: boolean
+  furniture_status: FurnitureStatus | null
+
+  // Certificado / portales
+  energy_certificate: EnergyCertificate | null
+  publish_sooprema: boolean
+  publish_idealista: boolean
+  publish_imoluc: boolean
+
+  // Gastos
   ibi_annual: number | null
+  ibi_period: ExpensePeriod
   basura_annual: number | null
+  basura_period: ExpensePeriod
   community_annual: number | null
+  community_period: ExpensePeriod
+  community_observations: string | null
+
+  // Owner
+  owner_id: string | null
+
+  // Llaves / visitas
+  keys_holder: string | null
+  keys_phone: string | null
+  keys_pickup: string | null
+  keys_count: number | null
+  visit_info: string | null
+
+  // Notas internas
+  office_description: string | null
+  internal_note: string | null
+
+  // Vivienda turística
+  tourist_housing_code: string | null
+  tourist_housing_status: string | null
+
+  // Fotos
+  primary_photo_id: string | null
+
+  // Suprema/Sooprema tracking
   suprema_status: 'pending' | 'publishing' | 'published' | 'error'
   suprema_job_id: string | null
+  sooprema_external_id: string | null
+  sooprema_public_url: string | null
+
   created_at: string
   updated_at: string
 }

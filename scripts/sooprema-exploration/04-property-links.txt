@@ -1,0 +1,8 @@
+"Subir Propiedad S" → #
+"Listado Propiedades L" → #/properties
+"508Propiedades propias" → #/properties?status=active&criteriaUid=OOW
+"362Propiedades ocultas" → #/properties?status=hidden&criteriaUid=OOWH
+"9Propiedades privadas" → #/properties?status=active-hidden&criteriaUid=PRVP
+"164Propiedades vendidas" → #/properties?status=active-hidden&criteriaUid=SLDP
+"1Propiedades alquiladas" → #/properties?status=active-hidden&criteriaUid=RTDP
+"139Propiedades importadas" → #/properties?status=active-hidden&criteriaUid=IP

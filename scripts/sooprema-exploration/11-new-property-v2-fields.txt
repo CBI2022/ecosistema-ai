@@ -1,0 +1,73 @@
+TOTAL: 234 | Visibles: 49
+
+[1] input type="text"
+[2] input name="input-txt-precio" id="input-txt-precio" type="text"
+[3] input name="input-txt-precio_contraoferta" id="input-txt-precio_contraoferta" type="text"
+[4] input name="txt-referencia" id="txt-referencia" type="text"
+[5] select name="txt-id_etiqueta" id="txt-id_etiqueta" type="select-one"
+    options: 0=- | 1=Negotiable | 2=Reduced | 5=Offer | 6=New | 7=Rented | 8=New build | 9=Unused | 10=Under construction | 11=No Commissions | 12=Exclusive | 13=Bank | 14=Proyecto | 15=Licencia Turística | 16=Cancelled | 17=Awarded | 18=Suspended | 19=Proyecto con licencia | 20=Temporary rental | 21=Vistas al mar | 22=Opportunity | 23=Front line | 24=In the center | 25=Deserted | 26=To reform | 27=Ideal Telework | 28=Key ready | 29=Exclusiva MLS | 30=Proyecto Realizado | 31=Investment
+[6] input type="text"
+[7] select name="txt-tipo_det" id="txt-tipo_det" type="select-one"
+    options: 0=- | 3=Apartment | 29=Building | 4=Bungalow | 11=Detached house | 13=Duplex | 6=Finca | 1=Flat | 31=Hotel | 12=House | 26=Office | 2=Penthouse | 15=Plot | 27=Restaurant | 38=Semi-detached house | 10=Terraced house | 9=Town house | 5=Villa | 36=- | 33=Commercial building | 18=Commercial premises | 20=Cortijo | 8=Country house | 7=Farmhouse | 17=Garage | 21=Industrial building | 30=Industrial plot | 25=Loft | 16=Parking | 34=Room
+[8] select name="txt-vistas" id="txt-vistas" type="select-one"
+    options: 0=- | 21=- | 5=Community area | 22=First line | 3=Golf course | 4=Good views | 7=Green zone | 9=National Park | 12=Open | 19=Others | 11=Panoramas | 8=Sea and mountains | 6=Sports area | 16=To the Castle | 18=To the city | 20=To the exterior | 1=To the garden | 10=To the mountain | 13=To the park | 2=To the sea | 14=To the square | 17=To the street | 15=To the valley
+[9] input name="txt-parcela" id="txt-parcela" type="text"
+[10] input name="txt-constru" id="txt-constru" type="text"
+[11] input name="txt-suputil" id="txt-suputil" type="text"
+[12] input name="txt-terraza" id="txt-terraza" type="text"
+[13] input name="txt-supjardin" id="txt-supjardin" type="text"
+[14] select name="txt-promocion" id="txt-promocion" type="select-one"
+    options: 0=-
+[15] select name="txt-ocupacion_actual" id="txt-ocupacion_actual" type="select-one"
+    options: 0=- | 2=Libre | 3=Propiedad vacía | 4=Con inquilino | 5=Ocupada ilegalmente
+[16] select name="txt-urbanizacion" id="txt-urbanizacion" type="select-one"
+    options: 0=-
+[17] select name="txt-habitacion" id="txt-habitacion" type="select-one"
+    options: 0=- | 1=1 | 2=2 | 3=3 | 4=4 | 5=5 | 6=6 | 7=7 | 8=8 | 9=9 | 10=10 | 11=11 | 12=12 | 13=13 | 14=14 | 15=15 | 16=16 | 17=17 | 18=18 | 19=19 | 20=20 | 21=21 | 22=22 | 23=23 | 24=24 | 25=25 | 26=26 | 27=27 | 28=28 | 29=29
+[18] select name="txt-banos" id="txt-banos" type="select-one"
+    options: 0=- | 1=1 | 2=2 | 3=3 | 4=4 | 5=5 | 6=6 | 7=7 | 8=8 | 9=9 | 10=10 | 11=11 | 12=12 | 13=13 | 14=14 | 15=15 | 16=16 | 17=17 | 18=18 | 19=19 | 20=20 | 21=21 | 22=22 | 23=23 | 24=24 | 25=25 | 26=26 | 27=27 | 28=28 | 29=29
+[19] select name="txt-aseo" id="txt-aseo" type="select-one"
+    options: 0=- | 1=1 | 2=2 | 3=3 | 4=4 | 5=5 | 6=6 | 7=7 | 8=8 | 9=9 | 10=10
+[20] select name="txt-salon" id="txt-salon" type="select-one"
+    options: 0=- | 1=1 | 2=2 | 3=3 | 4=4 | 5=5 | 6=6 | 7=7 | 8=8 | 9=9 | 10=10
+[21] select name="txt-comedor" id="txt-comedor" type="select-one"
+    options: 0=- | 1=1 | 2=2 | 3=3 | 4=4 | 5=5 | 6=6 | 7=7 | 8=8 | 9=9 | 10=10
+[22] select name="txt-cocina" id="txt-cocina" type="select-one"
+    options: 0=- | 8=- | 2=American | 6=French | 4=Furnished | 1=Independent | 7=Not available | 3=Open | 11=two_kitchens | 5=With cupboards | 9=With island | 10=Yes
+[23] select name="txt-consano" id="txt-consano" type="select-one"
+    options: 0=- | 2029=2029 | 2028=2028 | 2027=2027 | 2026=2026 | 2025=2025 | 2024=2024 | 2023=2023 | 2022=2022 | 2021=2021 | 2020=2020 | 2019=2019 | 2018=2018 | 2017=2017 | 2016=2016 | 2015=2015 | 2014=2014 | 2013=2013 | 2012=2012 | 2011=2011 | 2010=2010 | 2009=2009 | 2008=2008 | 2007=2007 | 2006=2006 | 2005=2005 | 2004=2004 | 2003=2003 | 2002=2002 | 2001=2001
+[24] select name="txt-refano" id="txt-refano" type="select-one"
+    options: 0=- | 2027=2027 | 2026=2026 | 2025=2025 | 2024=2024 | 2023=2023 | 2022=2022 | 2021=2021 | 2020=2020 | 2019=2019 | 2018=2018 | 2017=2017 | 2016=2016 | 2015=2015 | 2014=2014 | 2013=2013 | 2012=2012 | 2011=2011 | 2010=2010 | 2009=2009 | 2008=2008 | 2007=2007 | 2006=2006 | 2005=2005 | 2004=2004 | 2003=2003 | 2002=2002 | 2001=2001 | 2000=2000 | 1999=1999
+[25] input type="text"
+[26] select name="txt-inv_habitacion" id="txt-inv_habitacion" type="select-one"
+    options: 0=- | 1=1 | 2=2 | 3=3 | 4=4 | 5=5 | 6=6 | 7=7 | 8=8 | 9=9 | 10=10
+[27] select name="txt-inv_banos" id="txt-inv_banos" type="select-one"
+    options: 0=- | 1=1 | 2=2 | 3=3 | 4=4 | 5=5 | 6=6 | 7=7 | 8=8 | 9=9 | 10=10
+[28] select name="txt-inv_aseo" id="txt-inv_aseo" type="select-one"
+    options: 0=- | 1=1 | 2=2 | 3=3 | 4=4 | 5=5 | 6=6 | 7=7 | 8=8 | 9=9 | 10=10
+[29] select name="txt-inv_salon" id="txt-inv_salon" type="select-one"
+    options: 0=- | 1=1 | 2=2 | 3=3 | 4=4 | 5=5 | 6=6 | 7=7 | 8=8 | 9=9 | 10=10
+[30] select name="txt-inv_comedor" id="txt-inv_comedor" type="select-one"
+    options: 0=- | 1=1 | 2=2 | 3=3 | 4=4 | 5=5 | 6=6 | 7=7 | 8=8 | 9=9 | 10=10
+[31] select name="txt-inv_cocina" id="txt-inv_cocina" type="select-one"
+    options: 0=- | 1=1 | 2=2 | 3=3 | 4=4 | 5=5 | 6=6 | 7=7 | 8=8 | 9=9 | 10=10
+[32] input name="input-txt-precio_neto" id="input-txt-precio_neto" type="text"
+[33] input name="input-txt-comision" id="input-txt-comision" type="text"
+[34] input name="txt-porcentaje_comision" id="txt-porcentaje_comision" type="text" label="%:"
+[35] input name="input-txt-precio_final" id="input-txt-precio_final" type="text"
+[36] input name="input-txt-gastos_comunidad" id="input-txt-gastos_comunidad" type="text"
+[37] select name="txt-periodo_comunidad" id="txt-periodo_comunidad" type="select-one" label="Period:"
+    options: 0=- | 0=None | 1=Weekly | 2=Monthly | 3=Bimonthly | 4=Quarterly | 5=Annual
+[38] textarea name="txt-observaciones_comunidad" id="txt-observaciones_comunidad" type="textarea" label="Observations:"
+[39] input name="txt-cod_vivienda_turistica" id="txt-cod_vivienda_turistica" type="text" label="Código vivienda turística:"
+[40] select name="txt-estado_codigo_vivienda" id="txt-estado_codigo_vivienda" type="select-one" label="State housing code:"
+    options: 0=- | 0=None | 1=Disponible | 2=In process
+[41] input name="txt-indice_referencia_precios" id="txt-indice_referencia_precios" type="text" label="Índice de referencia de precios:"
+[42] input name="txt-importe_renta" id="txt-importe_renta" type="text" label="Importe actualizado de renta:"
+[43] input name="txt-persona_llaves" id="txt-persona_llaves" type="text" label="Who has the keys?:"
+[44] input name="txt-fon_contacto" id="txt-fon_contacto" type="text" label="Contact phone:"
+[45] input name="txt-recoger_llaves" id="txt-recoger_llaves" type="text" label="Collect keys in:"
+[46] input name="txt-numero_llaves" id="txt-numero_llaves" type="text" label="Number of keys::"
+[47] textarea name="txt-visita_propiedad" id="txt-visita_propiedad" type="textarea" label="Visit Information:"
+[48] textarea name="txt-descripcion_oficina" id="txt-descripcion_oficina" type="textarea" label="Office Description:"
+[49] textarea name="txt-nota_propiedad" id="txt-nota_propiedad" type="textarea" label="Property Note:"
