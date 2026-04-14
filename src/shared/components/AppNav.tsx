@@ -1,7 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
+import { useState, useTransition } from 'react'
 import type { UserRole } from '@/types/database'
 
 interface NavTab {
@@ -50,6 +51,9 @@ interface AppNavProps {
 
 export function AppNav({ role, notifCount = 0 }: AppNavProps) {
   const pathname = usePathname()
+  const router = useRouter()
+  const [isPending, startTransition] = useTransition()
+  const [clickedHref, setClickedHref] = useState<string | null>(null)
 
   const tabs =
     role === 'photographer'
@@ -60,33 +64,73 @@ export function AppNav({ role, notifCount = 0 }: AppNavProps) {
           ? SECRETARY_TABS
           : AGENT_TABS
 
-  return (
-    <nav className="sticky top-[57px] z-40 flex justify-center gap-0.5 overflow-x-auto border-b border-[#C9A84C]/12 bg-[#0A0A0A]/98 px-6 py-2 backdrop-blur-xl">
-      {tabs.map((tab) => {
-        const isActive =
-          tab.href === '/dashboard'
-            ? pathname === '/dashboard'
-            : pathname.startsWith(tab.href)
+  function handleNavClick(e: React.MouseEvent, href: string) {
+    if (pathname === href) { e.preventDefault(); return }
+    // Llama a startTransition para que React sepa que hay navegación en curso
+    // y que muestre loading.tsx inmediatamente
+    e.preventDefault()
+    setClickedHref(href)
+    startTransition(() => {
+      router.push(href)
+    })
+  }
 
-        return (
-          <Link
-            key={tab.href}
-            href={tab.href}
-            className={`relative whitespace-nowrap rounded-md px-4 py-2 text-[11px] font-medium transition-all ${
-              isActive
-                ? 'bg-[#C9A84C] font-bold tracking-[0.06em] text-black shadow-[0_2px_14px_rgba(201,168,76,0.35)]'
-                : 'text-[#9A9080] hover:bg-[#C9A84C]/8 hover:text-[#F5F0E8]'
-            }`}
-          >
-            {tab.label}
-            {tab.href === '/notifications' && notifCount > 0 && (
-              <span className="ml-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold text-white">
-                {notifCount > 9 ? '9+' : notifCount}
-              </span>
-            )}
-          </Link>
-        )
-      })}
-    </nav>
+  return (
+    <>
+      {/* Top progress bar global - visible durante navegación */}
+      {isPending && (
+        <div className="fixed left-0 top-0 z-[200] h-0.5 w-full overflow-hidden bg-transparent">
+          <div
+            className="h-full bg-gradient-to-r from-transparent via-[#C9A84C] to-transparent"
+            style={{ animation: 'cbi-progress-bar 1.2s ease-in-out infinite' }}
+          />
+        </div>
+      )}
+
+      <nav className="sticky top-[57px] z-40 flex justify-center gap-0.5 overflow-x-auto border-b border-[#C9A84C]/12 bg-[#0A0A0A]/98 px-6 py-2 backdrop-blur-xl">
+        {tabs.map((tab) => {
+          const isActive =
+            tab.href === '/dashboard'
+              ? pathname === '/dashboard'
+              : pathname.startsWith(tab.href)
+
+          // Estado "clicked" inmediato para feedback visual
+          const isLoading = isPending && clickedHref === tab.href
+
+          return (
+            <Link
+              key={tab.href}
+              href={tab.href}
+              prefetch={true}
+              onClick={(e) => handleNavClick(e, tab.href)}
+              className={`relative whitespace-nowrap rounded-md px-4 py-2 text-[11px] font-medium transition-all ${
+                isActive
+                  ? 'bg-[#C9A84C] font-bold tracking-[0.06em] text-black shadow-[0_2px_14px_rgba(201,168,76,0.35)]'
+                  : isLoading
+                    ? 'bg-[#C9A84C]/30 text-[#F5F0E8]'
+                    : 'text-[#9A9080] hover:bg-[#C9A84C]/8 hover:text-[#F5F0E8]'
+              }`}
+            >
+              {isLoading && (
+                <span className="mr-1.5 inline-block h-2.5 w-2.5 animate-spin rounded-full border-2 border-[#C9A84C]/30 border-t-[#C9A84C]" />
+              )}
+              {tab.label}
+              {tab.href === '/notifications' && notifCount > 0 && (
+                <span className="ml-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold text-white">
+                  {notifCount > 9 ? '9+' : notifCount}
+                </span>
+              )}
+            </Link>
+          )
+        })}
+      </nav>
+
+      <style>{`
+        @keyframes cbi-progress-bar {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
+        }
+      `}</style>
+    </>
   )
 }

@@ -149,11 +149,18 @@ export function DailyPlan({ items: initialItems, weekStart }: DailyPlanProps) {
             <button
               key={day}
               onClick={() => setActiveDay(day)}
-              className="flex flex-1 flex-col items-center gap-1"
+              className="group relative flex flex-1 flex-col items-center gap-1"
             >
+              {/* Dot indicator para "hoy" - reemplaza el borde azul */}
+              {isToday && (
+                <span className="absolute -top-1 right-1 h-1.5 w-1.5 rounded-full bg-[#C9A84C] shadow-[0_0_6px_rgba(201,168,76,0.8)]" />
+              )}
               <div
-                className="flex w-full items-end justify-center overflow-hidden rounded-t-md"
-                style={{ height: 40, background: 'rgba(255,255,255,0.04)', outline: isToday ? `1px solid #3B82F6` : undefined }}
+                className="flex w-full items-end justify-center overflow-hidden rounded-t-md transition-all"
+                style={{
+                  height: 40,
+                  background: isToday ? 'rgba(201,168,76,0.06)' : 'rgba(255,255,255,0.04)',
+                }}
               >
                 <div
                   style={{
@@ -165,8 +172,8 @@ export function DailyPlan({ items: initialItems, weekStart }: DailyPlanProps) {
                   }}
                 />
               </div>
-              <span className={`text-[9px] font-bold ${activeDay === day ? 'text-[#C9A84C]' : 'text-[#9A9080]'}`}>
-                {DAY_SHORT[day]}
+              <span className={`text-[9px] font-bold transition ${isToday ? 'text-[#C9A84C]' : activeDay === day ? 'text-[#F5F0E8]' : 'text-[#9A9080]'}`}>
+                {DAY_SHORT[day]}{isToday ? ' · Hoy' : ''}
               </span>
             </button>
           )
