@@ -447,8 +447,7 @@ export async function createTrainingUser(input: {
   fullName: string
   role: 'agent' | 'dc'
 }) {
-  const { profile } = await requireRole(['admin'])
-  if (profile.role !== 'admin') throw new Error('FORBIDDEN')
+  await requireRole(['admin', 'dc'])
   const admin = createAdminClient()
 
   const { data, error } = await admin.auth.admin.createUser({
@@ -474,8 +473,7 @@ export async function createTrainingUser(input: {
 }
 
 export async function deleteTrainingUser(userId: string) {
-  const { userId: me, profile } = await requireRole(['admin'])
-  if (profile.role !== 'admin') throw new Error('FORBIDDEN')
+  const { userId: me } = await requireRole(['admin', 'dc'])
   if (userId === me) throw new Error('CANNOT_DELETE_SELF')
   const admin = createAdminClient()
   await admin.auth.admin.deleteUser(userId)
@@ -483,8 +481,7 @@ export async function deleteTrainingUser(userId: string) {
 }
 
 export async function resetTrainingUserPassword(userId: string, newPassword: string) {
-  const { profile } = await requireRole(['admin'])
-  if (profile.role !== 'admin') throw new Error('FORBIDDEN')
+  await requireRole(['admin', 'dc'])
   if (!newPassword || newPassword.length < 6) throw new Error('PASSWORD_TOO_SHORT')
   const admin = createAdminClient()
   const { error } = await admin.auth.admin.updateUserById(userId, { password: newPassword })

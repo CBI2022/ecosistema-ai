@@ -131,7 +131,7 @@ export function DCDashboard({ userName, userRole }: { userName: string; userRole
 
   if (showTeamDashboard) return <TeamDashboard onBack={() => setShowTeamDashboard(false)} />
 
-  const isAdmin = userRole === 'admin'
+  void userRole
 
   return (
     <div style={{ fontFamily: "'Helvetica Neue', Arial, sans-serif", background: '#09080A', minHeight: '100vh', color: '#DDD5C8', display: 'flex', flexDirection: 'column' }}>
@@ -175,7 +175,7 @@ export function DCDashboard({ userName, userRole }: { userName: string; userRole
                     {u.role === 'agent' && (
                       <button onClick={() => { setViewingAgentId(u.id); setShowManageUsers(false) }} style={{ background: '#D4A85320', border: '1px solid #D4A85340', color: '#D4A853', borderRadius: 8, padding: '6px 12px', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>View Profile</button>
                     )}
-                    {isAdmin && u.role !== 'admin' && (
+                    {u.role !== 'admin' && (
                       <div style={{ display: 'flex', gap: 6 }}>
                         <button onClick={() => { setResetId(resetId === u.id ? null : u.id); setNewPassword('') }} style={{ background: 'transparent', border: '1px solid #2A2430', color: '#6A6070', borderRadius: 8, padding: '6px 12px', cursor: 'pointer', fontSize: 12 }}>Reset PW</button>
                         <button onClick={() => deleteUser(u.id, u.full_name ?? u.email)} style={{ background: 'transparent', border: '1px solid #3A1A1A', color: '#E07B6A', borderRadius: 8, padding: '6px 12px', cursor: 'pointer', fontSize: 12 }}>Delete</button>
@@ -200,9 +200,7 @@ export function DCDashboard({ userName, userRole }: { userName: string; userRole
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
           <div style={{ fontSize: 11, color: '#3A3040' }}>{pct}% done</div>
           <button onClick={() => setShowTrainingVideos(true)} style={{ background: '#E07B6A', color: '#09080A', border: 'none', borderRadius: 10, padding: '8px 14px', cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>🎬 Training Videos</button>
-          {isAdmin && (
-            <button onClick={() => setShowManageUsers(true)} style={{ background: '#9B7EC8', color: '#09080A', border: 'none', borderRadius: 10, padding: '8px 14px', cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>+ Add Agents</button>
-          )}
+          <button onClick={() => setShowManageUsers(true)} style={{ background: '#9B7EC8', color: '#09080A', border: 'none', borderRadius: 10, padding: '8px 14px', cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>+ Add Agents</button>
           <button onClick={() => setShowTeamDashboard(true)} style={{ background: '#D4A853', color: '#09080A', border: 'none', borderRadius: 10, padding: '8px 14px', cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>📊 Team</button>
           <button onClick={() => setShowPrompt(true)} style={{ background: '#6BAE94', color: '#09080A', border: 'none', borderRadius: 10, padding: '8px 14px', cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>🌅 My Focus</button>
         </div>

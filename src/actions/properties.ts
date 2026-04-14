@@ -229,6 +229,28 @@ export async function saveProperty(formData: FormData, publish = false) {
   } catch { /* non-blocking */ }
 
   if (publish) {
+    // Validar que la propiedad tenga los campos obligatorios de Sooprema
+    const missing: string[] = []
+    if (!propertyData.price) missing.push('Precio')
+    if (!propertyData.bedrooms) missing.push('Dormitorios')
+    if (!propertyData.bathrooms) missing.push('Baños')
+    if (!propertyData.build_area_m2) missing.push('m² construidos')
+    if (!propertyData.plot_area_m2 && propertyData.property_type === 'villa') missing.push('m² parcela')
+    if (!propertyData.description_es && !propertyData.description_en) missing.push('Descripción (ES o EN)')
+    if (!propertyData.location && !propertyData.zone) missing.push('Ubicación o Zona')
+    if (!propertyData.year_built) missing.push('Año de construcción')
+
+    if (missing.length > 0) {
+      await supabase
+        .from('properties')
+        .update({ suprema_status: null })
+        .eq('id', result.id)
+      return {
+        error: `Faltan campos obligatorios para publicar en Sooprema: ${missing.join(', ')}. La propiedad se guardó pero no se publicará hasta que rellenes estos datos.`,
+        propertyId: result.id,
+      }
+    }
+
     await supabase.from('suprema_jobs').insert({
       property_id: result.id,
       agent_id: user.id,
