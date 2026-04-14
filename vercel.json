@@ -1,0 +1,10 @@
+{
+  "functions": {
+    "src/app/api/sooprema-run/**/*": {
+      "maxDuration": 300
+    },
+    "src/actions/suprema.ts": {
+      "maxDuration": 300
+    }
+  }
+}

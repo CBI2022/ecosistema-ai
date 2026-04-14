@@ -4,6 +4,9 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendPushToUser } from '@/actions/push'
+import { mapPropertyToSooprema } from '@/lib/sooprema/mapper'
+import { runSoopremaAutomation } from '@/lib/sooprema/automation'
+import type { Property } from '@/types/database'
 
 export async function retrySupremaJob(jobId: string) {
   const supabase = await createClient()
@@ -42,14 +45,19 @@ export async function cancelSupremaJob(jobId: string) {
   return { success: true }
 }
 
-// Simulates a Suprema automation run — replace with real Playwright integration
+/**
+ * Ejecuta el job real de Sooprema con Playwright.
+ * Requiere maxDuration alto (300s en Vercel Pro).
+ */
 export async function runSupremaJob(jobId: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Not authenticated' }
 
-  // Fetch the job + property
-  const { data: job } = await supabase
+  const admin = createAdminClient()
+
+  // Fetch job + property
+  const { data: job } = await admin
     .from('suprema_jobs')
     .select('*, properties(*)')
     .eq('id', jobId)
@@ -57,74 +65,143 @@ export async function runSupremaJob(jobId: string) {
 
   if (!job) return { error: 'Job not found' }
 
-  const property = (job as Record<string, unknown>).properties as Record<string, unknown> | null
+  const property = (job as Record<string, unknown>).properties as Property | null
+  if (!property) return { error: 'Property data not found' }
 
-  // Mark as running
-  await supabase
-    .from('suprema_jobs')
-    .update({ status: 'running', started_at: new Date().toISOString(), logs: ['Job started'] })
-    .eq('id', jobId)
-
-  const logs: string[] = [
-    `[${new Date().toLocaleTimeString()}] Opening Suprema portal...`,
-    `[${new Date().toLocaleTimeString()}] Logging in with agent credentials...`,
-    `[${new Date().toLocaleTimeString()}] Navigating to "Add New Property"...`,
-    `[${new Date().toLocaleTimeString()}] Filling property type: ${property?.property_type || 'villa'}`,
-    `[${new Date().toLocaleTimeString()}] Entering location: ${property?.location || 'Costa Blanca'}`,
-    `[${new Date().toLocaleTimeString()}] Setting price: €${property?.price?.toLocaleString() || '—'}`,
-    `[${new Date().toLocaleTimeString()}] Filling bedrooms: ${property?.bedrooms || '—'}, bathrooms: ${property?.bathrooms || '—'}`,
-    `[${new Date().toLocaleTimeString()}] Entering Spanish description (ES)...`,
-    `[${new Date().toLocaleTimeString()}] Entering English description (EN)...`,
-    `[${new Date().toLocaleTimeString()}] Fetching property photos...`,
-    `[${new Date().toLocaleTimeString()}] Uploading standard photos (sorted by order)...`,
-    `[${new Date().toLocaleTimeString()}] Uploading drone photos last (aerial views)...`,
-    `[${new Date().toLocaleTimeString()}] Validating address on Suprema map...`,
-    `[${new Date().toLocaleTimeString()}] Setting annual expenses (IBI, community, basura)...`,
-    `[${new Date().toLocaleTimeString()}] Submitting listing for review...`,
-    `[${new Date().toLocaleTimeString()}] Listing submitted successfully! Reference: ${property?.reference || '—'}`,
-  ]
-
-  // NOTE: This is a simulation. In production, replace the body above with:
-  // const result = await runPlaywrightAutomation(job, property)
-  // That function would use Playwright to automate the actual Suprema portal.
-
-  await supabase
+  // Marcar como running
+  await admin
     .from('suprema_jobs')
     .update({
-      status: 'done',
-      logs,
-      completed_at: new Date().toISOString(),
+      status: 'running',
+      started_at: new Date().toISOString(),
+      logs: ['Job started'],
     })
     .eq('id', jobId)
 
-  // Update property suprema_status + notificar al agente
-  if (property?.id) {
-    const admin = createAdminClient()
-    await admin
-      .from('properties')
-      .update({ suprema_status: 'published' })
-      .eq('id', property.id as string)
+  try {
+    // Fetch owner
+    let owner = null
+    if (property.owner_id) {
+      const { data: o } = await admin
+        .from('owners')
+        .select('first_name, last_name, full_name, email, phone, nif, sooprema_owner_id')
+        .eq('id', property.owner_id)
+        .single()
+      owner = o
+    }
 
-    // Notificación de éxito al agente
-    const agentId = (job as Record<string, unknown>).agent_id as string
-    if (agentId) {
+    // Fetch photos vinculadas + URLs públicas
+    const { data: rawPhotos } = await admin
+      .from('property_photos')
+      .select('id, storage_path, is_drone, sort_order')
+      .eq('property_id', property.id)
+      .order('sort_order', { ascending: true })
+
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+    const photos = (rawPhotos || []).map((p) => {
+      // Si storage_path ya es URL absoluta, úsala; si no, componer URL pública
+      const url = p.storage_path.startsWith('http')
+        ? p.storage_path
+        : `${supabaseUrl}/storage/v1/object/public/property-photos/${p.storage_path}`
+      return {
+        public_url: url,
+        is_drone: p.is_drone,
+        sort_order: p.sort_order,
+      }
+    })
+
+    // Mapping agente CBI → agente Sooprema
+    const { data: agentMap } = await admin
+      .from('agent_sooprema_map')
+      .select('sooprema_agent_id')
+      .eq('profile_id', property.agent_id)
+      .maybeSingle()
+
+    // Preparar mapping
+    const fields = mapPropertyToSooprema({
+      property,
+      owner,
+      soopremaAgentId: agentMap?.sooprema_agent_id || null,
+      photos,
+    })
+
+    // Ejecutar automation
+    const result = await runSoopremaAutomation(fields, { timeout: 60000 })
+
+    // Guardar resultado
+    const finalStatus = result.success ? 'done' : 'error'
+    await admin
+      .from('suprema_jobs')
+      .update({
+        status: finalStatus,
+        logs: result.logs,
+        error_message: result.error || null,
+        completed_at: new Date().toISOString(),
+      })
+      .eq('id', jobId)
+
+    // Update property
+    if (result.success) {
+      await admin
+        .from('properties')
+        .update({
+          suprema_status: 'published',
+          sooprema_external_id: result.sooprema_external_id || null,
+          sooprema_public_url: result.sooprema_public_url || null,
+        })
+        .eq('id', property.id)
+
+      // Notificación éxito
       await admin.from('notifications').insert({
         type: 'suprema_done',
-        title: '✅ Propiedad publicada en Suprema',
-        message: `La propiedad ${property?.reference || ''} está publicada y activa en Suprema. Referencia: ${property?.reference || '—'}.`,
-        target_user_id: agentId,
+        title: '✅ Propiedad publicada en Sooprema',
+        message: `La propiedad ${property.reference || ''} está publicada. Referencia: ${property.reference}.`,
+        target_user_id: property.agent_id,
         is_read: false,
       })
-      // Push
-      await sendPushToUser(agentId, {
+      await sendPushToUser(property.agent_id, {
         title: '✅ Propiedad publicada',
-        body: `${property?.reference || 'Tu propiedad'} está activa en Suprema`,
+        body: `${property.reference || 'Tu propiedad'} está activa en Sooprema`,
         url: '/properties',
       })
-    }
-  }
+    } else {
+      await admin
+        .from('properties')
+        .update({ suprema_status: 'error' })
+        .eq('id', property.id)
 
-  revalidatePath('/suprema')
-  revalidatePath('/properties')
-  return { success: true, logs }
+      // Notificación error
+      await admin.from('notifications').insert({
+        type: 'suprema_error',
+        title: '❌ Error publicando en Sooprema',
+        message: `Falló la publicación de ${property.reference}: ${result.error || 'Ver logs'}`,
+        target_user_id: property.agent_id,
+        is_read: false,
+      })
+    }
+
+    revalidatePath('/suprema')
+    revalidatePath('/properties')
+    return { success: result.success, logs: result.logs, error: result.error }
+  } catch (err) {
+    const errMsg = (err as Error).message
+    await admin
+      .from('suprema_jobs')
+      .update({
+        status: 'error',
+        error_message: errMsg,
+        completed_at: new Date().toISOString(),
+      })
+      .eq('id', jobId)
+
+    await admin
+      .from('properties')
+      .update({ suprema_status: 'error' })
+      .eq('id', property.id)
+
+    return { error: errMsg }
+  }
 }
+
+// Nota: la configuración de maxDuration se hace en vercel.json (functions config)
+// ya que los archivos 'use server' no admiten exports no-action.
