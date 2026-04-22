@@ -756,9 +756,11 @@ export function PropertyForm({ availablePhotos = [], storageBaseUrl = '', initia
       {error && <p className="rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400">{error}</p>}
       {success && <p className="rounded-lg border border-[#2ECC9A]/20 bg-[#2ECC9A]/10 px-4 py-3 text-sm text-[#2ECC9A]">{success}</p>}
 
-      {/* Actions (fixed bottom bar) */}
-      <div className="sticky bottom-0 z-30 -mx-6 flex items-center justify-between gap-3 border-t border-[#C9A84C]/15 bg-[#0A0A0A]/95 px-6 py-3 backdrop-blur-xl">
-        <div className="flex gap-1.5">
+      {/* Actions (fixed bottom bar) — sobre el bottom-nav en mobile */}
+      <div
+        className="pb-safe sticky bottom-[calc(64px+env(safe-area-inset-bottom))] z-30 -mx-6 flex flex-col gap-2 border-t border-[#C9A84C]/15 bg-[#0A0A0A]/95 px-4 pt-3 backdrop-blur-xl sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:px-6 sm:py-3 md:bottom-0"
+      >
+        <div className="flex justify-center gap-1.5 sm:justify-start">
           {TABS.map((t, i) => (
             <span key={t.id} className={`h-1.5 w-5 rounded-full transition ${activeTab === t.id ? 'bg-[#C9A84C]' : 'bg-white/10'}`} title={`${i + 1}. ${t.label}`} />
           ))}
@@ -768,7 +770,7 @@ export function PropertyForm({ availablePhotos = [], storageBaseUrl = '', initia
             type="button"
             onClick={() => handleSubmit(false)}
             disabled={isPending}
-            className="rounded-xl border border-white/10 bg-white/5 px-5 py-2.5 text-xs font-bold uppercase tracking-[0.06em] text-[#9A9080] hover:text-[#F5F0E8] disabled:opacity-50"
+            className="flex-1 rounded-xl border border-white/10 bg-white/5 px-5 py-3 text-xs font-bold uppercase tracking-[0.06em] text-[#9A9080] active:scale-[0.98] hover:text-[#F5F0E8] disabled:opacity-50 sm:flex-none sm:py-2.5"
           >
             💾 Borrador
           </button>
@@ -776,9 +778,9 @@ export function PropertyForm({ availablePhotos = [], storageBaseUrl = '', initia
             type="button"
             onClick={() => handleSubmit(true)}
             disabled={isPending}
-            className="rounded-xl bg-[#C9A84C] px-6 py-2.5 text-xs font-bold uppercase tracking-[0.06em] text-black hover:bg-[#E8C96A] disabled:opacity-50"
+            className="flex-1 rounded-xl bg-[#C9A84C] px-6 py-3 text-xs font-bold uppercase tracking-[0.06em] text-black active:scale-[0.98] hover:bg-[#E8C96A] disabled:opacity-50 sm:flex-none sm:py-2.5"
           >
-            🚀 Publicar en Sooprema
+            🚀 Publicar
           </button>
         </div>
       </div>

@@ -62,23 +62,23 @@ export function StatCards({
   ]
 
   return (
-    <div className="mb-5 grid grid-cols-2 gap-2.5 lg:grid-cols-4">
+    <div className="mb-5 grid grid-cols-2 gap-3 sm:gap-2.5 lg:grid-cols-4">
       {cards.map((card) => (
         <div
           key={card.label}
-          className="rounded-[10px] border border-white/8 bg-[#1C1C1C] p-3.5"
+          className="rounded-2xl border border-white/8 bg-[#1C1C1C] p-4 sm:rounded-[10px] sm:p-3.5"
           style={{ borderTop: `2px solid ${card.borderColor}` }}
         >
-          <div className="mb-1.5 text-[9px] font-bold uppercase tracking-[0.12em] text-[#9A9080]">
+          <div className="mb-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-[#9A9080] sm:text-[9px]">
             {card.label}
           </div>
           <div
-            className="font-['Maharlika',serif] text-3xl font-bold leading-none"
+            className="font-['Maharlika',serif] text-[26px] font-bold leading-none sm:text-3xl"
             style={{ color: card.color }}
           >
             {card.value}
           </div>
-          <div className="mt-1.5 text-[10px] text-[#9A9080]">{card.sub}</div>
+          <div className="mt-1.5 text-[11px] leading-snug text-[#9A9080] sm:text-[10px]">{card.sub}</div>
         </div>
       ))}
     </div>

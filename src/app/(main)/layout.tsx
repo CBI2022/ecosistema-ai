@@ -57,7 +57,7 @@ export default async function MainLayout({
     <div className="min-h-screen bg-[#0A0A0A]">
       <AppHeader profile={profile} notifCount={notifCount} />
       <AppNav role={profile.role} notifCount={notifCount} />
-      <main className="mx-auto max-w-[1400px] px-3 py-4 sm:px-6 sm:py-6 lg:px-8">
+      <main className="mx-auto max-w-[1400px] px-3 py-4 pb-bottom-nav sm:px-6 sm:py-6 md:pb-6 lg:px-8">
         {children}
       </main>
       {profile.must_change_credentials && (

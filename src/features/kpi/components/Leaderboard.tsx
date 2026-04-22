@@ -153,7 +153,7 @@ export function Leaderboard({ agents: initialAgents, currentYear }: LeaderboardP
       </div>
 
       {/* Stats sidebar */}
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {/* Top performer */}
         <div className="rounded-2xl border border-[#C9A84C]/20 bg-[#131313] p-4 text-center">
           <p className="mb-3 text-[9px] font-bold uppercase tracking-[0.15em] text-[#C9A84C]">

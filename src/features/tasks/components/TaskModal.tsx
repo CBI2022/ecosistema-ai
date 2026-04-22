@@ -77,9 +77,9 @@ export function TaskModal({
   const st = STATUS_CONFIG[status]
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 backdrop-blur-sm" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/85 backdrop-blur-sm sm:items-center sm:p-4" onClick={onClose}>
       <div
-        className="flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-white/8 bg-[#131313] shadow-2xl"
+        className="pb-safe flex h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded-t-3xl border border-white/8 bg-[#131313] shadow-2xl sm:h-auto sm:max-h-[92vh] sm:rounded-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header con status pill + close */}

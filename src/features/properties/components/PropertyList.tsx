@@ -113,7 +113,7 @@ export function PropertyList({ properties }: PropertyListProps) {
           onClick={() => !isPending && setConfirmId(null)}
         >
           <div
-            className="w-full max-w-md rounded-t-2xl border border-white/10 bg-[#131313] p-6 shadow-2xl sm:rounded-2xl"
+            className="w-full max-w-md rounded-t-3xl border border-white/10 bg-[#131313] px-6 pb-sheet pt-6 shadow-2xl sm:rounded-2xl sm:pb-6"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-4">

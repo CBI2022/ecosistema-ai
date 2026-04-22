@@ -288,9 +288,9 @@ export function SettingsForm({ profile }: SettingsFormProps) {
         </div>
       </div>
 
-      {/* Sticky global save bar */}
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[#C9A84C]/20 bg-[#0A0A0A]/95 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-2xl items-center justify-between gap-4 px-6 py-4">
+      {/* Sticky global save bar — sobre el bottom-nav en mobile */}
+      <div className="pb-safe fixed inset-x-0 bottom-[calc(64px+env(safe-area-inset-bottom))] z-40 border-t border-[#C9A84C]/20 bg-[#0A0A0A]/95 backdrop-blur-xl md:bottom-0">
+        <div className="mx-auto flex max-w-2xl items-center justify-between gap-3 px-4 py-3 sm:gap-4 sm:px-6 sm:py-4">
           <div className="flex-1">
             {toast ? (
               <p className={`text-sm font-medium ${toast.type === 'success' ? 'text-[#2ECC9A]' : 'text-red-400'}`}>

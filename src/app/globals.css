@@ -66,6 +66,40 @@ body {
   max-width: 100vw;
 }
 
+/* iOS PWA / standalone: evitar que el statusbar se solape con el chrome */
+@supports (padding: max(0px)) {
+  .pt-safe {
+    padding-top: max(env(safe-area-inset-top), 0px);
+  }
+  .pb-safe {
+    padding-bottom: max(env(safe-area-inset-bottom), 0px);
+  }
+  .pl-safe {
+    padding-left: max(env(safe-area-inset-left), 0px);
+  }
+  .pr-safe {
+    padding-right: max(env(safe-area-inset-right), 0px);
+  }
+  .top-safe {
+    top: env(safe-area-inset-top);
+  }
+  .bottom-safe {
+    bottom: env(safe-area-inset-bottom);
+  }
+  /* altura útil del bottom-nav incluyendo home indicator */
+  .h-bottom-nav {
+    height: calc(64px + env(safe-area-inset-bottom));
+  }
+  .pb-bottom-nav {
+    /* padding para que el contenido no quede oculto tras el bottom-nav en mobile */
+    padding-bottom: calc(64px + env(safe-area-inset-bottom) + 1rem);
+  }
+  /* bottom-sheets: respeta home indicator sin perder el padding visual */
+  .pb-sheet {
+    padding-bottom: max(1.5rem, calc(env(safe-area-inset-bottom) + 0.75rem));
+  }
+}
+
 img,
 video {
   max-width: 100%;

@@ -451,31 +451,33 @@ export function RevenueChart({
         <p className="mb-3 text-[9px] font-bold uppercase tracking-[0.15em] text-[#9A9080]">
           + {t('logClosing')}
         </p>
-        <div className="flex flex-wrap items-end gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-end">
           <input
             type="text"
             placeholder={t('propertyAddress')}
             value={address}
             onChange={(e) => setAddress(e.target.value)}
-            className={`${inputClass} min-w-[160px] flex-[2]`}
+            className={`${inputClass} w-full sm:min-w-[160px] sm:flex-[2]`}
           />
-          <input
-            type="number"
-            placeholder={t('commission')}
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            className={`${inputClass} min-w-[110px] flex-1`}
-          />
-          <input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className={`${inputClass} min-w-[130px]`}
-          />
+          <div className="flex gap-2">
+            <input
+              type="number"
+              placeholder={t('commission')}
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              className={`${inputClass} flex-1 sm:min-w-[110px]`}
+            />
+            <input
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className={`${inputClass} flex-1 sm:min-w-[130px] sm:flex-none`}
+            />
+          </div>
           <button
             onClick={handleLog}
             disabled={isPending}
-            className="rounded-lg bg-[#C9A84C] px-4 py-2 text-sm font-bold text-black transition hover:bg-[#E8C96A] disabled:opacity-50"
+            className="flex h-12 w-full items-center justify-center rounded-lg bg-[#C9A84C] px-4 text-sm font-bold text-black transition active:scale-[0.98] hover:bg-[#E8C96A] disabled:opacity-50 sm:h-auto sm:w-auto sm:py-2"
           >
             {isPending ? '...' : `+ ${t('log')}`}
           </button>
@@ -498,9 +500,97 @@ export function RevenueChart({
               Aún no has registrado ninguna venta. Usa el formulario de arriba.
             </p>
           ) : (
-            <div className="overflow-hidden rounded-xl border border-white/8 bg-[#0A0A0A]">
-              <div className="max-h-[400px] overflow-y-auto">
-                <table className="w-full text-sm">
+            <>
+              {/* ───── MOBILE: card list ───── */}
+              <ul className="space-y-2 sm:hidden">
+                {sortedSales.map((sale) => {
+                  const isEditing = editingSaleId === sale.id
+                  return (
+                    <li
+                      key={sale.id}
+                      className="rounded-xl border border-white/8 bg-[#0F0F0F] p-3"
+                    >
+                      {isEditing ? (
+                        <div className="space-y-2">
+                          <input
+                            type="date"
+                            value={editDraft.date}
+                            onChange={(e) => setEditDraft({ ...editDraft, date: e.target.value })}
+                            className="w-full rounded-lg border border-white/10 bg-[#1C1C1C] px-3 py-2.5 text-sm text-[#F5F0E8] outline-none focus:border-[#C9A84C]/60"
+                          />
+                          <input
+                            type="text"
+                            value={editDraft.address}
+                            onChange={(e) => setEditDraft({ ...editDraft, address: e.target.value })}
+                            placeholder="Dirección"
+                            className="w-full rounded-lg border border-white/10 bg-[#1C1C1C] px-3 py-2.5 text-sm text-[#F5F0E8] outline-none focus:border-[#C9A84C]/60"
+                          />
+                          <input
+                            type="number"
+                            value={editDraft.commission}
+                            onChange={(e) => setEditDraft({ ...editDraft, commission: e.target.value })}
+                            placeholder="Comisión €"
+                            className="w-full rounded-lg border border-white/10 bg-[#1C1C1C] px-3 py-2.5 text-sm text-[#F5F0E8] outline-none focus:border-[#C9A84C]/60"
+                          />
+                          <div className="flex gap-2">
+                            <button
+                              onClick={handleSaveEdit}
+                              disabled={isPending}
+                              className="flex h-11 flex-1 items-center justify-center rounded-lg bg-[#2ECC9A]/15 text-sm font-bold text-[#2ECC9A] active:scale-95 disabled:opacity-50"
+                            >
+                              ✓ Guardar
+                            </button>
+                            <button
+                              onClick={() => { setEditingSaleId(null); setSaleError(null) }}
+                              className="flex h-11 flex-1 items-center justify-center rounded-lg border border-white/10 text-sm text-[#9A9080] active:scale-95"
+                            >
+                              Cancelar
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-start gap-3">
+                          <div className="min-w-0 flex-1">
+                            <div className="mb-0.5 text-[11px] uppercase tracking-wider text-[#9A9080]">
+                              {new Date(sale.closing_date + 'T00:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}
+                            </div>
+                            <div className="truncate text-sm font-medium text-[#F5F0E8]">
+                              {sale.property_address || <span className="text-[#9A9080]/60">Sin dirección</span>}
+                            </div>
+                            <div className="mt-1 text-base font-bold text-[#C9A84C]">
+                              {fmtEur(sale.commission ?? sale.sale_price ?? 0)}
+                            </div>
+                          </div>
+                          <div className="flex shrink-0 flex-col gap-1.5">
+                            <button
+                              onClick={() => beginEdit(sale)}
+                              className="flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-[#9A9080] active:scale-95"
+                              title="Editar"
+                              aria-label="Editar"
+                            >
+                              ✎
+                            </button>
+                            <button
+                              onClick={() => handleDeleteSale(sale.id)}
+                              disabled={isPending}
+                              className="flex h-10 w-10 items-center justify-center rounded-lg border border-red-500/20 bg-red-500/10 text-red-400 active:scale-95 disabled:opacity-50"
+                              title="Eliminar"
+                              aria-label="Eliminar"
+                            >
+                              🗑
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </li>
+                  )
+                })}
+              </ul>
+
+              {/* ───── DESKTOP: table ───── */}
+              <div className="hidden overflow-hidden rounded-xl border border-white/8 bg-[#0A0A0A] sm:block">
+                <div className="max-h-[400px] overflow-y-auto">
+                  <table className="w-full text-sm">
                   <thead className="sticky top-0 bg-[#1C1C1C] text-left text-[9px] font-bold uppercase tracking-[0.12em] text-[#9A9080]">
                     <tr>
                       <th className="px-3 py-2">Fecha</th>
@@ -596,8 +686,9 @@ export function RevenueChart({
                     })}
                   </tbody>
                 </table>
+                </div>
               </div>
-            </div>
+            </>
           )}
         </div>
       )}

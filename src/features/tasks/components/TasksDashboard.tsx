@@ -264,8 +264,8 @@ export function TasksDashboard({
         </div>
       </div>
 
-      {/* Stats — 5 columnas GTD */}
-      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-5">
+      {/* Stats — 5 columnas GTD (scroll horizontal en mobile para mantener legibilidad) */}
+      <div className="-mx-3 flex gap-2 overflow-x-auto px-3 pb-1 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-5 sm:gap-2.5 sm:px-0 sm:pb-0 [&::-webkit-scrollbar]:hidden">
         {[
           { label: t('total'), value: stats.total, color: '#F5F0E8', emoji: '📋' },
           { label: t('statusNextAction'), value: stats.next_action, color: STATUS_CONFIG.next_action.color, emoji: STATUS_CONFIG.next_action.emoji },
@@ -273,8 +273,12 @@ export function TasksDashboard({
           { label: t('statusSomeday'), value: stats.someday, color: STATUS_CONFIG.someday.color, emoji: STATUS_CONFIG.someday.emoji },
           { label: t('statusComplete'), value: stats.complete, color: STATUS_CONFIG.complete.color, emoji: STATUS_CONFIG.complete.emoji },
         ].map((s) => (
-          <div key={s.label} className="rounded-xl border border-white/8 bg-[#131313] p-3" style={{ borderTop: `2px solid ${s.color}` }}>
-            <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-[#9A9080]">{s.emoji} {s.label}</p>
+          <div
+            key={s.label}
+            className="min-w-[128px] shrink-0 rounded-xl border border-white/8 bg-[#131313] p-3 sm:min-w-0 sm:shrink"
+            style={{ borderTop: `2px solid ${s.color}` }}
+          >
+            <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-[#9A9080] sm:text-[9px] sm:tracking-[0.12em]">{s.emoji} {s.label}</p>
             <p className="mt-1 font-['Maharlika',serif] text-3xl font-bold" style={{ color: s.color }}>{s.value}</p>
           </div>
         ))}
