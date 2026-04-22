@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useEffect } from 'react'
 import { saveProperty, generateDescription } from '@/actions/properties'
 import { OwnerPicker } from './OwnerPicker'
+import type { Property } from '@/types/database'
 
 interface AgentPhoto {
   id: string
@@ -15,6 +16,7 @@ interface AgentPhoto {
 interface PropertyFormProps {
   availablePhotos?: AgentPhoto[]
   storageBaseUrl?: string
+  initialProperty?: Property | null
 }
 
 const ZONES = ['Altea','Albir','Calpe','Javea','Moraira','Benissa','Denia','Benidorm','La Nucia','Polop','Finestrat']
@@ -91,30 +93,64 @@ function CheckField({ name, label, defaultChecked }: { name: string; label: stri
   )
 }
 
-export function PropertyForm({ availablePhotos = [], storageBaseUrl = '' }: PropertyFormProps = {}) {
+export function PropertyForm({ availablePhotos = [], storageBaseUrl = '', initialProperty = null }: PropertyFormProps = {}) {
   const [activeTab, setActiveTab] = useState<TabId>('basics')
   const [isPending, startTransition] = useTransition()
   const [isAI, startAI] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+  const isEditing = !!initialProperty?.id
 
   // Shared state
   const [formState, setFormState] = useState({
-    property_type: 'villa',
-    listing_type: 'sale',
-    zone: 'Altea',
-    status_tags: [] as string[],
+    property_type: initialProperty?.property_type ?? 'villa',
+    listing_type: initialProperty?.listing_type ?? 'sale',
+    zone: initialProperty?.zone ?? 'Altea',
+    status_tags: (initialProperty?.status_tags as string[] | null) ?? [] as string[],
     // Textos (multi-lang)
-    title: '',
-    title_headline: '',
-    title_in_text: '',
-    description_es: '',
-    description_en: '',
-    description_nl: '',
+    title: initialProperty?.title ?? '',
+    title_headline: initialProperty?.title_headline ?? '',
+    title_in_text: initialProperty?.title_in_text ?? '',
+    description_es: initialProperty?.description_es ?? '',
+    description_en: initialProperty?.description_en ?? '',
+    description_nl: initialProperty?.description_nl ?? '',
   })
 
   const [selectedPhotoIds, setSelectedPhotoIds] = useState<Set<string>>(new Set())
-  const [ownerId, setOwnerId] = useState<string | null>(null)
+  const [ownerId, setOwnerId] = useState<string | null>(initialProperty?.owner_id ?? null)
+
+  // Scroll al form cuando entramos en modo edición
+  useEffect(() => {
+    if (isEditing) {
+      const form = document.getElementById('propForm')
+      form?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }, [isEditing])
+
+  // Precarga TODOS los inputs uncontrolled desde initialProperty al montar
+  useEffect(() => {
+    if (!initialProperty) return
+    const form = document.getElementById('propForm') as HTMLFormElement | null
+    if (!form) return
+
+    // Entries del initialProperty → setea el input/select con ese name si existe
+    for (const [key, value] of Object.entries(initialProperty)) {
+      if (value === null || value === undefined) continue
+      const el = form.querySelector<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>(
+        `[name="${key}"]`
+      )
+      if (!el) continue
+      if (el.type === 'checkbox' && el instanceof HTMLInputElement) {
+        el.checked = Boolean(value)
+      } else {
+        el.value = String(value)
+      }
+    }
+    // Owner
+    if (initialProperty.owner_id) setOwnerId(initialProperty.owner_id)
+    // Fotos ya vinculadas a esta propiedad
+    // (not loaded here — el form siempre muestra las disponibles)
+  }, [initialProperty])
 
   function update<K extends keyof typeof formState>(k: K, v: (typeof formState)[K]) {
     setFormState((p) => ({ ...p, [k]: v }))
@@ -174,8 +210,25 @@ export function PropertyForm({ availablePhotos = [], storageBaseUrl = '' }: Prop
 
   const sectionClass = 'rounded-2xl border border-white/8 bg-[#131313] p-5'
 
+  const ip = initialProperty
+  const num = (v: number | null | undefined) => (v === null || v === undefined ? '' : String(v))
+
   return (
     <form id="propForm" onSubmit={(e) => e.preventDefault()} className="space-y-5">
+      {/* Hidden id para edición */}
+      {ip?.id && <input type="hidden" name="id" value={ip.id} />}
+
+      {/* Banner modo edición */}
+      {isEditing && (
+        <div className="flex items-center justify-between rounded-xl border border-[#C9A84C]/40 bg-[#C9A84C]/10 px-4 py-3">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.12em] text-[#C9A84C]">Editando propiedad</p>
+            <p className="mt-0.5 text-sm text-[#F5F0E8]">{ip?.reference} — {ip?.title || ip?.location || 'Sin título'}</p>
+          </div>
+          <a href="/properties" className="rounded-lg border border-white/10 px-3 py-1.5 text-xs font-bold text-[#9A9080] hover:text-[#F5F0E8]">✕ Cancelar</a>
+        </div>
+      )}
+
       {/* Tabs */}
       <div className="flex flex-wrap gap-1.5 rounded-2xl border border-white/8 bg-[#131313] p-1.5">
         {TABS.map((tab) => (
@@ -197,13 +250,13 @@ export function PropertyForm({ availablePhotos = [], storageBaseUrl = '' }: Prop
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <div>
               <label className={labelClass}>Tipo de operación</label>
-              <select name="listing_type" value={formState.listing_type} onChange={(e) => update('listing_type', e.target.value)} className={inputClass}>
+              <select name="listing_type" value={formState.listing_type} onChange={(e) => update('listing_type', e.target.value as typeof formState.listing_type)} className={inputClass}>
                 {LISTING_TYPES.map((l) => <option key={l.id} value={l.id}>{l.label}</option>)}
               </select>
             </div>
             <div>
               <label className={labelClass}>Tipo de propiedad</label>
-              <select name="property_type" value={formState.property_type} onChange={(e) => update('property_type', e.target.value)} className={inputClass}>
+              <select name="property_type" value={formState.property_type} onChange={(e) => update('property_type', e.target.value as typeof formState.property_type)} className={inputClass}>
                 {PROPERTY_TYPES.map((t) => <option key={t} value={t}>{t.replace(/_/g, ' ')}</option>)}
               </select>
             </div>
@@ -215,7 +268,7 @@ export function PropertyForm({ availablePhotos = [], storageBaseUrl = '' }: Prop
             </div>
             <div>
               <label className={labelClass}>Referencia (auto si vacío)</label>
-              <input name="reference" className={inputClass} placeholder="A001" />
+              <input name="reference" defaultValue={ip?.reference ?? ''} className={inputClass} placeholder="A001" />
             </div>
             <div>
               <label className={labelClass}>Título de trabajo</label>
@@ -223,7 +276,7 @@ export function PropertyForm({ availablePhotos = [], storageBaseUrl = '' }: Prop
             </div>
             <div>
               <label className={labelClass}>Vistas</label>
-              <select name="views" className={inputClass} defaultValue="">
+              <select name="views" className={inputClass} defaultValue={ip?.views ?? ''}>
                 <option value="">—</option>
                 {VIEWS_OPTIONS.map((v) => <option key={v} value={v}>{v}</option>)}
               </select>
@@ -255,15 +308,15 @@ export function PropertyForm({ availablePhotos = [], storageBaseUrl = '' }: Prop
           <div className="mt-5 grid gap-4 sm:grid-cols-3">
             <div>
               <label className={labelClass}>Año construcción</label>
-              <input name="year_built" type="number" className={inputClass} placeholder="2013" />
+              <input name="year_built" type="number" defaultValue={num(ip?.year_built)} className={inputClass} placeholder="2013" />
             </div>
             <div>
               <label className={labelClass}>Año reforma</label>
-              <input name="year_reformed" type="number" className={inputClass} />
+              <input name="year_reformed" type="number" defaultValue={num(ip?.year_reformed)} className={inputClass} />
             </div>
             <div>
               <label className={labelClass}>Estado ocupación</label>
-              <select name="occupation_status" className={inputClass} defaultValue="">
+              <select name="occupation_status" className={inputClass} defaultValue={ip?.occupation_status ?? ''}>
                 <option value="">—</option>
                 {OCCUPATION.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
               </select>

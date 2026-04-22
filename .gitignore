@@ -63,3 +63,11 @@ Thumbs.db
 # Supabase
 supabase/.branches
 supabase/.temp
+
+# Playwright MCP test artifacts (local only)
+.playwright-mcp/
+/*.yml
+/properties-page.yml
+/tab-*.yml
+/suprema-page.yml
+/agent-properties-page.yml

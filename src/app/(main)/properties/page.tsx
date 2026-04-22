@@ -2,28 +2,24 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
 import { PropertyForm } from '@/features/properties/components/PropertyForm'
-import type { Property } from '@/types/database'
+import { PropertyList } from '@/features/properties/components/PropertyList'
 
-function StatusBadge({ status }: { status: Property['suprema_status'] }) {
-  const map: Record<string, { label: string; class: string }> = {
-    pending: { label: 'Draft', class: 'bg-white/10 text-[#9A9080]' },
-    publishing: { label: 'Publishing...', class: 'bg-yellow-500/15 text-yellow-400' },
-    published: { label: 'Published', class: 'bg-[#2ECC9A]/15 text-[#2ECC9A]' },
-    error: { label: 'Error', class: 'bg-red-500/15 text-red-400' },
-  }
-  const s = map[status] ?? map['pending']
-  return <span className={`rounded-full px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wide ${s.class}`}>{s.label}</span>
+interface PropertiesPageProps {
+  searchParams: Promise<{ edit?: string }>
 }
 
-export default async function PropertiesPage() {
+export default async function PropertiesPage({ searchParams }: PropertiesPageProps) {
   const supabase = await createClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
+  const params = await searchParams
+  const editId = params.edit
+
   const admin = createAdminClient()
-  const [{ data: properties }, { data: availablePhotos }] = await Promise.all([
+  const [{ data: properties }, { data: availablePhotos }, editProp] = await Promise.all([
     admin
       .from('properties')
       .select('*')
@@ -37,51 +33,32 @@ export default async function PropertiesPage() {
       .is('property_id', null)
       .order('created_at', { ascending: false })
       .limit(60),
+    editId
+      ? admin.from('properties').select('*').eq('id', editId).eq('agent_id', user.id).maybeSingle().then((r) => r.data)
+      : Promise.resolve(null),
   ])
 
   const storageBaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
 
   return (
     <div className="space-y-8">
-      {/* Header */}
       <div>
-        <h1 className="text-xl font-bold text-[#F5F0E8]">New Property Listing</h1>
+        <h1 className="text-xl font-bold text-[#F5F0E8]">
+          {editProp ? 'Editar propiedad' : 'New Property Listing'}
+        </h1>
         <p className="mt-1 text-sm text-[#9A9080]">
-          Rellena los datos, genera una descripción con IA y publica en Suprema
+          {editProp ? 'Modifica los datos y guarda o vuelve a publicar' : 'Rellena los datos, genera una descripción con IA y publica en Sooprema'}
         </p>
       </div>
 
-      {/* Form */}
       <PropertyForm
         availablePhotos={availablePhotos || []}
         storageBaseUrl={storageBaseUrl}
+        initialProperty={editProp}
       />
 
-      {/* Existing properties */}
       {properties && properties.length > 0 && (
-        <div>
-          <h2 className="mb-4 text-[10px] font-bold uppercase tracking-[0.18em] text-[#C9A84C]">
-            My Properties
-          </h2>
-          <div className="space-y-2.5">
-            {properties.map((p) => (
-              <div
-                key={p.id}
-                className="flex items-center justify-between rounded-xl border border-white/8 bg-[#131313] px-5 py-4"
-              >
-                <div>
-                  <p className="text-sm font-semibold text-[#F5F0E8]">
-                    {p.reference} — {p.title || p.location || 'Unnamed'}
-                  </p>
-                  <p className="mt-0.5 text-xs text-[#9A9080]">
-                    {p.zone} · €{p.price?.toLocaleString() ?? '—'} · {p.property_type}
-                  </p>
-                </div>
-                <StatusBadge status={p.suprema_status} />
-              </div>
-            ))}
-          </div>
-        </div>
+        <PropertyList properties={properties} />
       )}
     </div>
   )
