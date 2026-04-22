@@ -6,6 +6,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { sendPushToUser } from '@/actions/push'
 import { mapPropertyToSooprema } from '@/lib/sooprema/mapper'
 import { runSoopremaAutomation } from '@/lib/sooprema/automation'
+import { audit } from '@/lib/audit'
 import type { Property } from '@/types/database'
 
 export async function retrySupremaJob(jobId: string) {
@@ -25,6 +26,7 @@ export async function retrySupremaJob(jobId: string) {
     .eq('id', jobId)
 
   if (error) return { error: error.message }
+  await audit({ actor_id: user.id, actor_email: user.email, action: 'sooprema.retry', entity_type: 'suprema_jobs', entity_id: jobId })
   revalidatePath('/suprema')
   return { success: true }
 }
@@ -41,6 +43,7 @@ export async function cancelSupremaJob(jobId: string) {
     .in('status', ['queued', 'running'])
 
   if (error) return { error: error.message }
+  await audit({ actor_id: user.id, actor_email: user.email, action: 'sooprema.cancel', entity_type: 'suprema_jobs', entity_id: jobId })
   revalidatePath('/suprema')
   return { success: true }
 }

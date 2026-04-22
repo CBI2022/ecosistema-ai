@@ -1,22 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createHmac, timingSafeEqual } from 'crypto'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { webhookRateLimit } from '@/lib/rate-limit'
 
 /**
- * YouTube PubSubHubbub webhook.
+ * YouTube PubSubHubbub webhook con verificación HMAC.
  *
- * Flujo:
- * 1. YouTube envía GET con hub.challenge (verificación) → devolvemos challenge en texto plano
- * 2. YouTube envía POST con XML/ATOM cuando hay nuevo vídeo → parseamos video_id y creamos video_source
+ * Configuración requerida:
+ *   - Variable env YOUTUBE_WEBHOOK_SECRET = secreto compartido con hub.secret al suscribir
  *
- * Para activar:
- *   POST a https://pubsubhubbub.appspot.com/subscribe con:
+ * Suscripción (una vez):
+ *   POST https://pubsubhubbub.appspot.com/subscribe
  *     hub.mode=subscribe
- *     hub.topic=https://www.youtube.com/xml/feeds/videos.xml?channel_id=CBI_CHANNEL_ID
- *     hub.callback=https://tu-dominio.com/api/webhooks/youtube
+ *     hub.topic=https://www.youtube.com/xml/feeds/videos.xml?channel_id=CHANNEL_ID
+ *     hub.callback=https://app.costablancainvestments.com/api/webhooks/youtube
+ *     hub.secret=<YOUTUBE_WEBHOOK_SECRET>
  *     hub.verify=async
  */
 
-// Verificación de suscripción
+function verifyHmac(body: string, signatureHeader: string | null, secret: string): boolean {
+  if (!signatureHeader || !signatureHeader.startsWith('sha1=')) return false
+  const expected = createHmac('sha1', secret).update(body).digest('hex')
+  const received = signatureHeader.slice(5)
+  if (expected.length !== received.length) return false
+  try {
+    return timingSafeEqual(Buffer.from(expected, 'hex'), Buffer.from(received, 'hex'))
+  } catch {
+    return false
+  }
+}
+
 export async function GET(request: NextRequest) {
   const url = new URL(request.url)
   const challenge = url.searchParams.get('hub.challenge')
@@ -24,15 +37,28 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({ ok: true })
 }
 
-// Notificación de nuevo vídeo
 export async function POST(request: NextRequest) {
-  const text = await request.text()
+  const rl = webhookRateLimit(request, 'youtube')
+  if (!rl.allowed) {
+    return NextResponse.json({ error: 'rate limited' }, { status: 429, headers: { 'Retry-After': String(rl.retryAfter) } })
+  }
 
-  // Parse muy simple de Atom feed
-  const videoIdMatch = text.match(/<yt:videoId>([^<]+)<\/yt:videoId>/)
-  const titleMatch = text.match(/<title>([^<]+)<\/title>/)
-  const publishedMatch = text.match(/<published>([^<]+)<\/published>/)
-  const channelMatch = text.match(/<yt:channelId>([^<]+)<\/yt:channelId>/)
+  const body = await request.text()
+
+  const secret = process.env.YOUTUBE_WEBHOOK_SECRET
+  if (secret) {
+    const signature = request.headers.get('x-hub-signature')
+    if (!verifyHmac(body, signature, secret)) {
+      console.warn('[youtube webhook] firma HMAC invalida — rechazado')
+      return NextResponse.json({ error: 'invalid signature' }, { status: 401 })
+    }
+  } else {
+    console.warn('[youtube webhook] YOUTUBE_WEBHOOK_SECRET no configurado — peticion aceptada sin verificar firma')
+  }
+
+  const videoIdMatch = body.match(/<yt:videoId>([^<]+)<\/yt:videoId>/)
+  const titleMatch = body.match(/<title>([^<]+)<\/title>/)
+  const publishedMatch = body.match(/<published>([^<]+)<\/published>/)
 
   if (!videoIdMatch) {
     return NextResponse.json({ error: 'video_id not found' }, { status: 400 })
@@ -44,7 +70,6 @@ export async function POST(request: NextRequest) {
 
   const admin = createAdminClient()
 
-  // Upsert por external_id
   const { data: source, error } = await admin
     .from('video_sources')
     .upsert(
@@ -67,7 +92,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  // Disparar envío a Opus Clip (stub — reemplazar con API real)
   try {
     await sendToOpusClip(videoId, source?.id)
   } catch (err) {
@@ -78,20 +102,10 @@ export async function POST(request: NextRequest) {
 }
 
 async function sendToOpusClip(videoId: string, sourceId: string | undefined) {
-  const admin = createAdminClient()
   if (!sourceId) return
-
-  // TODO: Integrar con Opus Clip real cuando haya API/credenciales
-  // Por ahora marcamos como "processing"
+  const admin = createAdminClient()
   await admin
     .from('video_sources')
     .update({ opus_status: 'processing', opus_job_id: `job_${videoId}` })
     .eq('id', sourceId)
-
-  // Si Opus Clip tuviera API:
-  // const res = await fetch('https://api.opus.pro/v1/clips', {
-  //   method: 'POST',
-  //   headers: { Authorization: `Bearer ${process.env.OPUS_CLIP_API_KEY}` },
-  //   body: JSON.stringify({ video_url: `https://youtube.com/watch?v=${videoId}`, callback_url: 'https://tu-dominio.com/api/webhooks/opus-clip' }),
-  // })
 }

@@ -1,5 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createHmac, timingSafeEqual } from 'crypto'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { webhookRateLimit } from '@/lib/rate-limit'
+
+function verifyOpusSignature(body: string, signatureHeader: string | null, secret: string): boolean {
+  if (!signatureHeader) return false
+  // Soporta tanto firma HMAC-SHA256 ("sha256=<hex>") como token directo para compatibilidad
+  if (signatureHeader.startsWith('sha256=')) {
+    const expected = createHmac('sha256', secret).update(body).digest('hex')
+    const received = signatureHeader.slice(7)
+    if (expected.length !== received.length) return false
+    try {
+      return timingSafeEqual(Buffer.from(expected, 'hex'), Buffer.from(received, 'hex'))
+    } catch {
+      return false
+    }
+  }
+  return signatureHeader === secret
+}
 
 /**
  * Opus Clip webhook — recibe los clips generados automáticamente.
@@ -19,16 +37,24 @@ import { createAdminClient } from '@/lib/supabase/admin'
  */
 
 export async function POST(request: NextRequest) {
-  // Validación de firma si hay secret configurado
+  const rl = webhookRateLimit(request, 'opus-clip')
+  if (!rl.allowed) {
+    return NextResponse.json({ error: 'rate limited' }, { status: 429, headers: { 'Retry-After': String(rl.retryAfter) } })
+  }
+
+  const rawBody = await request.text()
+
   const secret = process.env.OPUS_WEBHOOK_SECRET
   if (secret) {
     const sig = request.headers.get('x-opus-signature')
-    if (sig !== secret) {
+    if (!verifyOpusSignature(rawBody, sig, secret)) {
       return NextResponse.json({ error: 'invalid signature' }, { status: 401 })
     }
   }
 
-  const body = await request.json().catch(() => null) as {
+  const body = (() => {
+    try { return JSON.parse(rawBody) } catch { return null }
+  })() as {
     job_id?: string
     source_video_id?: string
     status?: string

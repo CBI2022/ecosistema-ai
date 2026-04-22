@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { audit } from '@/lib/audit'
 
 const ZONE_PREFIXES: Record<string, string> = {
   Altea: 'A',
@@ -352,6 +353,8 @@ export async function deleteProperty(propertyId: string) {
     .eq('agent_id', user.id)
 
   if (error) return { error: error.message }
+
+  await audit({ actor_id: user.id, actor_email: user.email, action: 'property.delete', entity_type: 'properties', entity_id: propertyId })
 
   revalidatePath('/properties')
   return { success: true }
