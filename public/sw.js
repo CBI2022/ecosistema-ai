@@ -1,6 +1,6 @@
 // CBI Service Worker — push notifications + estrategia de update
 // Versión incluida en cache name para forzar update al cambiar de build
-const SW_VERSION = 'v2'
+const SW_VERSION = 'v3'
 const CACHE_NAME = `cbi-${SW_VERSION}`
 
 self.addEventListener('install', (event) => {
@@ -50,7 +50,11 @@ self.addEventListener('push', (event) => {
     badge: '/icons/icon-192.png',
     tag: data.tag || 'cbi-notification',
     data: { url: data.url || '/dashboard' },
-    vibrate: [80, 40, 80],
+    // Patrón de vibración (Android/desktop — iOS ignora esto y usa ajustes del sistema)
+    vibrate: [200, 100, 200, 100, 200],
+    // Explícito: NO silenciar. iOS respeta el sonido default del sistema si está habilitado.
+    silent: false,
+    renotify: true,
     requireInteraction: false,
   }
 

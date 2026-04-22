@@ -25,12 +25,16 @@ export function NotificationsBell({ initialCount }: NotificationsBellProps) {
     setMounted(true)
   }, [])
 
-  // Desktop: click outside to close
+  // Desktop: click outside to close. Ignora clicks dentro de cualquier [role=dialog]
+  // (el sheet mobile está portaled al body, fuera del ref).
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setOpen(false)
-      }
+      const target = e.target as Node
+      if (dropdownRef.current?.contains(target)) return
+      // Si está dentro del portal del sheet mobile, tampoco cerrar
+      const el = target as HTMLElement | null
+      if (el && typeof el.closest === 'function' && el.closest('[role="dialog"]')) return
+      setOpen(false)
     }
     if (open) document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)

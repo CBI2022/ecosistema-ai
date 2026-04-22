@@ -114,10 +114,10 @@ export function OwnerPicker({ value, onChange }: OwnerPickerProps) {
       {/* Hidden input para form */}
       <input type="hidden" name="owner_id" value={selected?.id || ''} />
 
-      {/* Picker modal */}
+      {/* Picker modal — bottom-sheet en mobile, centrado en desktop */}
       {showPicker && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm" onClick={() => setShowPicker(false)}>
-          <div className="w-full max-w-xl rounded-2xl border border-[#C9A84C]/25 bg-[#131313] p-5 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/80 backdrop-blur-sm sm:items-center sm:p-4" onClick={() => setShowPicker(false)}>
+          <div className="pb-sheet flex max-h-[90vh] w-full max-w-xl flex-col overflow-hidden rounded-t-3xl border border-[#C9A84C]/25 bg-[#131313] px-5 pt-5 shadow-2xl sm:max-h-[85vh] sm:rounded-2xl sm:pb-5" onClick={(e) => e.stopPropagation()}>
             <div className="mb-3 flex items-center justify-between">
               <p className="text-base font-bold text-[#F5F0E8]">Buscar propietario</p>
               <button type="button" onClick={() => setShowPicker(false)} className="text-[#9A9080] hover:text-[#F5F0E8]">✕</button>
@@ -168,16 +168,16 @@ export function OwnerPicker({ value, onChange }: OwnerPickerProps) {
         </div>
       )}
 
-      {/* Create modal */}
+      {/* Create modal — bottom-sheet en mobile */}
       {showCreate && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/85 p-4 backdrop-blur-sm" onClick={() => setShowCreate(false)}>
-          <form onSubmit={handleCreate} className="w-full max-w-md rounded-2xl border border-[#2ECC9A]/25 bg-[#131313] p-5 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/85 backdrop-blur-sm sm:items-center sm:p-4" onClick={() => setShowCreate(false)}>
+          <form onSubmit={handleCreate} className="pb-sheet flex max-h-[92vh] w-full max-w-md flex-col overflow-y-auto rounded-t-3xl border border-[#2ECC9A]/25 bg-[#131313] px-5 pt-5 shadow-2xl sm:max-h-[92vh] sm:rounded-2xl sm:pb-5" onClick={(e) => e.stopPropagation()}>
             <div className="mb-4 flex items-center justify-between">
               <p className="text-base font-bold text-[#F5F0E8]">+ Nuevo propietario</p>
-              <button type="button" onClick={() => setShowCreate(false)} className="text-[#9A9080] hover:text-[#F5F0E8]">✕</button>
+              <button type="button" onClick={() => setShowCreate(false)} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/5 text-[#9A9080] hover:text-[#F5F0E8]">✕</button>
             </div>
             <div className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
                   <label className={labelClass}>Nombre *</label>
                   <input name="first_name" required className={inputClass} />
@@ -191,7 +191,7 @@ export function OwnerPicker({ value, onChange }: OwnerPickerProps) {
                 <label className={labelClass}>Email</label>
                 <input name="email" type="email" className={inputClass} />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
                   <label className={labelClass}>Teléfono</label>
                   <input name="phone" className={inputClass} />
@@ -218,7 +218,7 @@ export function OwnerPicker({ value, onChange }: OwnerPickerProps) {
                 <textarea name="notes" rows={2} className={inputClass} />
               </div>
             </div>
-            <button type="submit" className="mt-4 w-full rounded-xl bg-[#2ECC9A] py-2.5 text-sm font-bold text-black hover:bg-[#3DDAAA]">
+            <button type="submit" className="mt-4 h-12 w-full rounded-xl bg-[#2ECC9A] text-sm font-bold text-black transition active:scale-[0.98] hover:bg-[#3DDAAA]">
               Crear propietario
             </button>
           </form>
