@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import Link from 'next/link'
 import { useLocale, useTranslations } from 'next-intl'
 import { signout } from '@/actions/auth'
@@ -34,7 +35,12 @@ export function MobileUserMenu({
   const t = useTranslations('header')
   const currentLocale = useLocale() as Locale
   const [open, setOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
   const [, startTransition] = useTransition()
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
     if (!open) return
@@ -70,7 +76,7 @@ export function MobileUserMenu({
         )}
       </button>
 
-      {open && (
+      {open && mounted && createPortal(
         <div
           className="fixed inset-0 z-[60] md:hidden"
           role="dialog"
@@ -83,12 +89,15 @@ export function MobileUserMenu({
             className="absolute inset-0 bg-black/70 backdrop-blur-sm"
           />
 
-          {/* Bottom sheet */}
-          <div className="pb-safe absolute inset-x-0 bottom-0 animate-slide-up rounded-t-3xl border-t border-[#C9A84C]/20 bg-[#0F0F0F] shadow-[0_-8px_32px_rgba(0,0,0,0.6)]">
+          {/* Bottom sheet — max 85vh con scroll interno */}
+          <div className="absolute inset-x-0 bottom-0 flex max-h-[85vh] animate-slide-up flex-col overflow-hidden rounded-t-3xl border-t border-[#C9A84C]/20 bg-[#0F0F0F] shadow-[0_-8px_32px_rgba(0,0,0,0.6)]">
             {/* Handle */}
-            <div className="flex justify-center pt-3">
+            <div className="flex shrink-0 justify-center pt-3">
               <div className="h-1.5 w-10 rounded-full bg-white/15" />
             </div>
+
+            {/* Scrollable container */}
+            <div className="pb-safe flex-1 overflow-y-auto">
 
             {/* User */}
             <div className="flex items-center gap-3 px-5 pb-5 pt-4">
@@ -200,6 +209,8 @@ export function MobileUserMenu({
                 {t('signOut')}
               </button>
             </form>
+
+            </div>
           </div>
 
           <style>{`
@@ -211,7 +222,8 @@ export function MobileUserMenu({
               animation: cbi-slide-up 0.28s cubic-bezier(0.22, 0.61, 0.36, 1);
             }
           `}</style>
-        </div>
+        </div>,
+        document.body,
       )}
     </>
   )

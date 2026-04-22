@@ -124,42 +124,42 @@ export function NotificationsPanel({ pendingUsers: initialPending, notifications
             </div>
           ) : (
             pendingUsers.map((u) => (
-              <div key={u.id} className="rounded-2xl border border-[#C9A84C]/15 bg-[#131313] p-5" style={{ borderLeft: '3px solid #C9A84C' }}>
-                <div className="flex items-start justify-between gap-4">
-                  <div>
+              <div key={u.id} className="rounded-2xl border border-[#C9A84C]/15 bg-[#131313] p-4 sm:p-5" style={{ borderLeft: '3px solid #C9A84C' }}>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+                  <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#C9A84C]/15 text-xs font-bold text-[#C9A84C]">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#C9A84C]/15 text-sm font-bold text-[#C9A84C] sm:h-8 sm:w-8 sm:text-xs">
                         {(u.full_name || u.email).charAt(0).toUpperCase()}
                       </div>
-                      <div>
-                        <p className="font-semibold text-[#F5F0E8]">{u.full_name || 'Unnamed'}</p>
-                        <p className="text-xs text-[#9A9080]">{u.email}</p>
+                      <div className="min-w-0">
+                        <p className="truncate font-semibold text-[#F5F0E8]">{u.full_name || 'Unnamed'}</p>
+                        <p className="truncate text-xs text-[#9A9080]">{u.email}</p>
                       </div>
                     </div>
-                    <div className="mt-2 flex items-center gap-2">
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
                       <span
-                        className="rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider"
+                        className="rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider sm:text-[9px]"
                         style={{ background: `${ROLE_COLORS[u.role] || '#9A9080'}20`, color: ROLE_COLORS[u.role] || '#9A9080' }}
                       >
                         {u.role}
                       </span>
-                      <span className="text-[10px] text-[#9A9080]">
-                        Registered {new Date(u.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      <span className="text-[11px] text-[#9A9080] sm:text-[10px]">
+                        {new Date(u.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                       </span>
                     </div>
                   </div>
 
-                  <div className="flex shrink-0 gap-2">
+                  <div className="flex gap-2 sm:shrink-0">
                     <button
                       onClick={() => handleApprove(u.id)}
                       disabled={isPending}
-                      className="rounded-lg bg-[#2ECC9A]/15 px-3 py-1.5 text-xs font-bold text-[#2ECC9A] transition hover:bg-[#2ECC9A]/25 disabled:opacity-50"
+                      className="flex h-11 flex-1 items-center justify-center gap-1 rounded-xl bg-[#2ECC9A]/15 px-3 text-sm font-bold text-[#2ECC9A] transition active:scale-95 hover:bg-[#2ECC9A]/25 disabled:opacity-50 sm:h-auto sm:flex-none sm:rounded-lg sm:py-1.5 sm:text-xs"
                     >
                       ✓ Approve
                     </button>
                     <button
                       onClick={() => setRejectingId(rejectingId === u.id ? null : u.id)}
-                      className="rounded-lg bg-red-500/10 px-3 py-1.5 text-xs font-bold text-red-400 transition hover:bg-red-500/20"
+                      className="flex h-11 flex-1 items-center justify-center gap-1 rounded-xl bg-red-500/10 px-3 text-sm font-bold text-red-400 transition active:scale-95 hover:bg-red-500/20 sm:h-auto sm:flex-none sm:rounded-lg sm:py-1.5 sm:text-xs"
                     >
                       ✕ Reject
                     </button>
@@ -169,27 +169,29 @@ export function NotificationsPanel({ pendingUsers: initialPending, notifications
                 {rejectingId === u.id && (
                   <div className="mt-4 border-t border-white/8 pt-4">
                     <p className="mb-2 text-xs font-bold uppercase tracking-wider text-[#9A9080]">Rejection reason (optional)</p>
-                    <div className="flex gap-2">
+                    <div className="flex flex-col gap-2 sm:flex-row">
                       <input
                         type="text"
-                        className="flex-1 rounded-lg border border-white/10 bg-[#1C1C1C] px-3 py-2 text-sm text-[#F5F0E8] outline-none focus:border-red-500/40 placeholder-[#9A9080]"
+                        className="flex-1 rounded-lg border border-white/10 bg-[#1C1C1C] px-3 py-3 text-sm text-[#F5F0E8] outline-none focus:border-red-500/40 placeholder-[#9A9080] sm:py-2"
                         placeholder="e.g. Not a CBI team member"
                         value={rejectReason}
                         onChange={(e) => setRejectReason(e.target.value)}
                       />
-                      <button
-                        onClick={() => handleReject(u.id)}
-                        disabled={isPending}
-                        className="rounded-lg bg-red-500 px-4 py-2 text-xs font-bold text-white transition hover:bg-red-600 disabled:opacity-50"
-                      >
-                        Confirm Reject
-                      </button>
-                      <button
-                        onClick={() => { setRejectingId(null); setRejectReason('') }}
-                        className="rounded-lg border border-white/10 px-3 py-2 text-xs text-[#9A9080] hover:text-[#F5F0E8]"
-                      >
-                        Cancel
-                      </button>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleReject(u.id)}
+                          disabled={isPending}
+                          className="h-11 flex-1 rounded-xl bg-red-500 px-4 text-sm font-bold text-white transition active:scale-95 hover:bg-red-600 disabled:opacity-50 sm:h-auto sm:flex-none sm:rounded-lg sm:py-2 sm:text-xs"
+                        >
+                          Confirm
+                        </button>
+                        <button
+                          onClick={() => { setRejectingId(null); setRejectReason('') }}
+                          className="h-11 flex-1 rounded-xl border border-white/10 px-3 text-sm text-[#9A9080] active:scale-95 hover:text-[#F5F0E8] sm:h-auto sm:flex-none sm:rounded-lg sm:py-2 sm:text-xs"
+                        >
+                          Cancel
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )}

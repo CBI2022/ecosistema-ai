@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useState, useTransition } from 'react'
+import { createPortal } from 'react-dom'
 import { useTranslations } from 'next-intl'
 import type { UserRole } from '@/types/database'
 
@@ -164,6 +165,11 @@ export function AppNav({ role }: AppNavProps) {
   const [isPending, startTransition] = useTransition()
   const [clickedHref, setClickedHref] = useState<string | null>(null)
   const [moreOpen, setMoreOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const AGENT_TABS: NavTab[] = [
     { href: '/dashboard', label: t('dashboard'), icon: 'home' },
@@ -378,8 +384,9 @@ export function AppNav({ role }: AppNavProps) {
         </div>
       </nav>
 
-      {/* ───────── MOBILE: overflow sheet ───────── */}
-      {moreOpen && (
+      {/* ───────── MOBILE: overflow sheet — portal al body para escapar
+           del containing block del bottom-nav (backdrop-filter) ───────── */}
+      {moreOpen && mounted && createPortal(
         <div className="fixed inset-0 z-[60] md:hidden" role="dialog" aria-modal="true">
           <button
             aria-label="Cerrar"
@@ -441,7 +448,8 @@ export function AppNav({ role }: AppNavProps) {
               animation: cbi-slide-up 0.28s cubic-bezier(0.22, 0.61, 0.36, 1);
             }
           `}</style>
-        </div>
+        </div>,
+        document.body,
       )}
 
       <style>{`
