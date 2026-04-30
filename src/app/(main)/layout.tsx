@@ -28,8 +28,9 @@ export default async function MainLayout({
   if (!profile || profile.status === 'pending') redirect('/pending-approval')
   if (profile.status === 'rejected') redirect('/account-rejected')
 
-  // Admins no necesitan onboarding
-  if (profile.role !== 'admin' && profile.role !== 'photographer') {
+  // Solo agents necesitan onboarding (objetivos de ventas)
+  // Admins, secretarias y fotógrafos no tienen objetivos de revenue
+  if (profile.role === 'agent') {
     const { data: goals } = await supabase
       .from('user_goals')
       .select('id')

@@ -202,12 +202,13 @@ export function AppNav({ role }: AppNavProps) {
   const SECRETARY_TABS: NavTab[] = [
     { href: '/dashboard', label: t('dashboard'), icon: 'home' },
     { href: '/admin', label: t('team'), icon: 'users' },
-    { href: '/kpi', label: t('kpi'), icon: 'chart' },
+    { href: '/properties', label: t('properties'), icon: 'building' },
+    { href: '/suprema', label: 'Sooprema', icon: 'upload' },
     { href: '/tasks', label: t('tasks'), icon: 'check' },
+    { href: '/kpi', label: t('kpi'), icon: 'chart' },
     { href: '/competitors', label: t('competitors'), icon: 'target' },
     { href: '/training', label: t('training'), icon: 'book' },
     { href: '/contracts', label: t('contracts'), icon: 'signature' },
-    { href: '/suprema', label: 'Sooprema', icon: 'upload' },
   ]
 
   const PHOTOGRAPHER_TABS: NavTab[] = [

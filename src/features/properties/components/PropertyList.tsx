@@ -5,8 +5,15 @@ import { useRouter } from 'next/navigation'
 import { deleteProperty } from '@/actions/properties'
 import type { Property } from '@/types/database'
 
+interface AgentInfo {
+  full_name: string | null
+  email: string
+}
+
 interface PropertyListProps {
   properties: Property[]
+  agentsMap?: Record<string, AgentInfo> | null
+  listTitle?: string
 }
 
 function StatusBadge({ status }: { status: Property['suprema_status'] }) {
@@ -20,7 +27,7 @@ function StatusBadge({ status }: { status: Property['suprema_status'] }) {
   return <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide ${s.cls}`}>{s.label}</span>
 }
 
-export function PropertyList({ properties }: PropertyListProps) {
+export function PropertyList({ properties, agentsMap = null, listTitle = 'My Properties' }: PropertyListProps) {
   const router = useRouter()
   const [confirmId, setConfirmId] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
@@ -49,10 +56,12 @@ export function PropertyList({ properties }: PropertyListProps) {
 
   return (
     <div>
-      <h2 className="mb-4 text-[10px] font-bold uppercase tracking-[0.18em] text-[#C9A84C]">My Properties</h2>
+      <h2 className="mb-4 text-[10px] font-bold uppercase tracking-[0.18em] text-[#C9A84C]">{listTitle}</h2>
 
       <div className="space-y-2.5">
-        {properties.map((p) => (
+        {properties.map((p) => {
+          const agent = agentsMap?.[p.agent_id]
+          return (
           <div
             key={p.id}
             className="flex flex-col gap-3 rounded-xl border border-white/8 bg-[#131313] px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5 sm:py-4"
@@ -63,6 +72,9 @@ export function PropertyList({ properties }: PropertyListProps) {
               </p>
               <p className="mt-0.5 text-xs text-[#9A9080]">
                 {p.zone} · €{p.price?.toLocaleString() ?? '—'} · {p.property_type}
+                {agent && (
+                  <span className="ml-1.5 text-[#8B7CF6]">· {agent.full_name || agent.email}</span>
+                )}
               </p>
             </div>
 
@@ -99,7 +111,8 @@ export function PropertyList({ properties }: PropertyListProps) {
               </button>
             </div>
           </div>
-        ))}
+          )
+        })}
       </div>
 
       {error && (

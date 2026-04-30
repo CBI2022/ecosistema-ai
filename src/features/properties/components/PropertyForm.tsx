@@ -13,10 +13,18 @@ interface AgentPhoto {
   property_id: string | null
 }
 
+interface AgentOption {
+  id: string
+  full_name: string | null
+  email: string
+}
+
 interface PropertyFormProps {
   availablePhotos?: AgentPhoto[]
   storageBaseUrl?: string
   initialProperty?: Property | null
+  agentOptions?: AgentOption[] | null
+  defaultAgentId?: string | null
 }
 
 const ZONES = ['Altea','Albir','Calpe','Javea','Moraira','Benissa','Denia','Benidorm','La Nucia','Polop','Finestrat']
@@ -93,13 +101,17 @@ function CheckField({ name, label, defaultChecked }: { name: string; label: stri
   )
 }
 
-export function PropertyForm({ availablePhotos = [], storageBaseUrl = '', initialProperty = null }: PropertyFormProps = {}) {
+export function PropertyForm({ availablePhotos = [], storageBaseUrl = '', initialProperty = null, agentOptions = null, defaultAgentId = null }: PropertyFormProps = {}) {
   const [activeTab, setActiveTab] = useState<TabId>('basics')
   const [isPending, startTransition] = useTransition()
   const [isAI, startAI] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const isEditing = !!initialProperty?.id
+  const canPickAgent = !!agentOptions && agentOptions.length > 0
+  const [selectedAgentId, setSelectedAgentId] = useState<string>(
+    initialProperty?.agent_id ?? defaultAgentId ?? (agentOptions?.[0]?.id ?? '')
+  )
 
   // Shared state
   const [formState, setFormState] = useState({
@@ -200,6 +212,9 @@ export function PropertyForm({ availablePhotos = [], storageBaseUrl = '', initia
     fd.set('description_nl', formState.description_nl)
     fd.set('status_tags', formState.status_tags.join(','))
     fd.set('selected_photo_ids', JSON.stringify([...selectedPhotoIds]))
+    if (canPickAgent && selectedAgentId) {
+      fd.set('agent_id', selectedAgentId)
+    }
 
     startTransition(async () => {
       const res = await saveProperty(fd, publish)
@@ -226,6 +241,30 @@ export function PropertyForm({ availablePhotos = [], storageBaseUrl = '', initia
             <p className="mt-0.5 text-sm text-[#F5F0E8]">{ip?.reference} — {ip?.title || ip?.location || 'Sin título'}</p>
           </div>
           <a href="/properties" className="rounded-lg border border-white/10 px-3 py-1.5 text-xs font-bold text-[#9A9080] hover:text-[#F5F0E8]">✕ Cancelar</a>
+        </div>
+      )}
+
+      {/* Selector de agente (solo admin/secretary) */}
+      {canPickAgent && (
+        <div className="rounded-xl border border-[#8B7CF6]/30 bg-[#8B7CF6]/8 px-4 py-3">
+          <label className="mb-1.5 block text-[9px] font-bold uppercase tracking-[0.12em] text-[#8B7CF6]">
+            Agente dueño de la propiedad *
+          </label>
+          <select
+            name="agent_id"
+            value={selectedAgentId}
+            onChange={(e) => setSelectedAgentId(e.target.value)}
+            className={inputClass}
+          >
+            {agentOptions!.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.full_name || a.email}
+              </option>
+            ))}
+          </select>
+          <p className="mt-1.5 text-[10px] text-[#9A9080]">
+            La propiedad se guardará a nombre de este agente. Solo admins y secretarías ven este campo.
+          </p>
         </div>
       )}
 

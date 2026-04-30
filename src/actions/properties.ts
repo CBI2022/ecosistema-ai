@@ -59,11 +59,26 @@ export async function saveProperty(formData: FormData, publish = false) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'No autenticado' }
 
+  // Admin/secretary pueden crear/editar a nombre de cualquier agente
+  const adminClient = createAdminClient()
+  const { data: callerProfile } = await adminClient
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+  const isElevated = callerProfile?.role === 'admin' || callerProfile?.role === 'secretary'
+
+  const submittedAgentId = str(formData, 'agent_id')
+  const agentId = isElevated && submittedAgentId ? submittedAgentId : user.id
+
+  // Para elevated users, usamos admin client para bypassear RLS de UPDATE/DELETE
+  const writeClient = isElevated ? adminClient : supabase
+
   const zone = str(formData, 'zone') || 'Altea'
   const reference = str(formData, 'reference') || (await generateReference(supabase, zone))
 
   const propertyData: Record<string, unknown> = {
-    agent_id: user.id,
+    agent_id: agentId,
     reference,
 
     // Identificación
@@ -193,7 +208,7 @@ export async function saveProperty(formData: FormData, publish = false) {
 
   let result: { id: string } | null = null
   if (propertyId) {
-    const { data, error } = await supabase
+    const { data, error } = await writeClient
       .from('properties')
       .update(propertyData)
       .eq('id', propertyId)
@@ -202,7 +217,7 @@ export async function saveProperty(formData: FormData, publish = false) {
     if (error) return { error: error.message }
     result = data
   } else {
-    const { data, error } = await supabase
+    const { data, error } = await writeClient
       .from('properties')
       .insert(propertyData)
       .select('id')
@@ -219,12 +234,14 @@ export async function saveProperty(formData: FormData, publish = false) {
     if (selectedRaw) {
       const ids: string[] = JSON.parse(selectedRaw)
       if (Array.isArray(ids) && ids.length > 0) {
-        const admin = createAdminClient()
-        await admin
+        // Admin client bypassa RLS (necesario cuando secretary vincula fotos del agent dueño)
+        const photoUpdate = adminClient
           .from('property_photos')
           .update({ property_id: result.id })
           .in('id', ids)
-          .eq('agent_id', user.id)
+        // Si NO es elevated, restringimos a sus propias fotos
+        if (!isElevated) photoUpdate.eq('agent_id', user.id)
+        await photoUpdate
       }
     }
   } catch { /* non-blocking */ }
@@ -242,7 +259,7 @@ export async function saveProperty(formData: FormData, publish = false) {
     if (!propertyData.year_built) missing.push('Año de construcción')
 
     if (missing.length > 0) {
-      await supabase
+      await writeClient
         .from('properties')
         .update({ suprema_status: null })
         .eq('id', result.id)
@@ -252,33 +269,32 @@ export async function saveProperty(formData: FormData, publish = false) {
       }
     }
 
-    await supabase.from('suprema_jobs').insert({
+    await adminClient.from('suprema_jobs').insert({
       property_id: result.id,
-      agent_id: user.id,
+      agent_id: agentId,
       status: 'queued',
     })
-    await supabase
+    await writeClient
       .from('properties')
       .update({ suprema_status: 'publishing' })
       .eq('id', result.id)
 
-    const admin = createAdminClient()
-    await admin.from('notifications').insert({
+    await adminClient.from('notifications').insert({
       type: 'suprema_started',
       title: '🚀 Publicando en Sooprema',
       message: `La propiedad ${reference} se está publicando. Te avisaremos cuando termine.`,
-      target_user_id: user.id,
+      target_user_id: agentId,
       is_read: false,
     })
 
     // Notificar a todas las secretarias para que puedan ejecutar el job si el agente no lo hace
-    const { data: secretaries } = await admin
+    const { data: secretaries } = await adminClient
       .from('profiles')
       .select('id')
       .eq('role', 'secretary')
 
     if (secretaries && secretaries.length > 0) {
-      await admin.from('notifications').insert(
+      await adminClient.from('notifications').insert(
         secretaries.map((s) => ({
           type: 'suprema_started',
           title: '📋 Nueva propiedad pendiente de publicar',
@@ -346,11 +362,23 @@ export async function deleteProperty(propertyId: string) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'No autenticado' }
 
-  const { error } = await supabase
+  const adminClient = createAdminClient()
+  const { data: callerProfile } = await adminClient
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+  const isElevated = callerProfile?.role === 'admin' || callerProfile?.role === 'secretary'
+
+  const query = (isElevated ? adminClient : supabase)
     .from('properties')
     .delete()
     .eq('id', propertyId)
-    .eq('agent_id', user.id)
+
+  // Agentes solo borran las suyas; admin/secretary borran cualquier propiedad
+  if (!isElevated) query.eq('agent_id', user.id)
+
+  const { error } = await query
 
   if (error) return { error: error.message }
 
