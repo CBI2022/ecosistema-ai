@@ -1,4 +1,3 @@
-import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { UserGoals } from '@/types/database'
 
@@ -81,7 +80,10 @@ export async function getOrCreateWeeklyPlan(
   weekStart: string,
   goals: UserGoals | null
 ) {
-  const supabase = await createClient()
+  // Usamos admin client para bypassear RLS — esta función crea filas
+  // del usuario en su nombre durante el render del server component, pero
+  // RLS no permite INSERT desde sesión de usuario en checklist_items.
+  const supabase = createAdminClient()
 
   // Filtrar SOLO el plan semanal de KPI (must_do / complete),
   // ignorando los items del checklist diario del Dashboard que usan
@@ -124,10 +126,15 @@ export async function getOrCreateWeeklyPlan(
     }
   }
 
-  const { data: created } = await supabase
+  const { data: created, error: insertErr } = await supabase
     .from('checklist_items')
     .insert(inserts)
     .select()
+
+  if (insertErr) {
+    console.error('[kpi] error creating weekly plan:', insertErr.message)
+    return []
+  }
 
   return created || []
 }
