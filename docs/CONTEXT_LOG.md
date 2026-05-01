@@ -14,6 +14,22 @@
 
 ## 2026-04-22
 
+### 🎯 Onboarding (decisión)
+- Marco confirmó: onboarding desactivado en producción hasta decidir versión definitiva con Darcy + Bruno.
+- Preview pública: https://app.costablancainvestments.com/onboarding-preview
+- En preview, `OnboardingWizard` recibe prop `previewMode` → no valida campos requeridos, no guarda en BD. Botones Siguiente/Atrás funcionan libres.
+- Bloque comentado en `src/app/(main)/layout.tsx` (líneas ~31-41) — reactivar cuando se decida.
+
+### 📧 Resend (verificado)
+- Marco confirmó: dominio `costablancainvestments.com` verificado en Resend desde 2026-04-07. Listo para enviar.
+- FROM aplicado: `CBI Performance Dashboard <noreply@costablancainvestments.com>`.
+- 6 plantillas de prueba enviadas con éxito a `brfelipecbi@gmail.com` (IDs Resend confirmados).
+- Marco desactivó "Confirm sign up" en Supabase tras la conversación.
+
+### 🎯 Sentry (decisión)
+- Marco lo deja en `someday`. Tarea con pasos exactos para activarlo cuando decida.
+- Cuenta `cbi-mk` ya creada por Marco. Falta crear el proyecto Next.js dentro y obtener DSN.
+
 ### 🔑 GitHub token (Marco)
 - Token actual en `.env.local` línea `Github: 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`
 - Sin caducidad (Marco lo regeneró clásico con permisos `repo`)
