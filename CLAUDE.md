@@ -6,11 +6,16 @@
 
 ---
 
+## ⚠️ LECTURA OBLIGATORIA AL INICIO DE CADA SESIÓN
+
+1. **[`docs/CONTEXT_LOG.md`](docs/CONTEXT_LOG.md)** — registro persistente de TODO el contexto del proyecto (decisiones de Marco, credenciales confirmadas, configuración, aprendizajes, cuentas). **Si una respuesta requiere preguntar a Marco algo que ya está aquí, es un fallo del agente.**
+2. **[`docs/TASK_DISCIPLINE.md`](docs/TASK_DISCIPLINE.md)** — protocolo de tareas: cada hallazgo va PRIMERO a `project_tasks` antes de continuar.
+
+**Tras cada avance importante en una sesión:** registra en `docs/CONTEXT_LOG.md` con fecha + emoji apropiado.
+
 ## ⚠️ DISCIPLINA DE TAREAS — REGLA INNEGOCIABLE
 
 **Cada hallazgo (bug, gap, mejora, decisión, deuda, idea) que detectes mientras trabajas → PRIMERO subes una tarea a `project_tasks` (BD Supabase) → DESPUÉS continúas con tu trabajo.**
-
-**Lectura obligatoria al inicio de cada sesión:** [`docs/TASK_DISCIPLINE.md`](docs/TASK_DISCIPLINE.md)
 
 Antes de cada respuesta importante, mentalmente:
 1. ¿He detectado algo nuevo este turno que no esté ya en `/tasks`?

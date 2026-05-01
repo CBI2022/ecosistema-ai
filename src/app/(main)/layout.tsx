@@ -28,17 +28,18 @@ export default async function MainLayout({
   if (!profile || profile.status === 'pending') redirect('/pending-approval')
   if (profile.status === 'rejected') redirect('/account-rejected')
 
-  // Solo agents necesitan onboarding (objetivos de ventas)
-  // Admins, secretarias y fotógrafos no tienen objetivos de revenue
-  if (profile.role === 'agent') {
-    const { data: goals } = await supabase
-      .from('user_goals')
-      .select('id')
-      .eq('user_id', user.id)
-      .single()
-
-    if (!goals) redirect('/onboarding')
-  }
+  // Onboarding desactivado temporalmente (2026-04-22): Marco quiere definirlo
+  // con Darcy/Bruno antes de mostrarlo a usuarios reales. Preview público
+  // disponible en /onboarding-preview para revisarlo sin loguearse.
+  // Cuando se decida la versión final, reactivar este bloque.
+  // if (profile.role === 'agent') {
+  //   const { data: goals } = await supabase
+  //     .from('user_goals')
+  //     .select('id')
+  //     .eq('user_id', user.id)
+  //     .single()
+  //   if (!goals) redirect('/onboarding')
+  // }
 
   // Unread notifications badge — admins ven globales, el resto las suyas propias
   let notifCount = 0

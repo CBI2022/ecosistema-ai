@@ -11,9 +11,11 @@ function client(): Resend | null {
 
 export const FROM = (() => {
   const name = process.env.RESEND_FROM_NAME ?? 'CBI Performance Dashboard'
-  const email = process.env.RESEND_FROM_EMAIL ?? 'onboarding@resend.dev'
+  const email = process.env.RESEND_FROM_EMAIL ?? 'noreply@costablancainvestments.com'
   return `${name} <${email}>`
 })()
+
+export const REPLY_TO = process.env.RESEND_REPLY_TO ?? undefined
 
 interface SendArgs {
   to: string | string[]
@@ -39,7 +41,7 @@ export async function sendEmail(args: SendArgs): Promise<{ ok: boolean; id?: str
       subject: args.subject,
       html: args.html,
       text: args.text ?? args.html.replace(/<[^>]+>/g, ''),
-      replyTo: args.replyTo,
+      replyTo: args.replyTo ?? REPLY_TO,
     })
     if (error) {
       console.error('[resend] error:', error)
