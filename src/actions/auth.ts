@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendPushToUser } from '@/actions/push'
 import { sendEmail } from '@/lib/email/resend'
-import { forgotPasswordEmail } from '@/lib/email/templates'
+import { forgotPasswordEmail, signupApprovedEmail, signupRejectedEmail } from '@/lib/email/templates'
 import type { UserRole } from '@/types/database'
 
 export async function login(formData: FormData) {
@@ -44,27 +44,63 @@ export async function login(formData: FormData) {
 }
 
 export async function signup(formData: FormData) {
-  const supabase = await createClient()
-
-  const role = formData.get('role') as UserRole
+  const role = (formData.get('role') as UserRole) || 'agent'
   const fullName = formData.get('full_name') as string
+  const email = (formData.get('email') as string)?.trim().toLowerCase()
+  const password = formData.get('password') as string
 
-  const { error } = await supabase.auth.signUp({
-    email: formData.get('email') as string,
-    password: formData.get('password') as string,
-    options: {
-      data: {
-        role: role || 'agent',
-        full_name: fullName,
-      },
-    },
+  if (!email || !password) {
+    return { error: 'Email y contraseña son obligatorios' }
+  }
+
+  // Crear usuario via admin (server-side) con email auto-confirmado.
+  // De este modo Supabase NO envía email de confirmación — el flujo de
+  // aprobación lo controla el admin desde /admin (Bruno/Darcy aprueban).
+  const admin = createAdminClient()
+  const { data, error } = await admin.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+    user_metadata: { role, full_name: fullName },
   })
 
-  if (error) {
-    if (error.message.includes('already registered')) {
+  if (error || !data?.user) {
+    if (error?.message?.toLowerCase().includes('already')) {
       return { error: 'Este email ya está registrado' }
     }
-    return { error: error.message }
+    return { error: error?.message ?? 'No se pudo crear la cuenta' }
+  }
+
+  // Asegurar que el perfil queda en estado pending hasta aprobación admin.
+  // El trigger on_auth_user_created suele crear el profile; lo upserteamos defensivamente.
+  await admin.from('profiles').upsert(
+    {
+      id: data.user.id,
+      email,
+      full_name: fullName ?? null,
+      role,
+      status: 'pending',
+    },
+    { onConflict: 'id' },
+  )
+
+  // Notificar a admins (Bruno/Darcy) de la nueva solicitud
+  const { data: admins } = await admin
+    .from('profiles')
+    .select('id')
+    .eq('role', 'admin')
+    .eq('status', 'approved')
+
+  if (admins && admins.length > 0) {
+    await admin.from('notifications').insert(
+      admins.map((a) => ({
+        type: 'signup_request',
+        title: '👤 Nueva solicitud de acceso',
+        message: `${fullName ?? email} ha solicitado acceso como ${role}. Apruébalo desde /admin.`,
+        target_user_id: a.id,
+        is_read: false,
+      })),
+    )
   }
 
   redirect('/pending-approval')
@@ -193,6 +229,18 @@ export async function approveUser(userId: string) {
     url: '/dashboard',
   })
 
+  // Email de bienvenida
+  const { data: approved } = await admin
+    .from('profiles')
+    .select('email, full_name')
+    .eq('id', userId)
+    .single()
+  if (approved?.email) {
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://app.costablancainvestments.com'
+    const tpl = signupApprovedEmail(approved.full_name ?? 'agente', `${siteUrl}/login`)
+    await sendEmail({ to: approved.email, subject: tpl.subject, html: tpl.html })
+  }
+
   revalidatePath('/', 'layout')
   return { success: true }
 }
@@ -229,6 +277,17 @@ export async function rejectUser(userId: string, reason?: string) {
     .from('notifications')
     .update({ is_read: true })
     .eq('target_user_id', userId)
+
+  // Email de rechazo (gentil)
+  const { data: rejected } = await admin
+    .from('profiles')
+    .select('email, full_name')
+    .eq('id', userId)
+    .single()
+  if (rejected?.email) {
+    const tpl = signupRejectedEmail(rejected.full_name ?? 'agente')
+    await sendEmail({ to: rejected.email, subject: tpl.subject, html: tpl.html })
+  }
 
   revalidatePath('/', 'layout')
   return { success: true }
