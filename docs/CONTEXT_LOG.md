@@ -14,6 +14,12 @@
 
 ## 2026-05-01
 
+### 🔑 Marco cambió su email
+- Cuenta personal de Marco: `admin@cbi.com` (ficticio) → `marcoapereirav@gmail.com` (real)
+- user_id se mantiene: `ed9762eb-5a34-486b-9fe1-71787d1ee00c`
+- Updated en `auth.users.email` (admin API) + `public.profiles.email` (REST PATCH)
+- email_confirmed_at preservado → no requiere reconfirmación
+
 ### 🐛 Hallazgos auditoría como agente.test@cbi.com (12 secciones)
 
 **Bugs/decisiones encontrados (registrados como tareas):**
