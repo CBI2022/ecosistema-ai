@@ -7,6 +7,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { sendPushToUser } from '@/actions/push'
 import { sendEmail } from '@/lib/email/resend'
 import { forgotPasswordEmail, signupApprovedEmail, signupRejectedEmail } from '@/lib/email/templates'
+import { getSiteUrl } from '@/lib/site-url'
 import type { UserRole } from '@/types/database'
 
 export async function login(formData: FormData) {
@@ -117,7 +118,7 @@ export async function resetPassword(formData: FormData) {
   const email = (formData.get('email') as string)?.trim().toLowerCase()
   if (!email) return { error: 'Email requerido' }
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://app.costablancainvestments.com'
+  const siteUrl = getSiteUrl()
   const admin = createAdminClient()
 
   // Generamos el link de recovery desde Supabase Admin (no envía email)
@@ -236,8 +237,7 @@ export async function approveUser(userId: string) {
     .eq('id', userId)
     .single()
   if (approved?.email) {
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://app.costablancainvestments.com'
-    const tpl = signupApprovedEmail(approved.full_name ?? 'agente', `${siteUrl}/login`)
+    const tpl = signupApprovedEmail(approved.full_name ?? 'agente', `${getSiteUrl()}/login`)
     await sendEmail({ to: approved.email, subject: tpl.subject, html: tpl.html })
   }
 

@@ -1,7 +1,9 @@
 // Templates de email transaccional CBI — HTML inline para máxima compatibilidad
 // con Gmail/Outlook/iOS Mail. Estilo dark + dorado, mobile-first.
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://app.costablancainvestments.com'
+import { getSiteUrl } from '@/lib/site-url'
+
+const SITE_URL = getSiteUrl()
 const LOGO_URL = `${SITE_URL}/logo-cbi.png`
 
 function shell({ title, preheader, body }: { title: string; preheader: string; body: string }): string {

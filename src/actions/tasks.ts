@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendEmail } from '@/lib/email/resend'
 import { taskAssignedEmail } from '@/lib/email/templates'
+import { getSiteUrl } from '@/lib/site-url'
 import type { TaskPriority, TaskStatus } from '@/types/database'
 
 async function getAuthContext() {
@@ -52,8 +53,7 @@ async function notifyAssignment(
 
   // Email
   if (assignee?.email) {
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://app.costablancainvestments.com'
-    const tpl = taskAssignedEmail(taskTitle, creatorName, `${siteUrl}/tasks`)
+    const tpl = taskAssignedEmail(taskTitle, creatorName, `${getSiteUrl()}/tasks`)
     await sendEmail({ to: assignee.email, subject: tpl.subject, html: tpl.html })
   }
 }

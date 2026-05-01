@@ -9,6 +9,7 @@ import { runSoopremaAutomation } from '@/lib/sooprema/automation'
 import { audit } from '@/lib/audit'
 import { sendEmail } from '@/lib/email/resend'
 import { soopremaDoneEmail, soopremaErrorEmail } from '@/lib/email/templates'
+import { getSiteUrl } from '@/lib/site-url'
 import type { Property } from '@/types/database'
 
 export async function retrySupremaJob(jobId: string) {
@@ -220,11 +221,10 @@ export async function runSupremaJob(jobId: string) {
         .eq('id', property.agent_id)
         .single()
       if (agentProfile?.email) {
-        const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://app.costablancainvestments.com'
         const tpl = soopremaErrorEmail(
           property.reference || 'sin referencia',
           result.error || 'Error desconocido — revisa los logs en /suprema',
-          `${siteUrl}/suprema`,
+          `${getSiteUrl()}/suprema`,
         )
         await sendEmail({ to: agentProfile.email, subject: tpl.subject, html: tpl.html })
       }
