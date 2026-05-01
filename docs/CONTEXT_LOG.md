@@ -12,6 +12,33 @@
 
 ---
 
+## 2026-05-01
+
+### 🐛 Hallazgos auditoría como agente.test@cbi.com (12 secciones)
+
+**Bugs/decisiones encontrados (registrados como tareas):**
+
+1. **Checklist diario en localStorage, no BD** (bug). Si agente cambia de dispositivo o limpia caché, pierde progreso. Admin no ve qué han hecho. Tarea: migrar a tabla `checklist_items`.
+2. **Leaderboard KPI completo visible para agentes** — un agente normal ve nombres + revenues de TODOS los demás. Decisión Marco: ¿intencional cultura competitiva o privacy fix?
+3. **Daily Action Plan vacío 0/0** en `/kpi` — falta seed de tasks del plan diario al onboarding del agente.
+4. **/notifications redirige a /dashboard** como agente — campana funciona. Decisión: ¿borrar route o construir página propia con histórico?
+
+**Confirmados que funcionan OK:**
+- ✅ Login + logout
+- ✅ Dashboard (CBI Mission, KPIs, Revenue chart, Log Closing persiste a sales)
+- ✅ Properties (form completo con 11 tabs incluyendo "Invitados", 22 etiquetas Sooprema, 7 idiomas, Edit/Delete)
+- ✅ Valuation (form completo, cálculo comisión + IVA, genera PDF)
+- ✅ Contracts (iframe CBIDocs)
+- ✅ Invoice (form completo)
+- ✅ Competitors (UI vacía pero funcional)
+- ✅ Tasks (agente solo ve sus asignadas — privacidad OK)
+- ✅ Settings (todo carga, mobile-first OK)
+- ✅ Training (commitment + tasks + tracker persisten en BD)
+
+### 📧 Emails Sooprema OK/Error + Task assignment hookeados
+- `runSupremaJob`: éxito y error envían email al agente con plantilla CBI vía Resend.
+- `notifyAssignment` (tasks): además de push + notif in-app, envía email al asignado.
+
 ## 2026-04-22
 
 ### 🎯 Onboarding (decisión)
