@@ -121,31 +121,31 @@ export async function resetPassword(formData: FormData) {
   const siteUrl = getSiteUrl()
   const admin = createAdminClient()
 
-  // Generamos el link de recovery desde Supabase Admin (no envía email)
-  // y lo entregamos nosotros vía Resend con nuestro template y branding.
-  // /update-password (client component) detecta automáticamente los tokens
-  // del fragment (#access_token=...) o del query (?code=...) y establece sesión.
+  // Generamos el hashed_token de recovery via Supabase Admin (no envía email).
+  // Después construimos NUESTRO propio link a /reset?token_hash=<token> con
+  // el dominio canonical, sin depender de la URL Configuration de Supabase.
+  // /reset valida el token con verifyOtp y permite cambiar la contraseña.
   const { data: linkData, error: linkError } = await admin.auth.admin.generateLink({
     type: 'recovery',
     email,
-    options: { redirectTo: `${siteUrl}/update-password` },
+    options: { redirectTo: `${siteUrl}/reset` },
   })
 
-  // Si el email no existe, devolvemos success igual (anti-enumeration)
-  // pero NO enviamos email — el atacante no debe poder distinguir.
-  if (linkError || !linkData?.properties?.action_link) {
+  // Anti-enumeration: si el email no existe, devolvemos success igual sin email.
+  if (linkError || !linkData?.properties?.hashed_token) {
     console.warn('[resetPassword] no link generado para', email, linkError?.message)
     return { success: true }
   }
 
-  const tpl = forgotPasswordEmail(linkData.properties.action_link)
+  const ourLink = `${siteUrl}/reset?token_hash=${linkData.properties.hashed_token}`
+  const tpl = forgotPasswordEmail(ourLink)
   const result = await sendEmail({ to: email, subject: tpl.subject, html: tpl.html })
 
   if (!result.ok) {
     // Fallback: usar el flujo nativo de Supabase (SMTP por defecto, rate-limited)
     const supabase = await createClient()
     await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${siteUrl}/update-password`,
+      redirectTo: `${siteUrl}/reset`,
     })
   }
 
