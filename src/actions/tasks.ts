@@ -3,6 +3,8 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { sendEmail } from '@/lib/email/resend'
+import { taskAssignedEmail } from '@/lib/email/templates'
 import type { TaskPriority, TaskStatus } from '@/types/database'
 
 async function getAuthContext() {
@@ -32,7 +34,14 @@ async function notifyAssignment(
     .select('full_name, email')
     .eq('id', creatorId)
     .single()
+  const { data: assignee } = await admin
+    .from('profiles')
+    .select('email, full_name')
+    .eq('id', assigneeId)
+    .single()
   const creatorName = creator?.full_name || creator?.email || 'Alguien'
+
+  // Notificación in-app
   await admin.from('notifications').insert({
     type: 'task_assigned',
     title: 'Nueva tarea asignada',
@@ -40,6 +49,13 @@ async function notifyAssignment(
     target_user_id: assigneeId,
     is_read: false,
   })
+
+  // Email
+  if (assignee?.email) {
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://app.costablancainvestments.com'
+    const tpl = taskAssignedEmail(taskTitle, creatorName, `${siteUrl}/tasks`)
+    await sendEmail({ to: assignee.email, subject: tpl.subject, html: tpl.html })
+  }
 }
 
 export async function createTask(formData: FormData) {

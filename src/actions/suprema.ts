@@ -7,6 +7,8 @@ import { sendPushToUser } from '@/actions/push'
 import { mapPropertyToSooprema } from '@/lib/sooprema/mapper'
 import { runSoopremaAutomation } from '@/lib/sooprema/automation'
 import { audit } from '@/lib/audit'
+import { sendEmail } from '@/lib/email/resend'
+import { soopremaDoneEmail, soopremaErrorEmail } from '@/lib/email/templates'
 import type { Property } from '@/types/database'
 
 export async function retrySupremaJob(jobId: string) {
@@ -166,7 +168,7 @@ export async function runSupremaJob(jobId: string) {
         })
         .eq('id', property.id)
 
-      // Notificación éxito
+      // Notificación éxito (push + email)
       await admin.from('notifications').insert({
         type: 'suprema_done',
         title: '✅ Propiedad publicada en Sooprema',
@@ -179,13 +181,26 @@ export async function runSupremaJob(jobId: string) {
         body: `${property.reference || 'Tu propiedad'} está activa en Sooprema`,
         url: '/properties',
       })
+
+      // Email al agente
+      const { data: agentProfile } = await admin
+        .from('profiles')
+        .select('email')
+        .eq('id', property.agent_id)
+        .single()
+      if (agentProfile?.email) {
+        const soopremaUrl = result.sooprema_public_url
+          || `https://www.costablancainvestments.com/admin/propiedades/`
+        const tpl = soopremaDoneEmail(property.reference || 'sin referencia', soopremaUrl)
+        await sendEmail({ to: agentProfile.email, subject: tpl.subject, html: tpl.html })
+      }
     } else {
       await admin
         .from('properties')
         .update({ suprema_status: 'error' })
         .eq('id', property.id)
 
-      // Notificación error
+      // Notificación error (push + email)
       await admin.from('notifications').insert({
         type: 'suprema_error',
         title: '❌ Error publicando en Sooprema',
@@ -193,6 +208,26 @@ export async function runSupremaJob(jobId: string) {
         target_user_id: property.agent_id,
         is_read: false,
       })
+      await sendPushToUser(property.agent_id, {
+        title: '❌ Error publicando',
+        body: `${property.reference || 'Tu propiedad'} no se pudo publicar. Revisa /suprema.`,
+        url: '/suprema',
+      })
+
+      const { data: agentProfile } = await admin
+        .from('profiles')
+        .select('email')
+        .eq('id', property.agent_id)
+        .single()
+      if (agentProfile?.email) {
+        const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://app.costablancainvestments.com'
+        const tpl = soopremaErrorEmail(
+          property.reference || 'sin referencia',
+          result.error || 'Error desconocido — revisa los logs en /suprema',
+          `${siteUrl}/suprema`,
+        )
+        await sendEmail({ to: agentProfile.email, subject: tpl.subject, html: tpl.html })
+      }
     }
 
     revalidatePath('/suprema')
