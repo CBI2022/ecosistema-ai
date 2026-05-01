@@ -6,6 +6,23 @@
 
 ---
 
+## ⚠️ DISCIPLINA DE TAREAS — REGLA INNEGOCIABLE
+
+**Cada hallazgo (bug, gap, mejora, decisión, deuda, idea) que detectes mientras trabajas → PRIMERO subes una tarea a `project_tasks` (BD Supabase) → DESPUÉS continúas con tu trabajo.**
+
+**Lectura obligatoria al inicio de cada sesión:** [`docs/TASK_DISCIPLINE.md`](docs/TASK_DISCIPLINE.md)
+
+Antes de cada respuesta importante, mentalmente:
+1. ¿He detectado algo nuevo este turno que no esté ya en `/tasks`?
+2. Si sí → ¿lo he subido como tarea?
+3. ¿He marcado como `complete` algo que verifiqué que funciona, con evidencia?
+
+Si no, hazlo **antes** de continuar.
+
+**Marcar `complete` solo con evidencia real** (test E2E, query BD, log que confirma). Nunca por suposición — ver `feedback_never_assume.md` en memoria.
+
+---
+
 ## Filosofia: Agent-First
 
 El usuario habla en lenguaje natural. Tu traduces a codigo.
