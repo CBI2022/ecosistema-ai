@@ -89,23 +89,23 @@ export function Leaderboard({
             </select>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-xl border border-white/8 bg-[#0F0F0F] p-4">
+          <div className="grid grid-cols-2 gap-2 sm:gap-3">
+            <div className="min-w-0 rounded-xl border border-white/8 bg-[#0F0F0F] p-3 sm:p-4">
               <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-[#9A9080]">
                 Mi revenue
               </p>
-              <p className="mt-2 text-2xl font-bold text-[#C9A84C]">
+              <p className="mt-2 truncate text-xl font-bold text-[#C9A84C] sm:text-2xl">
                 {myRevenue > 0 ? fmt(myRevenue) : '€0'}
               </p>
               <p className="mt-1 text-[11px] text-[#9A9080]">
                 {myClosings} deal{myClosings !== 1 ? 's' : ''}
               </p>
             </div>
-            <div className="rounded-xl border border-white/8 bg-[#0F0F0F] p-4">
+            <div className="min-w-0 rounded-xl border border-white/8 bg-[#0F0F0F] p-3 sm:p-4">
               <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-[#9A9080]">
                 Avg deal
               </p>
-              <p className="mt-2 text-2xl font-bold text-[#F5F0E8]">
+              <p className="mt-2 truncate text-xl font-bold text-[#F5F0E8] sm:text-2xl">
                 {myAvg > 0 ? fmt(myAvg) : '€0'}
               </p>
               <p className="mt-1 text-[11px] text-[#9A9080]">

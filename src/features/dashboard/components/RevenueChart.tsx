@@ -403,22 +403,24 @@ export function RevenueChart({
       )}
 
       {/* Chart */}
-      <div className="h-[200px]">
+      <div className="h-[200px] w-full overflow-hidden">
         <ResponsiveContainer width="100%" height="100%">
-          <ComposedChart data={chartData} margin={{ top: 5, right: 5, bottom: 0, left: 0 }}>
+          <ComposedChart data={chartData} margin={{ top: 5, right: 8, bottom: 0, left: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
             <XAxis
               dataKey="month"
               tick={{ fontSize: 10, fill: '#9A9080' }}
               axisLine={false}
               tickLine={false}
+              interval="preserveStartEnd"
+              minTickGap={4}
             />
             <YAxis
               tick={{ fontSize: 9, fill: '#9A9080' }}
               axisLine={false}
               tickLine={false}
-              tickFormatter={(v) => v >= 1000 ? `€${v / 1000}K` : `€${v}`}
-              width={42}
+              tickFormatter={(v) => v >= 1000 ? `${v / 1000}K` : `${v}`}
+              width={36}
             />
             <Tooltip content={<CustomTooltip />} />
             {annualGoal > 0 && (
@@ -431,8 +433,8 @@ export function RevenueChart({
                   strokeWidth={2}
                   strokeOpacity={0.9}
                   label={{
-                    value: `🎯 ${t('legendGoal')} ${fmtEur(monthlyGoalLine)}/mes`,
-                    position: 'insideTopRight',
+                    value: `🎯 ${fmtEur(monthlyGoalLine)}/mes`,
+                    position: 'insideTopLeft',
                     fill: '#C9A84C',
                     fontSize: 10,
                     fontWeight: 'bold',

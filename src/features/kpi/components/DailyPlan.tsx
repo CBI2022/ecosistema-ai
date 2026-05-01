@@ -180,8 +180,8 @@ export function DailyPlan({ items: initialItems, weekStart }: DailyPlanProps) {
         })}
       </div>
 
-      {/* Day tabs */}
-      <div className="mb-5 flex gap-1.5 overflow-x-auto">
+      {/* Day tabs — en mobile usa abreviados (Mon/Tue) en grid-5; en desktop full names en flex */}
+      <div className="mb-5 grid grid-cols-5 gap-1.5 sm:flex sm:overflow-x-auto">
         {DAYS.map((day) => {
           const pct = getDayScore(items.filter((i) => i.day_of_week === day))
           const isToday = day === todayKey
@@ -189,13 +189,14 @@ export function DailyPlan({ items: initialItems, weekStart }: DailyPlanProps) {
             <button
               key={day}
               onClick={() => setActiveDay(day)}
-              className={`flex items-center gap-2 whitespace-nowrap rounded-lg px-3.5 py-2 text-[11px] font-semibold transition-all ${
+              className={`flex items-center justify-center gap-1 whitespace-nowrap rounded-lg px-2 py-2 text-[11px] font-semibold transition-all sm:gap-2 sm:px-3.5 ${
                 activeDay === day
                   ? 'bg-[#C9A84C] text-black'
                   : 'border border-white/10 bg-white/4 text-[#9A9080] hover:text-[#F5F0E8]'
               }`}
             >
-              {DAY_LABELS[day]}
+              <span className="sm:hidden">{DAY_SHORT[day]}</span>
+              <span className="hidden sm:inline">{DAY_LABELS[day]}</span>
               {isToday && <span className="text-[10px]">👈</span>}
               <span
                 className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold ${

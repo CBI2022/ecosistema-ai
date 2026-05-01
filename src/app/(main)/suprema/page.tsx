@@ -58,8 +58,8 @@ export default async function SupremaPage() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-xl font-bold text-[#F5F0E8]">Suprema Automation</h1>
-        <p className="mt-1 text-sm text-[#9A9080]">Automate property publishing to the Suprema portal · Browser automation</p>
+        <h1 className="text-xl font-bold text-[#F5F0E8]">Sooprema Automation</h1>
+        <p className="mt-1 text-sm text-[#9A9080]">Automate property publishing to the Sooprema portal · Browser automation</p>
       </div>
       <SupremaDashboard jobs={jobs} />
     </div>

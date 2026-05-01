@@ -254,7 +254,7 @@
     "pushStatus": "Estado",
     "pushActive": "Activas",
     "pushInactive": "Inactivas",
-    "pushDescription": "Recibirás alertas de aprobaciones, publicaciones en Suprema, sesiones, etc.",
+    "pushDescription": "Recibirás alertas de aprobaciones, publicaciones en Sooprema, sesiones, etc.",
     "pushNotSupported": "Este navegador no soporta notificaciones push.",
     "pushIOSNote": "Para iOS: instala la app desde Safari → Compartir → Añadir a pantalla de inicio.",
     "activate": "Activar",

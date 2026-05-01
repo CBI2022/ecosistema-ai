@@ -264,8 +264,8 @@ export function TasksDashboard({
         </div>
       </div>
 
-      {/* Stats — 5 columnas GTD (scroll horizontal en mobile para mantener legibilidad) */}
-      <div className="-mx-3 flex gap-2 overflow-x-auto px-3 pb-1 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-5 sm:gap-2.5 sm:px-0 sm:pb-0 [&::-webkit-scrollbar]:hidden">
+      {/* Stats — 5 columnas GTD: en mobile grid-cols-2 (legible sin scroll), en desktop 5 cols */}
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-5 sm:gap-2.5">
         {[
           { label: t('total'), value: stats.total, color: '#F5F0E8', emoji: '📋' },
           { label: t('statusNextAction'), value: stats.next_action, color: STATUS_CONFIG.next_action.color, emoji: STATUS_CONFIG.next_action.emoji },

@@ -254,7 +254,7 @@
     "pushStatus": "Status",
     "pushActive": "Active",
     "pushInactive": "Inactive",
-    "pushDescription": "You'll receive alerts for approvals, Suprema publications, shoots, etc.",
+    "pushDescription": "You'll receive alerts for approvals, Sooprema publications, shoots, etc.",
     "pushNotSupported": "This browser doesn't support push notifications.",
     "pushIOSNote": "For iOS: install the app from Safari → Share → Add to Home Screen.",
     "activate": "Activate",
