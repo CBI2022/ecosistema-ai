@@ -18,6 +18,10 @@ const DAYS = [
 ] as const
 type Day = (typeof DAYS)[number]
 
+// La constraint UNIQUE de checklist_items es (user_id, week_start, day_of_week, category).
+// Por eso cada task del weekly plan necesita un category único — no podemos usar solo
+// 'must_do' / 'complete' (chocan al haber 6+8 tareas por día). Usamos prefijo + slug:
+//   must_do:powerhour, must_do:calls, ..., complete:debrief, etc.
 function buildTasks(goals: UserGoals | null) {
   const calls = goals?.calls_per_day ?? 20
   const followups = goals?.followups_per_day ?? 15
@@ -25,53 +29,21 @@ function buildTasks(goals: UserGoals | null) {
 
   return [
     // Priority: Must Do
-    {
-      category: 'must_do',
-      label: 'Power Hour — Start Before 9AM',
-      emoji: '⚡',
-    },
-    {
-      category: 'must_do',
-      label: `Make ${calls} prospecting calls`,
-      emoji: '📞',
-    },
-    {
-      category: 'must_do',
-      label: `Send ${followups} follow-ups`,
-      emoji: '🔄',
-    },
-    {
-      category: 'must_do',
-      label: 'Respond to new leads in under 5 min',
-      emoji: '⚡',
-    },
-    {
-      category: 'must_do',
-      label: 'Prospect for 1 new listing',
-      emoji: '🏠',
-    },
-    {
-      category: 'must_do',
-      label: `Book ${Math.ceil(appts / 5)} appointment(s) today`,
-      emoji: '📅',
-    },
+    { category: 'must_do:powerhour',     label: 'Power Hour — Start Before 9AM', emoji: '⚡' },
+    { category: 'must_do:calls',         label: `Make ${calls} prospecting calls`, emoji: '📞' },
+    { category: 'must_do:followups',     label: `Send ${followups} follow-ups`, emoji: '🔄' },
+    { category: 'must_do:respond_leads', label: 'Respond to new leads in under 5 min', emoji: '⚡' },
+    { category: 'must_do:prospect',      label: 'Prospect for 1 new listing', emoji: '🏠' },
+    { category: 'must_do:book_appt',     label: `Book ${Math.ceil(appts / 5)} appointment(s) today`, emoji: '📅' },
     // Complete the Day
-    { category: 'complete', label: 'Confirm all viewings for today', emoji: '🏡' },
-    { category: 'complete', label: 'Prepare viewing pack for each client', emoji: '📋' },
-    { category: 'complete', label: 'Update every deal in the pipeline', emoji: '💾' },
-    { category: 'complete', label: 'Move at least 1 deal forward', emoji: '🔁' },
-    { category: 'complete', label: 'Post 1 piece of content on Instagram', emoji: '📸' },
-    { category: 'complete', label: 'Ask 1 happy client for a Google review', emoji: '⭐' },
-    {
-      category: 'complete',
-      label: `Prepare tomorrow's call list — ${calls} names`,
-      emoji: '🗒️',
-    },
-    {
-      category: 'complete',
-      label: 'End-of-day debrief — 3 wins, 1 lesson',
-      emoji: '🎯',
-    },
+    { category: 'complete:viewings',     label: 'Confirm all viewings for today', emoji: '🏡' },
+    { category: 'complete:viewing_pack', label: 'Prepare viewing pack for each client', emoji: '📋' },
+    { category: 'complete:pipeline',     label: 'Update every deal in the pipeline', emoji: '💾' },
+    { category: 'complete:move_deal',    label: 'Move at least 1 deal forward', emoji: '🔁' },
+    { category: 'complete:ig_post',      label: 'Post 1 piece of content on Instagram', emoji: '📸' },
+    { category: 'complete:google_review',label: 'Ask 1 happy client for a Google review', emoji: '⭐' },
+    { category: 'complete:tomorrow_list',label: `Prepare tomorrow's call list — ${calls} names`, emoji: '🗒️' },
+    { category: 'complete:debrief',      label: 'End-of-day debrief — 3 wins, 1 lesson', emoji: '🎯' },
   ]
 }
 
@@ -85,15 +57,14 @@ export async function getOrCreateWeeklyPlan(
   // RLS no permite INSERT desde sesión de usuario en checklist_items.
   const supabase = createAdminClient()
 
-  // Filtrar SOLO el plan semanal de KPI (must_do / complete),
-  // ignorando los items del checklist diario del Dashboard que usan
-  // prefijo 'daily:' en la misma tabla.
+  // Filtrar SOLO el plan semanal de KPI (categorías que empiezan por
+  // 'must_do:' o 'complete:'), ignorando 'daily:' del checklist del Dashboard.
   const { data: existing } = await supabase
     .from('checklist_items')
     .select('*')
     .eq('user_id', userId)
     .eq('week_start', weekStart)
-    .in('category', ['must_do', 'complete'])
+    .or('category.like.must_do:%,category.like.complete:%')
     .order('created_at')
 
   if (existing && existing.length > 0) return existing

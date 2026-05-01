@@ -46,8 +46,8 @@ export function DailyPlan({ items: initialItems, weekStart }: DailyPlanProps) {
   const [showPerfect, setShowPerfect] = useState(false)
 
   const dayItems = items.filter((i) => i.day_of_week === activeDay)
-  const mustDo = dayItems.filter((i) => i.category === 'must_do')
-  const complete = dayItems.filter((i) => i.category === 'complete')
+  const mustDo = dayItems.filter((i) => i.category?.startsWith('must_do'))
+  const complete = dayItems.filter((i) => i.category?.startsWith('complete'))
   const score = getDayScore(dayItems)
 
   // Solo mostrar celebración 1 vez por (día_calendario + día_semana)
