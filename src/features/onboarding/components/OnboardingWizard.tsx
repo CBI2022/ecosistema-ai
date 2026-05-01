@@ -4,7 +4,7 @@ import { useState, useRef } from 'react'
 import { saveOnboarding } from '@/actions/onboarding'
 import { uploadAvatar } from '@/actions/profile'
 
-export function OnboardingWizard() {
+export function OnboardingWizard({ previewMode = false }: { previewMode?: boolean } = {}) {
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -31,6 +31,10 @@ export function OnboardingWizard() {
   }
 
   async function handleFinish() {
+    if (previewMode) {
+      setError('🎬 Modo preview — los datos NO se guardan. Es solo para revisar el flujo.')
+      return
+    }
     setLoading(true)
     setError(null)
     // Upload avatar first if provided
@@ -158,7 +162,7 @@ export function OnboardingWizard() {
 
           <button
             onClick={() => {
-              if (!data.first_name || !data.last_name) {
+              if (!previewMode && (!data.first_name || !data.last_name)) {
                 setError('Nombre y apellido son obligatorios')
                 return
               }
