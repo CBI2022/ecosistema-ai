@@ -310,10 +310,18 @@ export function RevenueChart({
       <div className="mb-5 grid gap-3 sm:grid-cols-4">
         {/* Objetivo anual */}
         <div className="rounded-xl border border-[#C9A84C]/30 bg-gradient-to-br from-[#C9A84C]/10 to-[#0A0A0A] p-3.5">
-          <div className="mb-1 flex items-center justify-between">
+          <div className="mb-1 flex items-center justify-between gap-2">
             <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-[#C9A84C]">🎯 {t('annualGoal')}</p>
             {!editingGoal && (
-              <button onClick={() => { setGoalDraft(String(annualGoal || '')); setEditingGoal(true) }} className="rounded border border-[#C9A84C]/40 bg-[#C9A84C]/10 px-2 py-0.5 text-[10px] font-bold text-[#C9A84C] hover:bg-[#C9A84C]/20">
+              <button
+                onClick={() => { setGoalDraft(String(annualGoal || '')); setEditingGoal(true) }}
+                className="flex shrink-0 items-center gap-1 rounded-md bg-[#C9A84C] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-black hover:bg-[#E8C96A] active:scale-95"
+                aria-label="Editar objetivo anual"
+              >
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 20h9" />
+                  <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                </svg>
                 {tCommon('edit')}
               </button>
             )}
