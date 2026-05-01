@@ -123,14 +123,12 @@ export async function resetPassword(formData: FormData) {
 
   // Generamos el link de recovery desde Supabase Admin (no envía email)
   // y lo entregamos nosotros vía Resend con nuestro template y branding.
-  // IMPORTANTE: redirectTo apunta a /callback que hace exchangeCodeForSession
-  // y de ahí redirige a /update-password con la sesión ya establecida.
-  // Si apuntáramos directo a /update-password, no habría sesión y daría
-  // 'Auth session missing!' al intentar cambiar password.
+  // /update-password (client component) detecta automáticamente los tokens
+  // del fragment (#access_token=...) o del query (?code=...) y establece sesión.
   const { data: linkData, error: linkError } = await admin.auth.admin.generateLink({
     type: 'recovery',
     email,
-    options: { redirectTo: `${siteUrl}/callback?next=/update-password` },
+    options: { redirectTo: `${siteUrl}/update-password` },
   })
 
   // Si el email no existe, devolvemos success igual (anti-enumeration)
@@ -147,7 +145,7 @@ export async function resetPassword(formData: FormData) {
     // Fallback: usar el flujo nativo de Supabase (SMTP por defecto, rate-limited)
     const supabase = await createClient()
     await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${siteUrl}/callback?next=/update-password`,
+      redirectTo: `${siteUrl}/update-password`,
     })
   }
 
