@@ -5,6 +5,8 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendPushToUser } from '@/actions/push'
+import { sendEmail } from '@/lib/email/resend'
+import { forgotPasswordEmail } from '@/lib/email/templates'
 import type { UserRole } from '@/types/database'
 
 export async function login(formData: FormData) {
@@ -76,15 +78,36 @@ export async function signout() {
 }
 
 export async function resetPassword(formData: FormData) {
-  const supabase = await createClient()
-  const email = formData.get('email') as string
+  const email = (formData.get('email') as string)?.trim().toLowerCase()
+  if (!email) return { error: 'Email requerido' }
 
-  const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/update-password`,
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://app.costablancainvestments.com'
+  const admin = createAdminClient()
+
+  // Generamos el link de recovery desde Supabase Admin (no envía email)
+  // y lo entregamos nosotros vía Resend con nuestro template y branding.
+  const { data: linkData, error: linkError } = await admin.auth.admin.generateLink({
+    type: 'recovery',
+    email,
+    options: { redirectTo: `${siteUrl}/update-password` },
   })
 
-  if (error) {
-    return { error: error.message }
+  // Si el email no existe, devolvemos success igual (anti-enumeration)
+  // pero NO enviamos email — el atacante no debe poder distinguir.
+  if (linkError || !linkData?.properties?.action_link) {
+    console.warn('[resetPassword] no link generado para', email, linkError?.message)
+    return { success: true }
+  }
+
+  const tpl = forgotPasswordEmail(linkData.properties.action_link)
+  const result = await sendEmail({ to: email, subject: tpl.subject, html: tpl.html })
+
+  if (!result.ok) {
+    // Fallback: usar el flujo nativo de Supabase (SMTP por defecto, rate-limited)
+    const supabase = await createClient()
+    await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${siteUrl}/update-password`,
+    })
   }
 
   return { success: true }
