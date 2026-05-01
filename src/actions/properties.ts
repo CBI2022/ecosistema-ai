@@ -102,11 +102,28 @@ export async function saveProperty(formData: FormData, publish = false) {
   const zone = str(formData, 'zone') || 'Altea'
   const reference = str(formData, 'reference') || (await generateReference(supabase, zone))
 
+  // Estado de publicación canónico (3 valores: hidden, published, private)
+  const submittedPubState = str(formData, 'publication_state')
+  const publicationState =
+    submittedPubState && ['hidden', 'published', 'private'].includes(submittedPubState)
+      ? submittedPubState
+      : (publish ? 'published' : 'hidden')
+
+  // XML feeds (multi)
+  let xmlFeedsArray: string[] = []
+  try {
+    const raw = str(formData, 'xml_feeds')
+    if (raw) {
+      const parsed = JSON.parse(raw)
+      if (Array.isArray(parsed)) xmlFeedsArray = parsed.filter((x: unknown): x is string => typeof x === 'string')
+    }
+  } catch { /* ignore */ }
+
   const propertyData: Record<string, unknown> = {
     agent_id: agentId,
     reference,
 
-    // Identificación
+    // Identificación (Sooprema solo tiene 1 título → title_headline)
     title: str(formData, 'title'),
     title_headline: str(formData, 'title_headline'),
     title_in_text: str(formData, 'title_in_text'),
@@ -114,9 +131,17 @@ export async function saveProperty(formData: FormData, publish = false) {
     // Tipo / estado
     property_type: str(formData, 'property_type') || 'villa',
     listing_type: str(formData, 'listing_type') || 'sale',
+    is_new_build: bool(formData, 'is_new_build'),
+    is_plot: bool(formData, 'is_plot'),
     status: publish ? 'published' : 'draft',
+    publication_state: publicationState,
     status_tags: arrCsv(formData, 'status_tags'),
     occupation_status: str(formData, 'occupation_status'),
+
+    // Destacadas / homepage
+    featured_homepage: bool(formData, 'featured_homepage'),
+    featured_first_position: bool(formData, 'featured_first_position'),
+    featured_promote: bool(formData, 'featured_promote'),
 
     // Precios
     price: num(formData, 'price'),
@@ -154,14 +179,26 @@ export async function saveProperty(formData: FormData, publish = false) {
     zone,
     street_name: str(formData, 'street_name'),
     street_number: str(formData, 'street_number'),
+    apartment_floor: str(formData, 'apartment_floor'),
+    apartment_door: str(formData, 'apartment_door'),
+    urbanization: str(formData, 'urbanization'),
     postal_code: str(formData, 'postal_code'),
     city: str(formData, 'city'),
+    latitude: num(formData, 'latitude'),
+    longitude: num(formData, 'longitude'),
 
-    // Descripciones
+    // Descripciones (7 idiomas)
     description_es: str(formData, 'description_es'),
     description_en: str(formData, 'description_en'),
+    description_de: str(formData, 'description_de'),
+    description_fr: str(formData, 'description_fr'),
     description_nl: str(formData, 'description_nl'),
+    description_ru: str(formData, 'description_ru'),
+    description_pl: str(formData, 'description_pl'),
     views: str(formData, 'views'),
+
+    // Calefacción / climatización
+    heating_type: str(formData, 'heating_type'),
 
     // Features core
     has_pool: bool(formData, 'has_pool'),
@@ -187,13 +224,41 @@ export async function saveProperty(formData: FormData, publish = false) {
     has_bar: bool(formData, 'has_bar'),
     has_guest_apartment: bool(formData, 'has_guest_apartment'),
     has_summer_kitchen: bool(formData, 'has_summer_kitchen'),
+    has_water_deposit: bool(formData, 'has_water_deposit'),
+    has_sat_tv: bool(formData, 'has_sat_tv'),
+    has_internet: bool(formData, 'has_internet'),
+    has_laundry: bool(formData, 'has_laundry'),
+    has_outdoor_shower: bool(formData, 'has_outdoor_shower'),
+    has_double_glazing: bool(formData, 'has_double_glazing'),
+    has_security_door: bool(formData, 'has_security_door'),
+    has_enclosed_plot: bool(formData, 'has_enclosed_plot'),
     furniture_status: str(formData, 'furniture_status'),
 
-    // Certificado / portales
+    // Apartamento de invitados
+    guest_bedrooms: int(formData, 'guest_bedrooms'),
+    guest_bathrooms: int(formData, 'guest_bathrooms'),
+    guest_toilets: int(formData, 'guest_toilets'),
+    guest_lounge: bool(formData, 'guest_lounge'),
+    guest_dining_room: bool(formData, 'guest_dining_room'),
+    guest_kitchen: bool(formData, 'guest_kitchen'),
+
+    // Certificados energéticos (Sooprema tiene 2 escalas + emisiones)
     energy_certificate: str(formData, 'energy_certificate') || 'D',
+    energy_consumption_rating: str(formData, 'energy_consumption_rating'),
+    energy_consumption_kwh: num(formData, 'energy_consumption_kwh'),
+    co2_emissions: num(formData, 'co2_emissions'),
+
+    // Portales
     publish_sooprema: bool(formData, 'publish_sooprema') !== false,
     publish_idealista: bool(formData, 'publish_idealista'),
+    publish_kyero: bool(formData, 'publish_kyero'),
     publish_imoluc: bool(formData, 'publish_imoluc'),
+    xml_feeds: xmlFeedsArray,
+
+    // Permisos del propietario / control interno CBI
+    owner_allows_web: bool(formData, 'owner_allows_web') || formData.get('owner_allows_web') === null,
+    owner_allows_idealista: bool(formData, 'owner_allows_idealista') || formData.get('owner_allows_idealista') === null,
+    allow_billboard: bool(formData, 'allow_billboard'),
 
     // Gastos
     ibi_annual: num(formData, 'ibi_annual'),
@@ -362,19 +427,32 @@ export async function generateDescription(formData: FormData) {
   const price = formData.get('price')
   const features = (formData.get('features') as string)?.split(',') ?? []
   const lang = (formData.get('lang') as string) || 'en'
+  const sourceText = (formData.get('source_text') as string) || ''
+  const isTranslate = formData.get('translate') === '1' && sourceText.trim().length > 0
 
-  const langLabel = lang === 'es' ? 'Spanish (Español)' : lang === 'nl' ? 'Dutch (Nederlands)' : 'English'
-  const distancesText = {
-    en: 'End with distances: "The property is located X minutes from the beach and X minutes from Alicante Airport."',
-    es: 'Termina con distancias: "La propiedad se encuentra a X minutos de la playa y X minutos del Aeropuerto de Alicante."',
-    nl: 'Eindig met afstanden: "De woning ligt op X minuten van het strand en X minuten van Luchthaven Alicante."',
-  }[lang] || ''
+  const langNames: Record<string, string> = {
+    en: 'English',
+    es: 'Spanish (Español)',
+    de: 'German (Deutsch)',
+    fr: 'French (Français)',
+    nl: 'Dutch (Nederlands)',
+    ru: 'Russian (Русский)',
+    pl: 'Polish (Polski)',
+  }
+  const langLabel = langNames[lang] || 'English'
 
-  const prompt = `Write a professional luxury real estate description in ${langLabel} for a ${type} in ${zone}, Costa Blanca, Spain.
+  const prompt = isTranslate
+    ? `Translate the following luxury real estate description from English to ${langLabel}.
+Keep the professional tone, the same structure, and the same level of detail.
+Do not add or remove information. Output only the translated text, in ${langLabel}, with no preface or quotes.
+
+ORIGINAL (English):
+${sourceText}`
+    : `Write a professional luxury real estate description in ${langLabel} for a ${type} in ${zone}, Costa Blanca, Spain.
 Details: ${bedrooms} bedrooms, ${bathrooms} bathrooms, ${buildArea}m², price €${price}.
 Features: ${features.join(', ')}.
 Requirements: no bullets, no emojis, 3-4 sentences, professional tone, mention lifestyle and location benefits.
-${distancesText}
+End with distances to the beach and Alicante Airport.
 Output only the description text, in ${langLabel}.`
 
   try {
