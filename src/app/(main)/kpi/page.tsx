@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
 import {
   getOrCreateWeeklyPlan,
@@ -7,6 +8,7 @@ import {
 } from '@/features/kpi/services/kpi'
 import { DailyPlan } from '@/features/kpi/components/DailyPlan'
 import { Leaderboard } from '@/features/kpi/components/Leaderboard'
+import type { UserRole } from '@/types/database'
 
 export default async function KpiPage() {
   const supabase = await createClient()
@@ -14,6 +16,13 @@ export default async function KpiPage() {
     data: { user },
   } = await supabase.auth.getUser()
   if (!user) redirect('/login')
+
+  const admin = createAdminClient()
+  const { data: profile } = await admin
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
 
   const { data: goals } = await supabase
     .from('user_goals')
@@ -27,12 +36,18 @@ export default async function KpiPage() {
     getLeaderboard(new Date().getFullYear()),
   ])
 
+  const viewerRole = (profile?.role ?? 'agent') as UserRole
+  const viewerAnnualGoal = goals?.annual_revenue_goal ?? 0
+
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_420px]">
       <DailyPlan items={planItems} weekStart={weekStart} />
       <Leaderboard
         agents={leaderboard}
         currentYear={new Date().getFullYear()}
+        viewerId={user.id}
+        viewerRole={viewerRole}
+        viewerAnnualGoal={viewerAnnualGoal}
       />
     </div>
   )
