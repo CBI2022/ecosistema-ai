@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useTransition } from 'react'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
+import { toggleDailyChecklistItem } from '@/actions/daily-checklist'
 
 interface UserGoalsLite {
   calls_per_day?: number | null
@@ -12,6 +13,7 @@ interface UserGoalsLite {
 
 interface TodaysChecklistProps {
   goals?: UserGoalsLite | null
+  initialDone?: string[]
 }
 
 function buildTasks(t: ReturnType<typeof useTranslations<'dashboard'>>, goals?: UserGoalsLite | null) {
@@ -35,12 +37,15 @@ function getTodayKey() {
   return `checklist_${new Date().toISOString().split('T')[0]}`
 }
 
-export function TodaysChecklist({ goals }: TodaysChecklistProps = {}) {
+export function TodaysChecklist({ goals, initialDone = [] }: TodaysChecklistProps = {}) {
   const t = useTranslations('dashboard')
   const TASKS = buildTasks(t, goals)
-  const [checked, setChecked] = useState<Set<string>>(new Set())
+  const [checked, setChecked] = useState<Set<string>>(new Set(initialDone))
+  const [, startTransition] = useTransition()
 
+  // Persistencia adicional optimista en localStorage (cache rápido + offline)
   useEffect(() => {
+    if (initialDone.length > 0) return
     const key = getTodayKey()
     const saved = localStorage.getItem(key)
     if (saved) {
@@ -48,17 +53,20 @@ export function TodaysChecklist({ goals }: TodaysChecklistProps = {}) {
         setChecked(new Set(JSON.parse(saved)))
       } catch {}
     }
-  }, [])
+  }, [initialDone.length])
 
   function toggle(id: string) {
     setChecked((prev) => {
       const next = new Set(prev)
-      if (next.has(id)) {
-        next.delete(id)
-      } else {
-        next.add(id)
-      }
+      const willBeDone = !next.has(id)
+      if (willBeDone) next.add(id)
+      else next.delete(id)
+      // Optimistic localStorage cache
       localStorage.setItem(getTodayKey(), JSON.stringify([...next]))
+      // Persist a BD
+      startTransition(async () => {
+        await toggleDailyChecklistItem(id, willBeDone)
+      })
       return next
     })
   }

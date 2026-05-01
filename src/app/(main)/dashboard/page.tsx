@@ -11,6 +11,7 @@ import { AgentPhotosGallery } from '@/features/dashboard/components/AgentPhotosG
 import { MotivationalBanner } from '@/features/dashboard/components/MotivationalBanner'
 import { TeamViewToggle } from '@/features/dashboard/components/TeamViewToggle'
 import { ChecklistReminder } from '@/features/dashboard/components/ChecklistReminder'
+import { getTodaysChecklistDone } from '@/actions/daily-checklist'
 
 export default async function DashboardPage({
   searchParams,
@@ -32,7 +33,7 @@ export default async function DashboardPage({
   const params = await searchParams
   const teamView = canManage && params.view === 'team'
 
-  const [data, { data: agentPhotos }, { data: motivation }] = await Promise.all([
+  const [data, { data: agentPhotos }, { data: motivation }, checklistDone] = await Promise.all([
     getDashboardData(user.id, teamView),
     supabase
       .from('property_photos')
@@ -45,6 +46,7 @@ export default async function DashboardPage({
       .select('motto, why')
       .eq('user_id', user.id)
       .maybeSingle(),
+    getTodaysChecklistDone(),
   ])
 
   const firstName =
@@ -84,7 +86,7 @@ export default async function DashboardPage({
         </div>
 
         <div>
-          <TodaysChecklist goals={data.goals} />
+          <TodaysChecklist goals={data.goals} initialDone={checklistDone} />
           <ExclusiveHomesManager homes={data.exclusiveHomes} canManage={canManage} />
         </div>
       </div>
