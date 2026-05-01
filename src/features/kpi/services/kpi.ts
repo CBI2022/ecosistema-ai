@@ -83,11 +83,15 @@ export async function getOrCreateWeeklyPlan(
 ) {
   const supabase = await createClient()
 
+  // Filtrar SOLO el plan semanal de KPI (must_do / complete),
+  // ignorando los items del checklist diario del Dashboard que usan
+  // prefijo 'daily:' en la misma tabla.
   const { data: existing } = await supabase
     .from('checklist_items')
     .select('*')
     .eq('user_id', userId)
     .eq('week_start', weekStart)
+    .in('category', ['must_do', 'complete'])
     .order('created_at')
 
   if (existing && existing.length > 0) return existing

@@ -18,8 +18,13 @@ function dayOfWeekIso(date: Date): number {
   return day === 0 ? 7 : day
 }
 
+// Prefijo para diferenciar items del checklist diario del Dashboard
+// del plan semanal de KPI (que usa category 'must_do' / 'complete').
+// Sin este prefijo, ambos sistemas chocaban en la UNIQUE constraint
+// (user_id, week_start, day_of_week, category).
+const PREFIX = 'daily:'
+
 // Trae los items marcados como done HOY para el usuario actual.
-// Devuelve un Set de category (que usamos como "item_id" del checklist diario).
 export async function getTodaysChecklistDone(): Promise<string[]> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -35,9 +40,13 @@ export async function getTodaysChecklistDone(): Promise<string[]> {
     .eq('user_id', user.id)
     .eq('week_start', ws)
     .eq('day_of_week', dow)
+    .like('category', `${PREFIX}%`)
     .eq('is_done', true)
 
-  return (data ?? []).map((r) => r.category as string).filter(Boolean)
+  return (data ?? [])
+    .map((r) => (r.category as string) ?? '')
+    .filter((c) => c.startsWith(PREFIX))
+    .map((c) => c.slice(PREFIX.length))
 }
 
 // Marca/desmarca un item del checklist diario hoy.
@@ -57,7 +66,9 @@ export async function toggleDailyChecklistItem(itemId: string, isDone: boolean) 
         user_id: user.id,
         week_start: ws,
         day_of_week: dow,
-        category: itemId,
+        category: `${PREFIX}${itemId}`,
+        label: itemId,
+        target: 1,
         is_done: isDone,
         completed: isDone ? 1 : 0,
         updated_at: new Date().toISOString(),
