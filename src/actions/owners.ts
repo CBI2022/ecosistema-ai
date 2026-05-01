@@ -32,8 +32,14 @@ export async function createOwner(formData: FormData) {
 
   const firstName = ((formData.get('first_name') as string) || '').trim()
   const lastName = ((formData.get('last_name') as string) || '').trim()
+  const phone = ((formData.get('phone') as string) || '').trim()
   const fullName = `${firstName} ${lastName}`.trim()
-  if (!fullName) return { error: 'Nombre obligatorio' }
+
+  // Obligatorios reales según Chloe: Nombre + Apellido + Teléfono
+  // (Email opcional — los propietarios no siempre tienen / no siempre lo dan)
+  if (!firstName) return { error: 'Nombre obligatorio' }
+  if (!lastName) return { error: 'Apellido obligatorio' }
+  if (!phone) return { error: 'Teléfono obligatorio (sin teléfono no podemos contactar al propietario)' }
 
   const admin = createAdminClient()
   const { data, error } = await admin.from('owners').insert({

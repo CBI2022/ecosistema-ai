@@ -183,23 +183,23 @@ export function OwnerPicker({ value, onChange }: OwnerPickerProps) {
                   <input name="first_name" required className={inputClass} />
                 </div>
                 <div>
-                  <label className={labelClass}>Apellido</label>
-                  <input name="last_name" className={inputClass} />
+                  <label className={labelClass}>Apellido *</label>
+                  <input name="last_name" required className={inputClass} />
                 </div>
-              </div>
-              <div>
-                <label className={labelClass}>Email</label>
-                <input name="email" type="email" className={inputClass} />
               </div>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
-                  <label className={labelClass}>Teléfono</label>
-                  <input name="phone" className={inputClass} />
+                  <label className={labelClass}>Teléfono *</label>
+                  <input name="phone" type="tel" required className={inputClass} placeholder="+34 600 000 000" />
                 </div>
                 <div>
-                  <label className={labelClass}>NIF / NIE</label>
-                  <input name="nif" className={inputClass} />
+                  <label className={labelClass}>Email (opcional)</label>
+                  <input name="email" type="email" className={inputClass} />
                 </div>
+              </div>
+              <div>
+                <label className={labelClass}>NIF / NIE (opcional)</label>
+                <input name="nif" className={inputClass} />
               </div>
               <div>
                 <label className={labelClass}>Idioma</label>

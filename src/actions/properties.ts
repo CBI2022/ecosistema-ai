@@ -24,11 +24,36 @@ async function generateReference(
   zone: string
 ) {
   const prefix = ZONE_PREFIXES[zone] ?? zone.slice(0, 2).toUpperCase()
-  const { count } = await supabase
+  // Tomar la última referencia con ese prefijo (ordenada desc) y sumarle 1.
+  // Esto es robusto frente a registros borrados, manual entries y conteos no atómicos.
+  const { data } = await supabase
     .from('properties')
-    .select('*', { count: 'exact', head: true })
+    .select('reference')
     .like('reference', `${prefix}%`)
-  return `${prefix}${String((count ?? 0) + 1).padStart(3, '0')}`
+    .order('reference', { ascending: false })
+    .limit(1)
+
+  let next = 1
+  if (data && data.length > 0 && data[0].reference) {
+    const numericPart = String(data[0].reference).slice(prefix.length).replace(/\D/g, '')
+    const parsed = parseInt(numericPart, 10)
+    if (!isNaN(parsed)) next = parsed + 1
+  }
+
+  // Verificación defensiva: si por alguna razón la candidata ya existe, incrementar hasta encontrar libre.
+  for (let attempt = 0; attempt < 50; attempt++) {
+    const candidate = `${prefix}${String(next).padStart(3, '0')}`
+    const { data: existing } = await supabase
+      .from('properties')
+      .select('id')
+      .eq('reference', candidate)
+      .maybeSingle()
+    if (!existing) return candidate
+    next++
+  }
+
+  // Fallback con sufijo aleatorio si tras 50 intentos no se encuentra hueco
+  return `${prefix}${String(next).padStart(3, '0')}-${Math.random().toString(36).slice(2, 5).toUpperCase()}`
 }
 
 // Helpers para parsear form data
@@ -217,13 +242,31 @@ export async function saveProperty(formData: FormData, publish = false) {
     if (error) return { error: error.message }
     result = data
   } else {
-    const { data, error } = await writeClient
-      .from('properties')
-      .insert(propertyData)
-      .select('id')
-      .single()
-    if (error) return { error: error.message }
-    result = data
+    // Reintentar hasta 5 veces si la referencia colisiona (carrera entre uploads concurrentes)
+    let lastError: unknown = null
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const { data, error } = await writeClient
+        .from('properties')
+        .insert(propertyData)
+        .select('id')
+        .single()
+      if (!error) {
+        result = data
+        break
+      }
+      lastError = error
+      const msg = error.message || ''
+      const code = (error as { code?: string }).code
+      const isUniqueViolation = code === '23505' || msg.includes('properties_reference_key') || msg.includes('duplicate key')
+      if (!isUniqueViolation) return { error: msg }
+      // Regenerar referencia y volver a intentar
+      const newRef = await generateReference(supabase, zone)
+      propertyData.reference = newRef
+    }
+    if (!result) {
+      const msg = (lastError as { message?: string })?.message || 'No se pudo guardar la propiedad'
+      return { error: msg }
+    }
   }
 
   if (!result) return { error: 'No se pudo guardar' }
@@ -248,6 +291,7 @@ export async function saveProperty(formData: FormData, publish = false) {
 
   if (publish) {
     // Validar que la propiedad tenga los campos obligatorios de Sooprema
+    // (year_built NO es obligatorio: Chloe confirmó que no siempre se conoce)
     const missing: string[] = []
     if (!propertyData.price) missing.push('Precio')
     if (!propertyData.bedrooms) missing.push('Dormitorios')
@@ -256,7 +300,6 @@ export async function saveProperty(formData: FormData, publish = false) {
     if (!propertyData.plot_area_m2 && propertyData.property_type === 'villa') missing.push('m² parcela')
     if (!propertyData.description_es && !propertyData.description_en) missing.push('Descripción (ES o EN)')
     if (!propertyData.location && !propertyData.zone) missing.push('Ubicación o Zona')
-    if (!propertyData.year_built) missing.push('Año de construcción')
 
     if (missing.length > 0) {
       await writeClient
