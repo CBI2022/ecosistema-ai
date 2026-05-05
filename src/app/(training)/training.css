@@ -38,6 +38,33 @@
 }
 
 /* ──────────────────────────────────────────────────────────
+   HEADER MOBILE/DESKTOP TOGGLE
+   ────────────────────────────────────────────────────────── */
+@media (min-width: 768px) {
+  .training-root .t-dc-actions-desktop {
+    display: flex !important;
+  }
+  .training-root .t-dc-actions-mobile-toggle {
+    display: none !important;
+  }
+}
+@media (max-width: 767px) {
+  .training-root .t-dc-actions-desktop {
+    display: none !important;
+  }
+}
+
+/* Asegurar safe-area + espacio para nav inferior móvil */
+.training-root {
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+@media (max-width: 767px) {
+  .training-root > div:first-child > div:last-child {
+    padding-bottom: 90px !important;
+  }
+}
+
+/* ──────────────────────────────────────────────────────────
    MOBILE RESPONSIVE
    ────────────────────────────────────────────────────────── */
 

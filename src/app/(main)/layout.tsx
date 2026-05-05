@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { AppHeader } from '@/shared/components/AppHeader'
 import { AppNav } from '@/shared/components/AppNav'
+import { RouteTransitionOverlay } from '@/shared/components/RouteTransitionOverlay'
 import { FirstLoginModal } from '@/features/auth/components/FirstLoginModal'
 
 export default async function MainLayout({
@@ -65,6 +66,7 @@ export default async function MainLayout({
       {profile.must_change_credentials && (
         <FirstLoginModal currentEmail={profile.email} />
       )}
+      <RouteTransitionOverlay />
     </div>
   )
 }

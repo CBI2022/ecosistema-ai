@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 
 const labelClass = 'block text-[9px] font-bold uppercase tracking-[0.12em] text-[#9A9080] mb-1.5'
-const inputClass = 'w-full rounded-lg border border-white/10 bg-[#1C1C1C] px-3.5 py-2.5 text-sm text-[#F5F0E8] outline-none transition focus:border-[#C9A84C]/60 placeholder-[#9A9080]'
+const inputClass = 'block w-full min-w-0 max-w-full box-border rounded-lg border border-white/10 bg-[#1C1C1C] px-3.5 py-2.5 text-sm text-[#F5F0E8] outline-none transition focus:border-[#C9A84C]/60 placeholder-[#9A9080] appearance-none [&::-webkit-date-and-time-value]:text-left'
 
 interface InvoiceFormProps {
   defaultAgentName?: string
@@ -50,16 +50,16 @@ export function InvoiceForm({
   return (
     <form ref={formRef} onSubmit={(e) => e.preventDefault()} className="space-y-6">
       {/* Invoice Info */}
-      <section className="rounded-2xl border border-[#C9A84C]/12 bg-[#131313] p-5" style={{ borderTop: '1px solid #C9A84C' }}>
+      <section className="rounded-2xl border border-[#C9A84C]/12 bg-[#131313] p-4 sm:p-5" style={{ borderTop: '1px solid #C9A84C' }}>
         <p className="mb-4 text-[9px] font-bold uppercase tracking-[0.18em] text-[#C9A84C]">
           🧾 Invoice Info
         </p>
         <div className="grid gap-4 sm:grid-cols-2">
-          <div>
+          <div className="min-w-0">
             <label className={labelClass}>Invoice Number</label>
             <input type="text" name="invoice_number" className={inputClass} defaultValue={autoInvoiceNumber} />
           </div>
-          <div>
+          <div className="min-w-0">
             <label className={labelClass}>Invoice Date</label>
             <input
               type="date"

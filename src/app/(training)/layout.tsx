@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { RouteTransitionOverlay } from '@/shared/components/RouteTransitionOverlay'
 import './training.css'
 
 export default async function TrainingLayout({ children }: { children: React.ReactNode }) {
@@ -17,5 +18,10 @@ export default async function TrainingLayout({ children }: { children: React.Rea
 
   if (!profile || profile.status !== 'approved') redirect('/pending-approval')
 
-  return <div className="training-root">{children}</div>
+  return (
+    <div className="training-root">
+      {children}
+      <RouteTransitionOverlay />
+    </div>
+  )
 }

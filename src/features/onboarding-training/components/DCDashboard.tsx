@@ -16,6 +16,7 @@ import {
 import { AgentProfileView } from './AgentProfileView'
 import { DCMorningPrompt } from './DCMorningPrompt'
 import { TeamDashboard } from './TeamDashboard'
+import { TrainingSkeleton } from './TrainingSkeleton'
 import { TrainingVideoManager } from './TrainingVideoManager'
 
 interface AgentOverview {
@@ -79,7 +80,8 @@ export function DCDashboard({ userName, userRole }: { userName: string; userRole
     loadUsers()
   }, [])
 
-  if (loading) return <div style={{ minHeight: '100vh', background: '#09080A', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6BAE94', fontSize: 14 }}>Loading...</div>
+  if (loading) return <TrainingSkeleton accent="#6BAE94" />
+
 
   const week = DC_WEEKS[wi]
   const ac = PHASE_COLORS[week.phase]
@@ -196,17 +198,14 @@ export function DCDashboard({ userName, userRole }: { userName: string; userRole
         </div>
       )}
 
-      <div className="t-dc-header" style={{ background: '#0C0B0E', borderBottom: '1px solid #1A1820', padding: '10px 18px', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-        <Link href="/dashboard" className="t-back-link" style={{ background: '#1A1820', border: '1px solid #2A2430', color: '#9A9080', borderRadius: 10, padding: '6px 10px', fontSize: 11, fontWeight: 600, textDecoration: 'none', flexShrink: 0 }}>← Dashboard</Link>
-        <div style={{ fontSize: 14, color: '#EEE5D5', fontWeight: 700 }}>👩‍💼 {userName}</div>
-        <div className="t-dc-actions" style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-          <div style={{ fontSize: 11, color: '#3A3040' }}>{pct}% done</div>
-          <button onClick={() => setShowTrainingVideos(true)} style={{ background: '#E07B6A', color: '#09080A', border: 'none', borderRadius: 10, padding: '8px 14px', cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>🎬 Training Videos</button>
-          <button onClick={() => setShowManageUsers(true)} style={{ background: '#9B7EC8', color: '#09080A', border: 'none', borderRadius: 10, padding: '8px 14px', cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>+ Add Agents</button>
-          <button onClick={() => setShowTeamDashboard(true)} style={{ background: '#D4A853', color: '#09080A', border: 'none', borderRadius: 10, padding: '8px 14px', cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>📊 Team</button>
-          <button onClick={() => setShowPrompt(true)} style={{ background: '#6BAE94', color: '#09080A', border: 'none', borderRadius: 10, padding: '8px 14px', cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>🌅 My Focus</button>
-        </div>
-      </div>
+      <DCHeader
+        userName={userName}
+        pct={pct}
+        onTrainingVideos={() => setShowTrainingVideos(true)}
+        onManageUsers={() => setShowManageUsers(true)}
+        onTeamDashboard={() => setShowTeamDashboard(true)}
+        onMyFocus={() => setShowPrompt(true)}
+      />
 
       <div style={{ height: 3, background: '#191714' }}>
         <div style={{ height: '100%', width: `${pct}%`, background: 'linear-gradient(90deg,#6BAE94,#EEE5D5)', transition: 'width 0.5s' }} />
@@ -318,6 +317,219 @@ export function DCDashboard({ userName, userRole }: { userName: string; userRole
           )}
         </div>
       </div>
+    </div>
+  )
+}
+
+/**
+ * Header mobile-first del DC dashboard.
+ * - Móvil: una fila con back button visible + nombre + % + botón "⋯" que abre un sheet con las acciones.
+ * - Desktop: todas las acciones inline a la derecha.
+ */
+function DCHeader({
+  userName,
+  pct,
+  onTrainingVideos,
+  onManageUsers,
+  onTeamDashboard,
+  onMyFocus,
+}: {
+  userName: string
+  pct: number
+  onTrainingVideos: () => void
+  onManageUsers: () => void
+  onTeamDashboard: () => void
+  onMyFocus: () => void
+}) {
+  const [actionsOpen, setActionsOpen] = useState(false)
+
+  const closeAndRun = (fn: () => void) => () => {
+    setActionsOpen(false)
+    fn()
+  }
+
+  const actions = [
+    { label: 'Training Videos', icon: '🎬', color: '#E07B6A', onClick: closeAndRun(onTrainingVideos) },
+    { label: 'Add Agents',      icon: '+',  color: '#9B7EC8', onClick: closeAndRun(onManageUsers)    },
+    { label: 'Team',            icon: '📊', color: '#D4A853', onClick: closeAndRun(onTeamDashboard)  },
+    { label: 'My Focus',        icon: '🌅', color: '#6BAE94', onClick: closeAndRun(onMyFocus)        },
+  ]
+
+  return (
+    <div
+      className="t-dc-header"
+      style={{
+        background: '#0C0B0E',
+        borderBottom: '1px solid #1A1820',
+        padding: '10px 14px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 10,
+        position: 'sticky',
+        top: 0,
+        zIndex: 30,
+        backdropFilter: 'blur(8px)',
+      }}
+    >
+      <Link
+        href="/dashboard"
+        className="t-back-link"
+        style={{
+          background: '#1A1820',
+          border: '1px solid #2A2430',
+          color: '#D0C8B8',
+          borderRadius: 10,
+          padding: '8px 12px',
+          fontSize: 12,
+          fontWeight: 600,
+          textDecoration: 'none',
+          flexShrink: 0,
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 6,
+        }}
+        aria-label="Volver al Dashboard"
+      >
+        <span style={{ fontSize: 14, lineHeight: 1 }}>←</span>
+        <span>Dashboard</span>
+      </Link>
+
+      <div style={{ minWidth: 0, flex: 1, display: 'flex', alignItems: 'center', gap: 8 }}>
+        <span style={{ fontSize: 14, color: '#EEE5D5', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          👩‍💼 {userName}
+        </span>
+        <span style={{ fontSize: 11, color: '#6BAE94', fontWeight: 700, flexShrink: 0 }}>{pct}%</span>
+      </div>
+
+      {/* Desktop actions inline */}
+      <div className="t-dc-actions-desktop" style={{ display: 'none', alignItems: 'center', gap: 8 }}>
+        {actions.map((a) => (
+          <button
+            key={a.label}
+            onClick={a.onClick}
+            style={{
+              background: a.color,
+              color: '#09080A',
+              border: 'none',
+              borderRadius: 10,
+              padding: '8px 14px',
+              cursor: 'pointer',
+              fontSize: 12,
+              fontWeight: 700,
+            }}
+          >
+            {a.icon} {a.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Mobile menu button */}
+      <button
+        type="button"
+        className="t-dc-actions-mobile-toggle"
+        onClick={() => setActionsOpen(true)}
+        aria-label="Abrir acciones"
+        style={{
+          flexShrink: 0,
+          height: 38,
+          width: 38,
+          borderRadius: 10,
+          background: '#1A1820',
+          border: '1px solid #2A2430',
+          color: '#D0C8B8',
+          fontSize: 18,
+          cursor: 'pointer',
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        ⋯
+      </button>
+
+      {/* Mobile bottom sheet */}
+      {actionsOpen && (
+        <div
+          className="t-dc-actions-sheet"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setActionsOpen(false)
+          }}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.7)',
+            zIndex: 60,
+            display: 'flex',
+            alignItems: 'flex-end',
+            justifyContent: 'center',
+            padding: '0 12px 16px',
+          }}
+        >
+          <div
+            style={{
+              width: '100%',
+              maxWidth: 480,
+              background: '#0F0E13',
+              border: '1px solid #2A2430',
+              borderRadius: 20,
+              padding: 12,
+              animation: 'cbi-sheet-up 0.2s ease-out',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 10 }}>
+              <div style={{ height: 4, width: 40, borderRadius: 2, background: '#2A2430' }} />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              {actions.map((a) => (
+                <button
+                  key={a.label}
+                  onClick={a.onClick}
+                  style={{
+                    background: a.color,
+                    color: '#09080A',
+                    border: 'none',
+                    borderRadius: 12,
+                    padding: '14px 12px',
+                    cursor: 'pointer',
+                    fontSize: 13,
+                    fontWeight: 700,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: 6,
+                  }}
+                >
+                  <span style={{ fontSize: 20 }}>{a.icon}</span>
+                  <span>{a.label}</span>
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => setActionsOpen(false)}
+              style={{
+                marginTop: 10,
+                width: '100%',
+                background: '#1A1820',
+                border: '1px solid #2A2430',
+                color: '#9A9080',
+                borderRadius: 12,
+                padding: '12px',
+                cursor: 'pointer',
+                fontSize: 13,
+                fontWeight: 600,
+              }}
+            >
+              Cerrar
+            </button>
+          </div>
+          <style>{`
+            @keyframes cbi-sheet-up {
+              from { transform: translateY(100%); opacity: 0.5; }
+              to { transform: translateY(0); opacity: 1; }
+            }
+          `}</style>
+        </div>
+      )}
     </div>
   )
 }

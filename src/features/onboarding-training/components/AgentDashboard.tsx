@@ -21,6 +21,7 @@ import {
 } from '../actions'
 import { CommitmentScreen } from './CommitmentScreen'
 import { DailyCheckIn } from './DailyCheckIn'
+import { TrainingSkeleton } from './TrainingSkeleton'
 
 const LEVELS = [
   { min: 0,   icon: '🌱', title: 'Rookie',       color: '#6BAE94' },
@@ -126,7 +127,7 @@ export function AgentDashboard({ userName }: { userName: string }) {
   }, [])
 
   if (loading) {
-    return <div style={{ minHeight: '100vh', background: '#09080A', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#D4A853', fontSize: 14 }}>Loading...</div>
+    return <TrainingSkeleton accent="#D4A853" />
   }
 
   if (!committed) {
@@ -239,19 +240,29 @@ export function AgentDashboard({ userName }: { userName: string }) {
 
       {showCheckin && <DailyCheckIn agentName={userName} weekAction={week.action} onClose={() => setShowCheckin(false)} />}
 
-      <div className="t-agent-header" style={{ background: '#0C0B0E', borderBottom: '1px solid #1A1820', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-        <Link href="/dashboard" className="t-back-link" style={{ background: '#1A1820', border: '1px solid #2A2430', color: '#9A9080', borderRadius: 10, padding: '6px 10px', fontSize: 11, fontWeight: 600, textDecoration: 'none', flexShrink: 0 }}>← Dashboard</Link>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ fontSize: 18, width: 32, height: 32, borderRadius: 10, background: `${level.color}18`, border: `1.5px solid ${level.color}40`, display: 'flex', alignItems: 'center', justifyContent: 'center', animation: pct >= 100 ? 'levelPulse 2s ease-in-out infinite' : 'none' }}>{level.icon}</div>
-          <div>
-            <div style={{ fontSize: 13, color: '#EEE5D5', fontWeight: 700 }}>{userName}</div>
-            <div style={{ fontSize: 10, color: level.color, fontWeight: 600 }}>{level.title}</div>
+      <div className="t-agent-header" style={{ background: '#0C0B0E', borderBottom: '1px solid #1A1820', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10, position: 'sticky', top: 0, zIndex: 30, backdropFilter: 'blur(8px)' }}>
+        <Link
+          href="/dashboard"
+          className="t-back-link"
+          style={{ background: '#1A1820', border: '1px solid #2A2430', color: '#D0C8B8', borderRadius: 10, padding: '8px 12px', fontSize: 12, fontWeight: 600, textDecoration: 'none', flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 6 }}
+          aria-label="Volver al Dashboard"
+        >
+          <span style={{ fontSize: 14, lineHeight: 1 }}>←</span>
+          <span>Dashboard</span>
+        </Link>
+        <div style={{ minWidth: 0, flex: 1, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ fontSize: 18, width: 32, height: 32, borderRadius: 10, background: `${level.color}18`, border: `1.5px solid ${level.color}40`, display: 'flex', alignItems: 'center', justifyContent: 'center', animation: pct >= 100 ? 'levelPulse 2s ease-in-out infinite' : 'none', flexShrink: 0 }}>{level.icon}</div>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontSize: 13, color: '#EEE5D5', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{userName}</div>
+            <div style={{ fontSize: 10, color: level.color, fontWeight: 600 }}>{level.title} · {pct}%</div>
           </div>
         </div>
-        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ fontSize: 11, color: '#3A3040' }}>{pct}%</div>
-          <button onClick={() => setShowCheckin(true)} style={{ background: '#D4A853', color: '#09080A', border: 'none', borderRadius: 10, padding: '8px 14px', cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>☀️ Check In</button>
-        </div>
+        <button
+          onClick={() => setShowCheckin(true)}
+          style={{ flexShrink: 0, background: '#D4A853', color: '#09080A', border: 'none', borderRadius: 10, padding: '9px 14px', cursor: 'pointer', fontSize: 12, fontWeight: 700 }}
+        >
+          ☀️ Check In
+        </button>
       </div>
 
       <div style={{ height: 4, background: '#191714', position: 'relative' }}>
