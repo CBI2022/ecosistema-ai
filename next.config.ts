@@ -15,17 +15,16 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     '/**': ['./node_modules/@sparticuz/chromium/bin/**'],
   },
-  // Headers críticos para que las PWAs detecten nuevas versiones.
-  // /sw.js debe servirse SIEMPRE fresco para que registration.update() detecte cambios.
+  // /sw.js ahora se sirve dinámicamente desde /api/sw (route handler)
+  // para evitar el cache CDN de Vercel para assets de /public/.
+  // Ver src/app/api/sw/route.ts.
+  async rewrites() {
+    return [
+      { source: '/sw.js', destination: '/api/sw' },
+    ]
+  },
   async headers() {
     return [
-      {
-        source: '/sw.js',
-        headers: [
-          { key: 'Cache-Control', value: 'no-store, no-cache, must-revalidate, max-age=0' },
-          { key: 'Service-Worker-Allowed', value: '/' },
-        ],
-      },
       {
         source: '/manifest.json',
         headers: [
