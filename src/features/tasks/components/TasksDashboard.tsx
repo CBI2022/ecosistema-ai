@@ -104,7 +104,11 @@ export function TasksDashboard({
     // Sort
     const sorted = [...result]
     if (sortBy === 'priority') {
-      sorted.sort((a, b) => PRIORITY_CONFIG[a.priority].order - PRIORITY_CONFIG[b.priority].order)
+      sorted.sort((a, b) => {
+        const ao = a.priority ? PRIORITY_CONFIG[a.priority].order : 99
+        const bo = b.priority ? PRIORITY_CONFIG[b.priority].order : 99
+        return ao - bo
+      })
     } else if (sortBy === 'due_date') {
       sorted.sort((a, b) => {
         if (!a.due_date && !b.due_date) return 0
@@ -484,7 +488,7 @@ function KanbanCard({
 }) {
   const t = useTranslations('tasks')
   const cat = CATEGORIES.find((c) => c.id === task.category) || CATEGORIES[CATEGORIES.length - 1]
-  const pri = PRIORITY_CONFIG[task.priority]
+  const pri = task.priority ? PRIORITY_CONFIG[task.priority] : null
   const assignee = task.assignee
 
   return (
@@ -498,9 +502,11 @@ function KanbanCard({
         <span className="rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider" style={{ background: `${cat.color}20`, color: cat.color }}>
           {cat.emoji} {cat.label}
         </span>
-        <span className={`rounded px-1.5 py-0.5 text-[9px] font-bold uppercase ${pri.bg}`} style={{ color: pri.color }}>
-          {pri.label}
-        </span>
+        {pri && (
+          <span className={`rounded px-1.5 py-0.5 text-[9px] font-bold uppercase ${pri.bg}`} style={{ color: pri.color }}>
+            {pri.label}
+          </span>
+        )}
       </div>
       <p className="line-clamp-2 text-xs font-semibold text-[#F5F0E8]">{task.title}</p>
       {task.description && (
@@ -559,7 +565,7 @@ function TableView({
           <tbody>
             {tasks.map((task) => {
               const cat = CATEGORIES.find((c) => c.id === task.category) || CATEGORIES[CATEGORIES.length - 1]
-              const pri = PRIORITY_CONFIG[task.priority]
+              const pri = task.priority ? PRIORITY_CONFIG[task.priority] : null
               const st = STATUS_CONFIG[task.status]
               const assignee = task.assignee
               return (
@@ -584,9 +590,13 @@ function TableView({
                     )}
                   </td>
                   <td className="px-4 py-3">
-                    <span className={`rounded px-1.5 py-0.5 text-[9px] font-bold uppercase ${pri.bg}`} style={{ color: pri.color }}>
-                      {pri.label}
-                    </span>
+                    {pri ? (
+                      <span className={`rounded px-1.5 py-0.5 text-[9px] font-bold uppercase ${pri.bg}`} style={{ color: pri.color }}>
+                        {pri.label}
+                      </span>
+                    ) : (
+                      <span className="text-[10px] text-[#9A9080]/50">—</span>
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     <span className="whitespace-nowrap rounded px-1.5 py-0.5 text-[9px] font-bold uppercase" style={{ background: `${cat.color}20`, color: cat.color }}>
