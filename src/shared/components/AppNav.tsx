@@ -23,11 +23,27 @@ type IconName =
   | 'camera'
   | 'cameraPlus'
   | 'more'
+  | 'shield'
+  | 'brain'
 
 interface NavTab {
   href: string
   label: string
   icon: IconName
+}
+
+interface NavGroup {
+  type: 'group'
+  key: string
+  label: string
+  icon: IconName
+  items: NavTab[]
+}
+
+type NavEntry = NavTab | NavGroup
+
+function isGroup(entry: NavEntry): entry is NavGroup {
+  return (entry as NavGroup).type === 'group'
 }
 
 interface AppNavProps {
@@ -155,6 +171,19 @@ function Icon({ name, className = 'h-5 w-5' }: { name: IconName; className?: str
           <circle cx="5" cy="12" r="1" />
         </svg>
       )
+    case 'shield':
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+        </svg>
+      )
+    case 'brain':
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+          <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2Z" />
+          <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2Z" />
+        </svg>
+      )
   }
 }
 
@@ -165,41 +194,48 @@ export function AppNav({ role }: AppNavProps) {
   const [isPending, startTransition] = useTransition()
   const [clickedHref, setClickedHref] = useState<string | null>(null)
   const [moreOpen, setMoreOpen] = useState(false)
+  const [adminOpen, setAdminOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
     setMounted(true)
   }, [])
 
-  const AGENT_TABS: NavTab[] = [
-    { href: '/dashboard', label: t('dashboard'), icon: 'home' },
-    { href: '/properties', label: t('properties'), icon: 'building' },
-    { href: '/kpi', label: t('kpi'), icon: 'chart' },
-    { href: '/tasks', label: t('tasks'), icon: 'check' },
-    { href: '/valuation', label: t('valuation'), icon: 'file' },
-    { href: '/contracts', label: t('contracts'), icon: 'signature' },
-    { href: '/invoice', label: t('invoice'), icon: 'receipt' },
-    { href: '/training', label: t('training'), icon: 'book' },
-    { href: '/competitors', label: t('competitors'), icon: 'target' },
-    { href: '/suprema', label: 'Sooprema', icon: 'upload' },
-  ]
-
-  const ADMIN_TABS: NavTab[] = [
-    { href: '/dashboard', label: t('dashboard'), icon: 'home' },
+  // Subsecciones DENTRO del dropdown Admin▾ (solo admin las ve)
+  const ADMIN_SUBITEMS: NavTab[] = [
     { href: '/admin', label: t('team'), icon: 'users' },
-    { href: '/properties', label: t('properties'), icon: 'building' },
     { href: '/tasks', label: t('tasks'), icon: 'check' },
     { href: '/kpi', label: t('kpi'), icon: 'chart' },
-    { href: '/valuation', label: t('valuation'), icon: 'file' },
-    { href: '/contracts', label: t('contracts'), icon: 'signature' },
-    { href: '/invoice', label: t('invoice'), icon: 'receipt' },
-    { href: '/training', label: t('training'), icon: 'book' },
-    { href: '/competitors', label: t('competitors'), icon: 'target' },
     { href: '/suprema', label: 'Sooprema', icon: 'upload' },
     { href: '/social', label: t('social'), icon: 'share' },
+    { href: '/admin/knowledge', label: t('knowledge'), icon: 'brain' },
   ]
 
-  const SECRETARY_TABS: NavTab[] = [
+  const AGENT_TABS: NavEntry[] = [
+    { href: '/dashboard', label: t('dashboard'), icon: 'home' },
+    { href: '/properties', label: t('properties'), icon: 'building' },
+    { href: '/kpi', label: t('kpi'), icon: 'chart' },
+    { href: '/tasks', label: t('tasks'), icon: 'check' },
+    { href: '/valuation', label: t('valuation'), icon: 'file' },
+    { href: '/contracts', label: t('contracts'), icon: 'signature' },
+    { href: '/invoice', label: t('invoice'), icon: 'receipt' },
+    { href: '/training', label: t('training'), icon: 'book' },
+    { href: '/competitors', label: t('competitors'), icon: 'target' },
+    { href: '/suprema', label: 'Sooprema', icon: 'upload' },
+  ]
+
+  const ADMIN_TABS: NavEntry[] = [
+    { href: '/dashboard', label: t('dashboard'), icon: 'home' },
+    { href: '/properties', label: t('properties'), icon: 'building' },
+    { href: '/valuation', label: t('valuation'), icon: 'file' },
+    { href: '/contracts', label: t('contracts'), icon: 'signature' },
+    { href: '/invoice', label: t('invoice'), icon: 'receipt' },
+    { href: '/training', label: t('training'), icon: 'book' },
+    { href: '/competitors', label: t('competitors'), icon: 'target' },
+    { type: 'group', key: 'admin-group', label: t('admin'), icon: 'shield', items: ADMIN_SUBITEMS },
+  ]
+
+  const SECRETARY_TABS: NavEntry[] = [
     { href: '/dashboard', label: t('dashboard'), icon: 'home' },
     { href: '/admin', label: t('team'), icon: 'users' },
     { href: '/properties', label: t('properties'), icon: 'building' },
@@ -211,13 +247,13 @@ export function AppNav({ role }: AppNavProps) {
     { href: '/contracts', label: t('contracts'), icon: 'signature' },
   ]
 
-  const PHOTOGRAPHER_TABS: NavTab[] = [
+  const PHOTOGRAPHER_TABS: NavEntry[] = [
     { href: '/photographer', label: t('myShoots'), icon: 'camera' },
     { href: '/photographer/upload', label: t('uploadPhotos'), icon: 'cameraPlus' },
     { href: '/tasks', label: t('tasks'), icon: 'check' },
   ]
 
-  const DC_TABS: NavTab[] = [
+  const DC_TABS: NavEntry[] = [
     { href: '/dashboard', label: t('dashboard'), icon: 'home' },
     { href: '/admin', label: t('team'), icon: 'users' },
     { href: '/kpi', label: t('kpi'), icon: 'chart' },
@@ -225,7 +261,7 @@ export function AppNav({ role }: AppNavProps) {
     { href: '/training', label: t('training'), icon: 'book' },
   ]
 
-  const tabs =
+  const tabs: NavEntry[] =
     role === 'photographer'
       ? PHOTOGRAPHER_TABS
       : role === 'admin'
@@ -236,9 +272,12 @@ export function AppNav({ role }: AppNavProps) {
             ? DC_TABS
             : AGENT_TABS
 
-  // Bottom nav mobile: 4 primeras + "Más" si hay más de 4
-  const primaryTabs = tabs.slice(0, 4)
-  const overflowTabs = tabs.slice(4)
+  // Para móvil: aplanamos los grupos y los tratamos como tabs normales del overflow
+  const flatTabsForMobile: NavTab[] = tabs.flatMap((entry) =>
+    isGroup(entry) ? entry.items : [entry],
+  )
+  const primaryTabs = flatTabsForMobile.slice(0, 4)
+  const overflowTabs = flatTabsForMobile.slice(4)
   const hasOverflow = overflowTabs.length > 0
 
   function isActive(href: string): boolean {
@@ -285,7 +324,83 @@ export function AppNav({ role }: AppNavProps) {
 
       {/* ───────── DESKTOP: top tab bar ───────── */}
       <nav className="sticky top-[73px] z-40 hidden items-center justify-center gap-0.5 border-b border-[#C9A84C]/12 bg-[#0A0A0A]/98 px-6 py-2 backdrop-blur-xl md:flex">
-        {tabs.map((tab) => {
+        {tabs.map((entry) => {
+          if (isGroup(entry)) {
+            const groupActive = entry.items.some((it) => isActive(it.href))
+            return (
+              <div
+                key={entry.key}
+                className="relative"
+                onMouseEnter={() => setAdminOpen(true)}
+                onMouseLeave={() => setAdminOpen(false)}
+              >
+                <button
+                  type="button"
+                  onClick={() => setAdminOpen((v) => !v)}
+                  className={`relative inline-flex items-center gap-1.5 whitespace-nowrap rounded-md px-4 py-2 text-[11px] font-medium transition-all ${
+                    groupActive || adminOpen
+                      ? 'bg-[#C9A84C] font-bold tracking-[0.06em] text-black shadow-[0_2px_14px_rgba(201,168,76,0.35)]'
+                      : 'text-[#9A9080] hover:bg-[#C9A84C]/8 hover:text-[#F5F0E8]'
+                  }`}
+                  aria-haspopup="menu"
+                  aria-expanded={adminOpen}
+                >
+                  <Icon name={entry.icon} className="h-3.5 w-3.5" />
+                  {entry.label}
+                  <svg
+                    className={`h-3 w-3 transition-transform ${adminOpen ? 'rotate-180' : ''}`}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                </button>
+                {adminOpen && (
+                  <div
+                    role="menu"
+                    className="absolute right-0 top-full z-50 mt-1 min-w-[220px] overflow-hidden rounded-xl border border-[#C9A84C]/25 bg-[#0F0F0F]/98 p-1.5 shadow-[0_12px_40px_rgba(0,0,0,0.6)] backdrop-blur-xl"
+                  >
+                    {entry.items.map((sub) => {
+                      const subActive = isActive(sub.href)
+                      const loading = isPending && clickedHref === sub.href
+                      return (
+                        <Link
+                          key={sub.href}
+                          href={sub.href}
+                          prefetch
+                          onClick={(e) => {
+                            handleNavClick(e, sub.href)
+                            setAdminOpen(false)
+                          }}
+                          className={`flex items-center gap-2.5 rounded-md px-3 py-2 text-[12px] font-medium transition ${
+                            subActive
+                              ? 'bg-[#C9A84C]/15 text-[#C9A84C]'
+                              : loading
+                                ? 'bg-[#C9A84C]/10 text-[#F5F0E8]'
+                                : 'text-[#D0C8B8] hover:bg-white/5 hover:text-[#F5F0E8]'
+                          }`}
+                          role="menuitem"
+                        >
+                          {loading ? (
+                            <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-[#C9A84C]/30 border-t-[#C9A84C]" />
+                          ) : (
+                            <Icon name={sub.icon} className="h-4 w-4" />
+                          )}
+                          <span className="flex-1">{sub.label}</span>
+                        </Link>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            )
+          }
+
+          const tab = entry
           const active = isActive(tab.href)
           const loading = isPending && clickedHref === tab.href
           return (

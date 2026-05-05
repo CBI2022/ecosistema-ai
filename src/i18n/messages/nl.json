@@ -44,7 +44,9 @@
     "social": "Sociaal",
     "notifications": "Meldingen",
     "myShoots": "Mijn Shoots",
-    "uploadPhotos": "Foto's Uploaden"
+    "uploadPhotos": "Foto's Uploaden",
+    "admin": "Admin",
+    "knowledge": "Knowledge"
   },
   "header": {
     "settings": "Instellingen",

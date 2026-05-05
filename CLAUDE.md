@@ -8,10 +8,19 @@
 
 ## ⚠️ LECTURA OBLIGATORIA AL INICIO DE CADA SESIÓN
 
-1. **[`docs/CONTEXT_LOG.md`](docs/CONTEXT_LOG.md)** — registro persistente de TODO el contexto del proyecto (decisiones de Marco, credenciales confirmadas, configuración, aprendizajes, cuentas). **Si una respuesta requiere preguntar a Marco algo que ya está aquí, es un fallo del agente.**
-2. **[`docs/TASK_DISCIPLINE.md`](docs/TASK_DISCIPLINE.md)** — protocolo de tareas: cada hallazgo va PRIMERO a `project_tasks` antes de continuar.
+1. **🧠 KNOWLEDGE en Supabase (`knowledge_folders` + `knowledge_items`)** — **cerebro escrito del proyecto**. Lo edita el equipo (Bruno, Darcy, Marco) desde `/admin/knowledge` y lo lee la IA al iniciar cada sesión. Contiene: reglas innegociables, decisiones de Marco, roles, cuentas/credenciales, flujos, errores resueltos, integraciones, naming. **Antes de CUALQUIER trabajo, leer Knowledge.** Si una respuesta requiere preguntar algo que ya está ahí, es un fallo del agente.
 
-**Tras cada avance importante en una sesión:** registra en `docs/CONTEXT_LOG.md` con fecha + emoji apropiado.
+   ```sql
+   -- Lectura al iniciar sesión (vía MCP Supabase)
+   SELECT f.name as folder, i.title, i.content, i.pinned
+   FROM knowledge_items i JOIN knowledge_folders f ON f.id = i.folder_id
+   ORDER BY f.position, i.pinned DESC, i.position;
+   ```
+
+2. **[`docs/CONTEXT_LOG.md`](docs/CONTEXT_LOG.md)** — histórico legacy de decisiones (mantener por ahora, ir migrando lo nuevo a Knowledge).
+3. **[`docs/TASK_DISCIPLINE.md`](docs/TASK_DISCIPLINE.md)** — protocolo de tareas: cada hallazgo va PRIMERO a `project_tasks` antes de continuar.
+
+**Tras cada avance importante:** si surge una regla nueva, decisión, error resuelto o cuenta → la IA escribe ficha en Knowledge automáticamente (server action `createItem` en `src/actions/knowledge.ts`) y avisa al equipo.
 
 ## ⚠️ DISCIPLINA DE TAREAS — REGLA INNEGOCIABLE
 

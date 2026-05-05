@@ -44,7 +44,9 @@
     "social": "Social",
     "notifications": "Notifications",
     "myShoots": "My Shoots",
-    "uploadPhotos": "Upload Photos"
+    "uploadPhotos": "Upload Photos",
+    "admin": "Admin",
+    "knowledge": "Knowledge"
   },
   "header": {
     "settings": "Settings",
