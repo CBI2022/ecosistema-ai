@@ -8,6 +8,11 @@ const nextConfig: NextConfig = {
   experimental: {
     mcpServer: true,
   },
+  // Exponer el SHA del commit al cliente para que VersionWatcher pueda
+  // comparar build vs deploy y disparar el modal de actualización.
+  env: {
+    NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA: process.env.VERCEL_GIT_COMMIT_SHA || '',
+  },
   // Sparticuz chromium y playwright-core no deben ser bundleados —
   // deben resolverse en runtime desde node_modules en la función serverless
   serverExternalPackages: ['@sparticuz/chromium', 'playwright-core'],

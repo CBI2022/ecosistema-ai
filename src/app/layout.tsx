@@ -3,6 +3,7 @@ import { NextIntlClientProvider } from 'next-intl'
 import { getLocale, getMessages } from 'next-intl/server'
 import { Analytics } from '@vercel/analytics/next'
 import { SWUpdateNotifier } from '@/shared/components/SWUpdateNotifier'
+import { VersionWatcher } from '@/shared/components/VersionWatcher'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -58,6 +59,7 @@ export default async function RootLayout({
         <NextIntlClientProvider locale={locale} messages={messages}>
           {children}
           <SWUpdateNotifier />
+          <VersionWatcher />
           <Analytics />
         </NextIntlClientProvider>
       </body>
