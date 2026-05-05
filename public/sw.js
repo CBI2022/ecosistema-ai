@@ -1,6 +1,9 @@
 // CBI Service Worker — push notifications + estrategia de update
-// Versión incluida en cache name para forzar update al cambiar de build
-const SW_VERSION = 'v3'
+// Versión incluida en cache name para forzar update al cambiar de build.
+// IMPORTANTE: bumpear SW_VERSION en cada deploy que toque la UI (loader, layouts, nav).
+// Sin esto, el navegador no detecta cambios y sigue sirviendo el bundle cacheado.
+// (TODO permanente: convertir esto en build-time variable inyectada por Vercel.)
+const SW_VERSION = 'v4-2026-05-05'
 const CACHE_NAME = `cbi-${SW_VERSION}`
 
 self.addEventListener('install', (event) => {
