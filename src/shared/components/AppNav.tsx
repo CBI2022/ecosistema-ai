@@ -195,6 +195,7 @@ export function AppNav({ role }: AppNavProps) {
   const [clickedHref, setClickedHref] = useState<string | null>(null)
   const [moreOpen, setMoreOpen] = useState(false)
   const [adminOpen, setAdminOpen] = useState(false)
+  const [groupSheetOpen, setGroupSheetOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -272,12 +273,17 @@ export function AppNav({ role }: AppNavProps) {
             ? DC_TABS
             : AGENT_TABS
 
-  // Para móvil: aplanamos los grupos y los tratamos como tabs normales del overflow
-  const flatTabsForMobile: NavTab[] = tabs.flatMap((entry) =>
-    isGroup(entry) ? entry.items : [entry],
-  )
-  const primaryTabs = flatTabsForMobile.slice(0, 4)
-  const overflowTabs = flatTabsForMobile.slice(4)
+  // ─── Lógica del BOTTOM NAV MÓVIL ───
+  // Separamos el grupo (Admin) de los tabs sueltos. El grupo, si existe,
+  // ocupa siempre uno de los 4 slots fijos del bottom nav (slot 4) — no se
+  // mete dentro del "Más" porque queremos que el admin vea Admin a un toque.
+  const mobileGroup = tabs.find(isGroup) as NavGroup | undefined
+  const mobileFlatTabs = tabs.filter((e): e is NavTab => !isGroup(e))
+
+  // Si hay grupo: 3 primaryTabs + grupo + resto en overflow
+  // Si no hay grupo: 4 primaryTabs + resto en overflow
+  const primaryTabs = mobileGroup ? mobileFlatTabs.slice(0, 3) : mobileFlatTabs.slice(0, 4)
+  const overflowTabs = mobileGroup ? mobileFlatTabs.slice(3) : mobileFlatTabs.slice(4)
   const hasOverflow = overflowTabs.length > 0
 
   function isActive(href: string): boolean {
@@ -302,13 +308,13 @@ export function AppNav({ role }: AppNavProps) {
 
   // Lock scroll when sheet open
   useEffect(() => {
-    if (!moreOpen) return
+    if (!moreOpen && !groupSheetOpen) return
     const prev = document.body.style.overflow
     document.body.style.overflow = 'hidden'
     return () => {
       document.body.style.overflow = prev
     }
-  }, [moreOpen])
+  }, [moreOpen, groupSheetOpen])
 
   return (
     <>
@@ -362,7 +368,7 @@ export function AppNav({ role }: AppNavProps) {
                 {adminOpen && (
                   <div
                     role="menu"
-                    className="absolute right-0 top-full z-50 mt-1 min-w-[220px] overflow-hidden rounded-xl border border-[#C9A84C]/25 bg-[#0F0F0F]/98 p-1.5 shadow-[0_12px_40px_rgba(0,0,0,0.6)] backdrop-blur-xl"
+                    className="absolute right-0 top-full z-50 mt-1 min-w-[220px] overflow-hidden rounded-xl border border-[#C9A84C]/30 bg-[#0A0A0A] p-1.5 shadow-[0_16px_50px_rgba(0,0,0,0.85)] ring-1 ring-black/40"
                   >
                     {entry.items.map((sub) => {
                       const subActive = isActive(sub.href)
@@ -471,6 +477,32 @@ export function AppNav({ role }: AppNavProps) {
             )
           })}
 
+          {mobileGroup && (() => {
+            const groupActive = mobileGroup.items.some((it) => isActive(it.href))
+            return (
+              <button
+                onClick={() => setGroupSheetOpen(true)}
+                className="group flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 transition active:scale-95"
+                aria-label={mobileGroup.label}
+              >
+                <div
+                  className={`flex h-7 items-center justify-center transition ${
+                    groupActive ? 'text-[#C9A84C]' : 'text-[#9A9080] group-active:text-[#F5F0E8]'
+                  }`}
+                >
+                  <Icon name={mobileGroup.icon} className="h-6 w-6" />
+                </div>
+                <span
+                  className={`text-[10px] leading-none transition ${
+                    groupActive ? 'font-semibold text-[#C9A84C]' : 'font-medium text-[#9A9080]'
+                  }`}
+                >
+                  {mobileGroup.label}
+                </span>
+              </button>
+            )
+          })()}
+
           {hasOverflow && (
             <button
               onClick={() => setMoreOpen(true)}
@@ -564,6 +596,65 @@ export function AppNav({ role }: AppNavProps) {
               animation: cbi-slide-up 0.28s cubic-bezier(0.22, 0.61, 0.36, 1);
             }
           `}</style>
+        </div>,
+        document.body,
+      )}
+
+      {/* ───────── MOBILE: sheet del grupo (Admin) ───────── */}
+      {groupSheetOpen && mobileGroup && mounted && createPortal(
+        <div className="fixed inset-0 z-[60] md:hidden" role="dialog" aria-modal="true">
+          <button
+            aria-label="Cerrar"
+            onClick={() => setGroupSheetOpen(false)}
+            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+          />
+          <div className="pb-safe absolute inset-x-0 bottom-0 animate-slide-up rounded-t-3xl border-t border-[#C9A84C]/30 bg-[#0A0A0A] shadow-[0_-8px_32px_rgba(0,0,0,0.6)]">
+            <div className="flex justify-center pt-3">
+              <div className="h-1.5 w-10 rounded-full bg-white/15" />
+            </div>
+            <div className="flex items-center justify-between px-5 py-3">
+              <h3 className="flex items-center gap-2 text-base font-bold text-[#F5F0E8]">
+                <Icon name={mobileGroup.icon} className="h-5 w-5 text-[#C9A84C]" />
+                {mobileGroup.label}
+              </h3>
+              <button
+                onClick={() => setGroupSheetOpen(false)}
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-white/5 text-[#9A9080] transition active:scale-95"
+                aria-label="Cerrar"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="grid grid-cols-3 gap-2 p-4 pt-2">
+              {mobileGroup.items.map((sub) => {
+                const subActive = isActive(sub.href)
+                return (
+                  <Link
+                    key={sub.href}
+                    href={sub.href}
+                    prefetch
+                    onClick={() => setGroupSheetOpen(false)}
+                    className={`flex min-h-[92px] flex-col items-center justify-center gap-2 rounded-2xl border px-2 py-3 transition active:scale-95 ${
+                      subActive
+                        ? 'border-[#C9A84C]/60 bg-[#C9A84C]/10 text-[#C9A84C]'
+                        : 'border-white/8 bg-white/4 text-[#F5F0E8]'
+                    }`}
+                  >
+                    <div
+                      className={`flex h-11 w-11 items-center justify-center rounded-full ${
+                        subActive ? 'bg-[#C9A84C]/20 text-[#C9A84C]' : 'bg-white/6 text-[#F5F0E8]'
+                      }`}
+                    >
+                      <Icon name={sub.icon} className="h-5 w-5" />
+                    </div>
+                    <span className="text-center text-[11px] font-medium leading-tight">
+                      {sub.label}
+                    </span>
+                  </Link>
+                )
+              })}
+            </div>
+          </div>
         </div>,
         document.body,
       )}
