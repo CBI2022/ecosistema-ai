@@ -10,21 +10,14 @@ export function SWUpdateNotifier() {
   useEffect(() => {
     if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return
 
-    // Auto-registrar SW si no lo esta
-    navigator.serviceWorker.getRegistration('/sw.js').then((reg) => {
-      if (!reg) navigator.serviceWorker.register('/sw.js')
-    })
+    let updateInterval: ReturnType<typeof setInterval> | null = null
 
-    // Escuchar mensaje del SW cuando se activa version nueva
-    const onMessage = (event: MessageEvent) => {
-      if (event.data?.type === 'SW_UPDATED') setUpdateAvailable(true)
-    }
-    navigator.serviceWorker.addEventListener('message', onMessage)
+    // Auto-registrar SW si no lo esta + forzar update inmediato
+    navigator.serviceWorker.getRegistration('/sw.js').then(async (existing) => {
+      const reg = existing ?? (await navigator.serviceWorker.register('/sw.js'))
 
-    // Detectar nueva version esperando (waiting worker)
-    navigator.serviceWorker.getRegistration().then((reg) => {
-      if (!reg) return
       if (reg.waiting) setUpdateAvailable(true)
+
       reg.addEventListener('updatefound', () => {
         const newWorker = reg.installing
         if (!newWorker) return
@@ -34,9 +27,31 @@ export function SWUpdateNotifier() {
           }
         })
       })
+
+      // Forzar verificación inmediata al cargar la página (en lugar de esperar 24h del browser)
+      reg.update().catch(() => {})
+
+      // Re-verificar cada 60s mientras la pestaña esté abierta
+      updateInterval = setInterval(() => {
+        reg.update().catch(() => {})
+      }, 60_000)
+
+      // Re-verificar cuando la app vuelve del background (importante para PWAs en iOS)
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) reg.update().catch(() => {})
+      })
     })
 
-    return () => navigator.serviceWorker.removeEventListener('message', onMessage)
+    // Escuchar mensaje del SW cuando se activa version nueva
+    const onMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'SW_UPDATED') setUpdateAvailable(true)
+    }
+    navigator.serviceWorker.addEventListener('message', onMessage)
+
+    return () => {
+      navigator.serviceWorker.removeEventListener('message', onMessage)
+      if (updateInterval) clearInterval(updateInterval)
+    }
   }, [])
 
   if (!updateAvailable) return null
