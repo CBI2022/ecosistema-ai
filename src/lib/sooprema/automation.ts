@@ -154,39 +154,89 @@ export async function runSoopremaAutomation(
     await dismissPopups(page, log)
     await page.waitForLoadState('networkidle').catch(() => {})
 
-    // Capturar sooprema_external_id desde la URL (Sooprema redirige a /location/<id> después del save)
+    // Capturar sooprema_external_id desde la URL — esto es el ID temporal de la sesión
     const urlMatch = page.url().match(/\/location\/(\d+)/) || page.url().match(/\/(\d+)\//)
     if (urlMatch) {
       soopremaExternalId = urlMatch[1]
-      log(`✓ Propiedad CREADA en Sooprema como borrador. ID: ${soopremaExternalId}`)
+      log(`✓ Sesión creada en Sooprema con ID temporal: ${soopremaExternalId}`)
       stepsCompleted = 3
     } else {
       log(`⚠ No se pudo capturar el external_id de la URL: ${page.url()}`)
     }
 
-    // ═════════ PARAR AQUÍ ═════════
-    // Por decisión de Marco: la automation SOLO crea el borrador con datos
-    // básicos en Sooprema. La secretaria (Chloe) entra a Sooprema, rellena
-    // ubicación, sube las fotos, completa textos multi-idioma y publica.
+    // ═════════ PASO CRÍTICO: GUARDAR COMO BORRADOR ═════════
+    // Click "Continue" solo crea una sesión temporal con ID — Sooprema NO guarda
+    // la propiedad en BD hasta que se pulsa "Confirmar y salir" (o equivalente).
+    // Si paramos aquí sin clickar ese botón, la sesión se descarta y la propiedad
+    // NO aparece en "propiedades ocultas" (visto 2026-05-06 con Z111 ID 939248).
     //
-    // No intentamos avanzar location/textos/portales porque:
-    // 1) Si lo hacemos sin todos los campos requeridos, Sooprema deja un
-    //    registro corrupto que rompe la página de edición (Fatal error PHP en
-    //    getInsertar() — visto 2026-05-06 en propiedad A888 ID 939244).
-    // 2) El equipo prefiere validar manualmente antes de publicar.
+    // Estrategia: avanzar pasos uno a uno SIN tocar campos (para no corromper
+    // como hizo A888) hasta encontrar el botón "Confirmar y salir" y clickarlo.
+    log('Buscando botón "Confirmar y salir" para guardar borrador...')
+    let saved = false
+    for (let i = 0; i < 8; i++) {
+      // Intentar click en "Confirmar y salir" / "Guardar borrador" / similares
+      const submitFinal = page.locator(
+        'button:has-text("Confirmar y salir"), ' +
+        'button:has-text("Guardar borrador"), ' +
+        'button:has-text("Guardar"), ' +
+        '.propertyuploadhelp__submit, ' +
+        'a:has-text("Confirmar y salir")'
+      ).first()
+
+      try {
+        if (await submitFinal.count() > 0 && await submitFinal.isVisible().catch(() => false)) {
+          const btnText = (await submitFinal.textContent().catch(() => '')) || ''
+          log(`✓ Encontrado botón: "${btnText.trim()}" → clickando para guardar borrador`)
+          await submitFinal.click({ timeout: 5000 })
+          await page.waitForTimeout(3500)
+          await dismissPopups(page, log)
+          await page.waitForLoadState('networkidle').catch(() => {})
+          saved = true
+          stepsCompleted++
+          break
+        }
+      } catch (err) {
+        log(`  Error al clickar submit: ${(err as Error).message.slice(0, 80)}`)
+      }
+
+      // Si no está, avanzar al siguiente step (sin tocar campos del step actual)
+      const nextBtn = page.locator('.propertyuploadnavigation__submit--next, button:has-text("Siguiente"), button:has-text("Next")').first()
+      try {
+        if (await nextBtn.count() > 0 && await nextBtn.isVisible().catch(() => false)) {
+          await nextBtn.click({ timeout: 5000 })
+          await page.waitForTimeout(2500)
+          await dismissPopups(page, log)
+          stepsCompleted++
+          log(`  Avanzado al paso ${i + 2} buscando "Confirmar y salir"...`)
+        } else {
+          log(`  No hay botón "Siguiente" visible (paso ${i + 2}). Saliendo del loop.`)
+          break
+        }
+      } catch (err) {
+        log(`  Error al avanzar: ${(err as Error).message.slice(0, 80)}`)
+        break
+      }
+    }
+
+    if (!saved) {
+      log(`⚠ NO se pudo clickar "Confirmar y salir" — la propiedad NO se guardó como borrador en Sooprema`)
+    }
 
     const sooprema_public_url = soopremaExternalId
       ? `https://www.costablancainvestments.com/admin/propiedades/editar/${soopremaExternalId}/`
       : null
 
-    if (soopremaExternalId) {
-      log(`✅ Borrador creado correctamente. La secretaria puede completarlo desde Sooprema.`)
+    if (saved && soopremaExternalId) {
+      log(`✅ Borrador guardado en Sooprema. La secretaria lo verá en "propiedades ocultas".`)
+    } else if (soopremaExternalId) {
+      log(`⚠ Sesión creada (ID ${soopremaExternalId}) pero no se guardó — Sooprema descartará la sesión.`)
     } else {
-      log(`❌ No se generó el borrador — revisar credenciales/campos obligatorios.`)
+      log(`❌ No se generó la propiedad — revisar credenciales/campos obligatorios.`)
     }
 
     return {
-      success: !!soopremaExternalId,
+      success: saved && !!soopremaExternalId,
       logs,
       sooprema_external_id: soopremaExternalId,
       sooprema_public_url,
