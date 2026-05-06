@@ -363,7 +363,7 @@ export async function saveProperty(formData: FormData, publish = false) {
     if (!propertyData.bathrooms) missing.push('Baños')
     if (!propertyData.build_area_m2) missing.push('m² construidos')
     if (!propertyData.plot_area_m2 && propertyData.property_type === 'villa') missing.push('m² parcela')
-    if (!propertyData.description_es && !propertyData.description_en) missing.push('Descripción (ES o EN)')
+    if (!propertyData.description_es && !propertyData.description_en) missing.push('Descripción')
     if (!propertyData.location && !propertyData.zone) missing.push('Ubicación o Zona')
 
     if (missing.length > 0) {

@@ -149,11 +149,11 @@ export function PropertyForm({
     setCalcShown(calculation)
   }
 
-  // Título y descripción
-  const [title, setTitle] = useState<string>(initialProperty?.title_headline ?? '')
-  const [description, setDescription] = useState<string>(
-    initialProperty?.description_es || initialProperty?.description_en || getStr('description_de') || '',
-  )
+  // Título y descripción — uncontrolled para fiabilidad (FormData los recoge directo)
+  const initialTitle = initialProperty?.title_headline ?? ''
+  const initialDescription =
+    initialProperty?.description_es || initialProperty?.description_en || getStr('description_de') || ''
+  const [titleEmpty, setTitleEmpty] = useState<boolean>(!initialTitle.trim())
 
   // Owner
   const [ownerId, setOwnerId] = useState<string | null>(initialProperty?.owner_id ?? null)
@@ -172,22 +172,29 @@ export function PropertyForm({
     setError(null)
     setSuccess(null)
 
-    if (!title.trim()) {
-      setError('Falta el título de la propiedad. Si no lo incluyes, no aparecerá en la web.')
-      window.scrollTo({ top: document.getElementById('section-title')?.offsetTop ?? 0, behavior: 'smooth' })
-      return
-    }
-
     const form = document.getElementById('propForm') as HTMLFormElement
     if (!form) return
     const fd = new FormData(form)
+
+    // Validación cliente — leer del DOM ya que son uncontrolled
+    const titleVal = String(fd.get('title_headline') || '').trim()
+    const descVal = String(fd.get('description_es') || '').trim()
+
+    if (!titleVal) {
+      setError('Falta el título de la propiedad. Si no lo incluyes, no aparecerá en la web.')
+      document.getElementById('section-title')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      return
+    }
+    if (!descVal) {
+      setError('Falta la descripción de la propiedad. Escribe al menos un párrafo en cualquier idioma — Sooprema la traducirá automáticamente.')
+      document.getElementById('section-title')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      return
+    }
 
     // Calcular si aún no se calculó
     const finalSalePrice = calcShown.salePrice > 0 ? calcShown.salePrice : calculation.salePrice
     const finalCommission = calcShown.commission > 0 ? calcShown.commission : calculation.commission
 
-    fd.set('title_headline', title)
-    fd.set('description_es', description)
     fd.set('publication_state', 'published')
     fd.set('zone', zone)
     fd.set('property_type', propertyType)
@@ -739,24 +746,27 @@ export function PropertyForm({
           <label className={labelClass}>
             Título de la propiedad <span className="text-red-400">*</span>
           </label>
-          {!title.trim() && (
+          {titleEmpty && (
             <div className="mb-2 rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-xs text-red-400">
               ⚠️ ATENCIÓN: si no incluyes el título, la propiedad NO aparecerá en la web.
             </div>
           )}
           <input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            name="title_headline"
+            defaultValue={initialTitle}
+            onChange={(e) => setTitleEmpty(!e.target.value.trim())}
             className={inputClass}
             placeholder="Mediterranean Villa with Sea Views in Altea"
           />
         </div>
 
         <div className="mt-5">
-          <label className={labelClass}>Descripción de la propiedad</label>
+          <label className={labelClass}>
+            Descripción de la propiedad <span className="text-red-400">*</span>
+          </label>
           <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            name="description_es"
+            defaultValue={initialDescription}
             rows={6}
             className={inputClass}
             placeholder="Escribe en cualquier idioma — Sooprema la pulirá y traducirá a 7 idiomas automáticamente."
