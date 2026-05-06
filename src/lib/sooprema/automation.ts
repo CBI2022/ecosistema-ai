@@ -154,91 +154,37 @@ export async function runSoopremaAutomation(
     await dismissPopups(page, log)
     await page.waitForLoadState('networkidle').catch(() => {})
 
-    // Capturar sooprema_external_id de la URL (ej: /location/932168)
-    const urlMatch = page.url().match(/\/location\/(\d+)/)
+    // Capturar sooprema_external_id desde la URL (Sooprema redirige a /location/<id> después del save)
+    const urlMatch = page.url().match(/\/location\/(\d+)/) || page.url().match(/\/(\d+)\//)
     if (urlMatch) {
       soopremaExternalId = urlMatch[1]
-      log(`✓ Propiedad CREADA en Sooprema con ID: ${soopremaExternalId}`)
+      log(`✓ Propiedad CREADA en Sooprema como borrador. ID: ${soopremaExternalId}`)
       stepsCompleted = 3
     } else {
-      log('⚠ No se pudo capturar el external_id — puede haber fallado la creación')
+      log(`⚠ No se pudo capturar el external_id de la URL: ${page.url()}`)
     }
 
-    // ═════════ PASO 5: Ubicación ═════════
-    if (soopremaExternalId) {
-      log('Rellenando ubicación...')
-      try {
-        await page.fill('[name="address"]', '').catch(() => {})
-        // Construir dirección desde property
-        const street = (fields.text['location'] as string) || ''
-        if (street) await page.fill('[name="address"]', street)
-
-        // Los campos específicos (address_number, postal_code) se rellenan desde property si están
-        // Pero no están en fields.text con ese name. Por ahora los skippeamos.
-
-        const nextBtn = page.locator('.propertyuploadnavigation__submit--next').first()
-        if (await nextBtn.count() > 0 && await nextBtn.isEnabled().catch(() => false)) {
-          await nextBtn.click()
-          await page.waitForTimeout(3000)
-          log('✓ Avanzado desde ubicación')
-          stepsCompleted = 4
-        } else {
-          log('⚠ Botón "Siguiente" no habilitado (faltan campos requeridos en ubicación)')
-        }
-      } catch (err) {
-        log(`⚠ Error en ubicación: ${(err as Error).message.slice(0, 100)}`)
-      }
-    }
-
-    // ═════════ PASO 6: Navegar pasos restantes (descripción, portales, publicar) ═════════
-    // Los siguientes steps son React-driven. Intentamos avanzar pulsando "Siguiente"
-    // hasta encontrar el submit final.
-    for (let i = 0; i < 5; i++) {
-      const nextBtn = page.locator('.propertyuploadnavigation__submit--next').first()
-      const submitFinal = page.locator('.propertyuploadhelp__submit, button:has-text("Confirmar y salir"), button:has-text("Publicar")').first()
-
-      if (await submitFinal.count() > 0 && await submitFinal.isVisible().catch(() => false)) {
-        log(`✓ Encontrado botón submit final: "Confirmar y salir"`)
-        // NO clickamos en MVP — dejamos como draft para revisión humana
-        // Descomentar en producción tras validación: await submitFinal.click()
-        stepsCompleted++
-        break
-      }
-
-      if (await nextBtn.count() > 0 && await nextBtn.isEnabled().catch(() => false)) {
-        await nextBtn.click()
-        await page.waitForTimeout(2500)
-        stepsCompleted++
-        log(`  Avance paso intermedio ${i + 1}`)
-      } else {
-        log(`  Paso intermedio ${i + 1}: no hay más avance posible`)
-        break
-      }
-    }
-
-    // ═════════ PASO 7: Rellenar descripciones (si existen en algún tab) ═════════
-    log('Buscando textareas de descripción multi-idioma...')
-    const descLocators = [
-      { sel: 'textarea[name*="_en" i], textarea[id*="_en" i]', value: fields.texts.en },
-      { sel: 'textarea[name*="_es" i], textarea[id*="_es" i]', value: fields.texts.es },
-      { sel: 'textarea[name*="_nl" i], textarea[id*="_nl" i]', value: fields.texts.nl },
-    ]
-    for (const { sel, value } of descLocators) {
-      if (!value) continue
-      try {
-        const el = page.locator(sel).first()
-        if (await el.count() > 0) {
-          await el.fill(value)
-          log(`  ✓ Descripción: ${sel.split(',')[0]}`)
-        }
-      } catch {}
-    }
+    // ═════════ PARAR AQUÍ ═════════
+    // Por decisión de Marco: la automation SOLO crea el borrador con datos
+    // básicos en Sooprema. La secretaria (Chloe) entra a Sooprema, rellena
+    // ubicación, sube las fotos, completa textos multi-idioma y publica.
+    //
+    // No intentamos avanzar location/textos/portales porque:
+    // 1) Si lo hacemos sin todos los campos requeridos, Sooprema deja un
+    //    registro corrupto que rompe la página de edición (Fatal error PHP en
+    //    getInsertar() — visto 2026-05-06 en propiedad A888 ID 939244).
+    // 2) El equipo prefiere validar manualmente antes de publicar.
 
     const sooprema_public_url = soopremaExternalId
       ? `https://www.costablancainvestments.com/admin/propiedades/editar/${soopremaExternalId}/`
       : null
 
-    log(`✅ Automation completada (${stepsCompleted} pasos)`)
+    if (soopremaExternalId) {
+      log(`✅ Borrador creado correctamente. La secretaria puede completarlo desde Sooprema.`)
+    } else {
+      log(`❌ No se generó el borrador — revisar credenciales/campos obligatorios.`)
+    }
+
     return {
       success: !!soopremaExternalId,
       logs,
