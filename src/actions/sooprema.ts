@@ -12,7 +12,7 @@ import { soopremaDoneEmail, soopremaErrorEmail } from '@/lib/email/templates'
 import { getSiteUrl } from '@/lib/site-url'
 import type { Property } from '@/types/database'
 
-export async function retrySupremaJob(jobId: string) {
+export async function retrySoopremaJob(jobId: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Not authenticated' }
@@ -30,11 +30,11 @@ export async function retrySupremaJob(jobId: string) {
 
   if (error) return { error: error.message }
   await audit({ actor_id: user.id, actor_email: user.email, action: 'sooprema.retry', entity_type: 'suprema_jobs', entity_id: jobId })
-  revalidatePath('/suprema')
+  revalidatePath('/admin/sooprema')
   return { success: true }
 }
 
-export async function cancelSupremaJob(jobId: string) {
+export async function cancelSoopremaJob(jobId: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Not authenticated' }
@@ -47,7 +47,7 @@ export async function cancelSupremaJob(jobId: string) {
 
   if (error) return { error: error.message }
   await audit({ actor_id: user.id, actor_email: user.email, action: 'sooprema.cancel', entity_type: 'suprema_jobs', entity_id: jobId })
-  revalidatePath('/suprema')
+  revalidatePath('/admin/sooprema')
   return { success: true }
 }
 
@@ -55,21 +55,19 @@ export async function cancelSupremaJob(jobId: string) {
  * Ejecuta el job real de Sooprema con Playwright.
  * Requiere maxDuration alto (300s en Vercel Pro).
  */
-export async function runSupremaJob(jobId: string) {
+export async function runSoopremaJob(jobId: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Not authenticated' }
 
   const admin = createAdminClient()
 
-  // Permisos: admin, secretary o el agente dueño del job
   const { data: callerProfile } = await admin
     .from('profiles')
     .select('role')
     .eq('id', user.id)
     .single()
 
-  // Fetch job + property
   const { data: job } = await admin
     .from('suprema_jobs')
     .select('*, properties(*)')
@@ -86,7 +84,6 @@ export async function runSupremaJob(jobId: string) {
   const property = (job as Record<string, unknown>).properties as Property | null
   if (!property) return { error: 'Property data not found' }
 
-  // Marcar como running
   await admin
     .from('suprema_jobs')
     .update({
@@ -97,7 +94,6 @@ export async function runSupremaJob(jobId: string) {
     .eq('id', jobId)
 
   try {
-    // Fetch owner
     let owner = null
     if (property.owner_id) {
       const { data: o } = await admin
@@ -108,7 +104,6 @@ export async function runSupremaJob(jobId: string) {
       owner = o
     }
 
-    // Fetch photos vinculadas + URLs públicas
     const { data: rawPhotos } = await admin
       .from('property_photos')
       .select('id, storage_path, is_drone, sort_order')
@@ -117,7 +112,6 @@ export async function runSupremaJob(jobId: string) {
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
     const photos = (rawPhotos || []).map((p) => {
-      // Si storage_path ya es URL absoluta, úsala; si no, componer URL pública
       const url = p.storage_path.startsWith('http')
         ? p.storage_path
         : `${supabaseUrl}/storage/v1/object/public/property-photos/${p.storage_path}`
@@ -128,14 +122,12 @@ export async function runSupremaJob(jobId: string) {
       }
     })
 
-    // Mapping agente CBI → agente Sooprema
     const { data: agentMap } = await admin
       .from('agent_sooprema_map')
       .select('sooprema_agent_id')
       .eq('profile_id', property.agent_id)
       .maybeSingle()
 
-    // Preparar mapping
     const fields = mapPropertyToSooprema({
       property,
       owner,
@@ -143,10 +135,8 @@ export async function runSupremaJob(jobId: string) {
       photos,
     })
 
-    // Ejecutar automation
     const result = await runSoopremaAutomation(fields, { timeout: 60000 })
 
-    // Guardar resultado
     const finalStatus = result.success ? 'done' : 'error'
     await admin
       .from('suprema_jobs')
@@ -158,7 +148,6 @@ export async function runSupremaJob(jobId: string) {
       })
       .eq('id', jobId)
 
-    // Update property
     if (result.success) {
       await admin
         .from('properties')
@@ -169,7 +158,6 @@ export async function runSupremaJob(jobId: string) {
         })
         .eq('id', property.id)
 
-      // Notificación éxito (push + email)
       await admin.from('notifications').insert({
         type: 'suprema_done',
         title: '✅ Propiedad publicada en Sooprema',
@@ -183,7 +171,6 @@ export async function runSupremaJob(jobId: string) {
         url: '/properties',
       })
 
-      // Email al agente
       const { data: agentProfile } = await admin
         .from('profiles')
         .select('email')
@@ -201,7 +188,6 @@ export async function runSupremaJob(jobId: string) {
         .update({ suprema_status: 'error' })
         .eq('id', property.id)
 
-      // Notificación error (push + email)
       await admin.from('notifications').insert({
         type: 'suprema_error',
         title: '❌ Error publicando en Sooprema',
@@ -211,8 +197,8 @@ export async function runSupremaJob(jobId: string) {
       })
       await sendPushToUser(property.agent_id, {
         title: '❌ Error publicando',
-        body: `${property.reference || 'Tu propiedad'} no se pudo publicar. Revisa /suprema.`,
-        url: '/suprema',
+        body: `${property.reference || 'Tu propiedad'} no se pudo publicar. Revisa /admin/sooprema.`,
+        url: '/admin/sooprema',
       })
 
       const { data: agentProfile } = await admin
@@ -223,14 +209,14 @@ export async function runSupremaJob(jobId: string) {
       if (agentProfile?.email) {
         const tpl = soopremaErrorEmail(
           property.reference || 'sin referencia',
-          result.error || 'Error desconocido — revisa los logs en /suprema',
-          `${getSiteUrl()}/suprema`,
+          result.error || 'Error desconocido — revisa los logs en /admin/sooprema',
+          `${getSiteUrl()}/admin/sooprema`,
         )
         await sendEmail({ to: agentProfile.email, subject: tpl.subject, html: tpl.html })
       }
     }
 
-    revalidatePath('/suprema')
+    revalidatePath('/admin/sooprema')
     revalidatePath('/properties')
     return { success: result.success, logs: result.logs, error: result.error }
   } catch (err) {
@@ -252,6 +238,3 @@ export async function runSupremaJob(jobId: string) {
     return { error: errMsg }
   }
 }
-
-// Nota: la configuración de maxDuration se hace en vercel.json (functions config)
-// ya que los archivos 'use server' no admiten exports no-action.

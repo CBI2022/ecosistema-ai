@@ -1,9 +1,9 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
-import { SupremaDashboard } from '@/features/suprema/components/SupremaDashboard'
+import { SoopremaDashboard } from '@/features/sooprema/components/SoopremaDashboard'
 
-export default async function SupremaPage() {
+export default async function SoopremaAdminPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
@@ -15,11 +15,10 @@ export default async function SupremaPage() {
     .eq('id', user.id)
     .single()
 
-  const role = profile?.role
-  const canSeeAll = role === 'admin' || role === 'secretary'
+  // Solo admin entra aquí. Secretary y agent NO ven la sección.
+  if (profile?.role !== 'admin') redirect('/dashboard')
 
-  // Admin/secretary ven todo. Agente/photographer solo los suyos.
-  let query = admin
+  const { data: rawJobs } = await admin
     .from('suprema_jobs')
     .select(`
       *,
@@ -28,12 +27,6 @@ export default async function SupremaPage() {
     `)
     .order('created_at', { ascending: false })
     .limit(50)
-
-  if (!canSeeAll) {
-    query = query.eq('agent_id', user.id)
-  }
-
-  const { data: rawJobs } = await query
 
   const jobs = (rawJobs || []).map((j) => {
     const p = j.properties as { reference?: string; title?: string; zone?: string } | null
@@ -58,10 +51,10 @@ export default async function SupremaPage() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-xl font-bold text-[#F5F0E8]">Sooprema Automation</h1>
-        <p className="mt-1 text-sm text-[#9A9080]">Automate property publishing to the Sooprema portal · Browser automation</p>
+        <h1 className="text-xl font-bold text-[#F5F0E8]">Sooprema · Monitor</h1>
+        <p className="mt-1 text-sm text-[#9A9080]">Dashboard de jobs de subida automática a Sooprema · Solo lectura para administradores</p>
       </div>
-      <SupremaDashboard jobs={jobs} />
+      <SoopremaDashboard jobs={jobs} />
     </div>
   )
 }

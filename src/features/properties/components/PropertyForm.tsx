@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useTransition, useEffect } from 'react'
-import { saveProperty, generateDescription } from '@/actions/properties'
+import { useState, useTransition, useEffect, useMemo } from 'react'
+import { saveProperty } from '@/actions/properties'
 import { OwnerPicker } from './OwnerPicker'
 import { AddressPicker } from './AddressPicker'
 import type { Property } from '@/types/database'
@@ -28,169 +28,139 @@ interface PropertyFormProps {
   defaultAgentId?: string | null
 }
 
-const ZONES = ['Altea','Albir','Calpe','Javea','Moraira','Benissa','Denia','Benidorm','La Nucia','Polop','Finestrat']
+const ZONES = ['Altea', 'Albir', 'Calpe', 'Javea', 'Moraira', 'Benissa', 'Denia', 'Benidorm', 'La Nucia', 'Polop', 'Finestrat']
+
 const PROPERTY_TYPES = [
-  'villa', 'apartment', 'penthouse', 'townhouse', 'flat', 'bungalow', 'duplex',
-  'finca', 'country_house', 'detached_house', 'semi_detached', 'terraced_house',
-  'loft', 'plot', 'commercial',
+  { id: 'villa', label: 'Villa' },
+  { id: 'apartment', label: 'Apartamento' },
+  { id: 'penthouse', label: 'Ático' },
+  { id: 'townhouse', label: 'Adosado' },
+  { id: 'flat', label: 'Piso' },
+  { id: 'bungalow', label: 'Bungalow' },
+  { id: 'duplex', label: 'Dúplex' },
+  { id: 'finca', label: 'Finca' },
+  { id: 'country_house', label: 'Casa de campo' },
+  { id: 'detached_house', label: 'Casa independiente' },
+  { id: 'plot', label: 'Parcela' },
+  { id: 'commercial', label: 'Local comercial' },
 ]
-const LISTING_TYPES = [
-  { id: 'sale', label: 'Venta' },
-  { id: 'rental', label: 'Alquiler' },
-  { id: 'rental_temporary', label: 'Alquiler temporal' },
-]
-// Lista oficial Sooprema (Type of Label) — incluye Negotiable, Sea views como tag
-const STATUS_TAGS = [
-  'Exclusive', 'New', 'New build', 'Reduced', 'Offer', 'Opportunity',
-  'Front line', 'Sea views', 'Key ready', 'To reform', 'Investment',
-  'In the center', 'Bank', 'Licencia Turística', 'No Commissions',
-  'Negotiable', 'Rented', 'Unused', 'Under construction', 'Cancelled',
-  'Awarded', 'Suspended',
-]
-// Lista oficial Sooprema (21 opciones de vistas — captura confirmada)
+
 const VIEWS_OPTIONS = [
-  'Community area', 'First line', 'Golf course', 'Good views', 'Green zone',
-  'National Park', 'Open', 'Others', 'Panoramas', 'Sea and mountains',
-  'Sports area', 'To the Castle', 'To the city', 'To the exterior',
-  'To the garden', 'To the mountain', 'To the park', 'To the sea',
-  'To the square', 'To the street', 'To the valley',
+  'Sea and mountains', 'To the sea', 'First line', 'Open', 'Panoramas',
+  'To the mountain', 'Good views', 'To the garden', 'Community area',
+  'Golf course', 'Others',
 ]
-const KITCHEN_TYPES = ['American', 'French', 'Furnished', 'Independent', 'Open', 'With cupboards', 'With island', 'Two kitchens']
-const ORIENTATIONS = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW']
-// Lista oficial Sooprema (Pool) — captura confirmada
-const POOL_TYPES = ['Climatized', 'Community', 'Cover', 'Infinity', 'Inside', 'Not available', 'Pool with Jacuzzi', 'Private', 'Yes']
-// Lista oficial Sooprema (Air Conditioning) — captura confirmada
-const AC_TYPES = ['Centralised', 'Cold', 'Duct-based', 'Hot/Cold', 'Not available', 'Pre-installation', 'Split', 'Yes']
-const TERRACE_TYPES = ['Open', 'Closed', 'Both']
-const GARDEN_TYPES = ['Private', 'Community']
-// Lista oficial Sooprema (Furnitures type) — captura confirmada
-const FURNITURE_STATUS = [
-  { id: 'unfurnished', label: 'Unfurnished' },
-  { id: 'partially_furnished', label: 'Partially furnished' },
-  { id: 'furnished_kitchen', label: 'Furnished kitchen' },
-  { id: 'furnished', label: 'Furnished' },
-  { id: 'negotiable', label: 'Negotiable' },
-]
-// Lista oficial Sooprema (Heating) — captura confirmada
-const HEATING_TYPES = [
-  'Storage heaters', 'Aerothermal energy', 'Biomass', 'Blue heat radiators',
-  'Centralised', 'Centralised fuel oil', 'Centralised gas', 'Central electric',
-  'Diesel Boiler', 'Duct-based', 'Electric', 'Electric marble plate',
-  'Electric underfloor heating', 'Fireplace', 'Firewood heater',
-  'Gas underfloor heating', 'Geothermal energy', 'Heater', 'Heat pumps',
-  'Hot/Cold', 'Individual city gas', 'Natural Gas', 'Not available',
-  'Oil underfloor heating', 'Pellets',
-]
+
 const OCCUPATION = [
   { id: 'free', label: 'Libre' },
-  { id: 'empty', label: 'Propiedad vacía' },
+  { id: 'empty', label: 'Vacía' },
   { id: 'rented', label: 'Con inquilino' },
   { id: 'occupied_illegally', label: 'Ocupada ilegalmente' },
 ]
+
 const ENERGY = ['A', 'B', 'C', 'D', 'E', 'F', 'G']
-const PERIODS = [
-  { id: 'annual', label: 'Anual' },
-  { id: 'monthly', label: 'Mensual' },
-  { id: 'bimonthly', label: 'Bimensual' },
-  { id: 'quarterly', label: 'Trimestral' },
-  { id: 'weekly', label: 'Semanal' },
-]
-// Idiomas oficiales Sooprema (7) — captura confirmada
-const LANGUAGES: Array<{ code: 'es' | 'en' | 'de' | 'fr' | 'nl' | 'ru' | 'pl'; flag: string; label: string; key: 'description_es' | 'description_en' | 'description_de' | 'description_fr' | 'description_nl' | 'description_ru' | 'description_pl' }> = [
-  { code: 'en', flag: '🇬🇧', label: 'English (fuente)', key: 'description_en' },
-  { code: 'es', flag: '🇪🇸', label: 'Español', key: 'description_es' },
-  { code: 'de', flag: '🇩🇪', label: 'Deutsch', key: 'description_de' },
-  { code: 'fr', flag: '🇫🇷', label: 'Français', key: 'description_fr' },
-  { code: 'nl', flag: '🇳🇱', label: 'Nederlands', key: 'description_nl' },
-  { code: 'ru', flag: '🇷🇺', label: 'Русский', key: 'description_ru' },
-  { code: 'pl', flag: '🇵🇱', label: 'Polski', key: 'description_pl' },
-]
-// Feeds XML disponibles en Sooprema (capturas)
-const XML_FEEDS = [
-  { id: 'classandvillas', label: 'Class and Villas' },
-  { id: 'inmoluk', label: 'Inmoluk' },
-]
 
-type TabId = 'basics' | 'structure' | 'equipment' | 'guests' | 'price' | 'owner' | 'address' | 'descriptions' | 'photos' | 'portals' | 'keys'
+const inputClass =
+  'w-full rounded-lg border border-white/10 bg-[#1C1C1C] px-3.5 py-2.5 text-sm text-[#F5F0E8] outline-none transition focus:border-[#C9A84C]/60 placeholder-[#9A9080] disabled:opacity-50'
+const labelClass = 'block text-[10px] font-bold uppercase tracking-[0.12em] text-[#9A9080] mb-1.5'
+const sectionClass = 'rounded-2xl border border-white/8 bg-[#131313] p-5 sm:p-6'
+const sectionTitle =
+  'mb-1 text-base font-bold text-[#F5F0E8] sm:text-lg'
+const sectionSubtitle = 'mb-5 text-xs text-[#9A9080]'
 
-const TABS: Array<{ id: TabId; label: string; emoji: string }> = [
-  { id: 'basics', label: 'Datos', emoji: '📋' },
-  { id: 'structure', label: 'Estructura', emoji: '📐' },
-  { id: 'equipment', label: 'Equipamiento', emoji: '✨' },
-  { id: 'guests', label: 'Invitados', emoji: '🛏️' },
-  { id: 'price', label: 'Precio', emoji: '💰' },
-  { id: 'owner', label: 'Propietario', emoji: '👤' },
-  { id: 'address', label: 'Dirección', emoji: '📍' },
-  { id: 'descriptions', label: 'Textos', emoji: '📝' },
-  { id: 'photos', label: 'Fotos', emoji: '📸' },
-  { id: 'portals', label: 'Portales', emoji: '🌐' },
-  { id: 'keys', label: 'Llaves', emoji: '🔑' },
-]
-
-const inputClass = 'w-full rounded-lg border border-white/10 bg-[#1C1C1C] px-3.5 py-2.5 text-sm text-[#F5F0E8] outline-none transition focus:border-[#C9A84C]/60 placeholder-[#9A9080] disabled:opacity-50'
-const labelClass = 'block text-[9px] font-bold uppercase tracking-[0.12em] text-[#9A9080] mb-1.5'
-
-function CheckField({ name, label, defaultChecked }: { name: string; label: string; defaultChecked?: boolean }) {
+function NumberSelect({
+  name,
+  defaultValue,
+  max = 10,
+  emoji,
+}: {
+  name: string
+  defaultValue?: string
+  max?: number
+  emoji?: string
+}) {
   return (
-    <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-white/10 bg-[#1C1C1C] px-3 py-2 text-xs text-[#F5F0E8] transition hover:border-[#C9A84C]/40 has-[:checked]:border-[#C9A84C]/60 has-[:checked]:bg-[#C9A84C]/10">
-      <input type="checkbox" name={name} defaultChecked={defaultChecked} className="accent-[#C9A84C]" />
-      <span>{label}</span>
-    </label>
+    <select name={name} className={inputClass} defaultValue={defaultValue ?? ''}>
+      <option value="">{emoji ? `${emoji} —` : '—'}</option>
+      {Array.from({ length: max + 1 }, (_, i) => (
+        <option key={i} value={String(i)}>
+          {i}
+        </option>
+      ))}
+    </select>
   )
 }
 
-export function PropertyForm({ availablePhotos = [], storageBaseUrl = '', initialProperty = null, agentOptions = null, defaultAgentId = null }: PropertyFormProps = {}) {
-  const [activeTab, setActiveTab] = useState<TabId>('basics')
+export function PropertyForm({
+  availablePhotos = [],
+  storageBaseUrl = '',
+  initialProperty = null,
+  agentOptions = null,
+  defaultAgentId = null,
+}: PropertyFormProps = {}) {
   const [isPending, startTransition] = useTransition()
-  const [isAI, startAI] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+
   const isEditing = !!initialProperty?.id
   const canPickAgent = !!agentOptions && agentOptions.length > 0
-  const [selectedAgentId, setSelectedAgentId] = useState<string>(
-    initialProperty?.agent_id ?? defaultAgentId ?? (agentOptions?.[0]?.id ?? '')
-  )
 
-  // Shared state
   const ipAny = initialProperty as Record<string, unknown> | null
   const getStr = (k: string) => (ipAny?.[k] as string | null | undefined) ?? ''
-  const getBool = (k: string) => Boolean(ipAny?.[k])
-  const [formState, setFormState] = useState({
-    property_type: initialProperty?.property_type ?? 'villa',
-    listing_type: initialProperty?.listing_type ?? 'sale',
-    zone: initialProperty?.zone ?? 'Altea',
-    status_tags: (initialProperty?.status_tags as string[] | null) ?? [] as string[],
-    is_new_build: getBool('is_new_build'),
-    is_plot: getBool('is_plot'),
-    // Título único (Sooprema solo tiene 1)
-    title_headline: initialProperty?.title_headline ?? '',
-    // Textos (7 idiomas)
-    description_es: initialProperty?.description_es ?? '',
-    description_en: initialProperty?.description_en ?? '',
-    description_de: getStr('description_de'),
-    description_fr: getStr('description_fr'),
-    description_nl: initialProperty?.description_nl ?? '',
-    description_ru: getStr('description_ru'),
-    description_pl: getStr('description_pl'),
+  const getNum = (k: string) => {
+    const v = ipAny?.[k] as number | null | undefined
+    return v === null || v === undefined ? '' : String(v)
+  }
+
+  // ── Estado controlado mínimo ──
+  const [selectedAgentId, setSelectedAgentId] = useState<string>(
+    initialProperty?.agent_id ?? defaultAgentId ?? (agentOptions?.[0]?.id ?? ''),
+  )
+  const [zone, setZone] = useState<string>(initialProperty?.zone ?? 'Altea')
+  const [propertyType, setPropertyType] = useState<string>(initialProperty?.property_type ?? 'villa')
+  const [hasGuestApt, setHasGuestApt] = useState<boolean>(Boolean(ipAny?.has_guest_apartment))
+
+  // Calculadora — precio del propietario y % CBI
+  const initialPrice = ((initialProperty as { price?: number | null } | null)?.price ?? 0)
+  const initialCommissionPct = ((initialProperty as { commission_percentage?: number | null } | null)?.commission_percentage ?? 5)
+  const [priceOwner, setPriceOwner] = useState<number>(0)
+  const [commissionPct, setCommissionPct] = useState<number>(initialCommissionPct)
+
+  // Si editamos una propiedad existente, "deshacemos" el cálculo: priceOwner = price - commission
+  useEffect(() => {
+    if (initialPrice > 0 && initialCommissionPct > 0) {
+      const inferredOwner = Math.round(initialPrice / (1 + initialCommissionPct / 100))
+      setPriceOwner(inferredOwner)
+    }
+  }, [initialPrice, initialCommissionPct])
+
+  const calculation = useMemo(() => {
+    const commission = Math.round(priceOwner * (commissionPct / 100))
+    const salePrice = priceOwner + commission
+    return { commission, salePrice }
+  }, [priceOwner, commissionPct])
+
+  const [calcShown, setCalcShown] = useState<{ commission: number; salePrice: number }>({
+    commission: 0,
+    salePrice: initialPrice,
   })
 
-  // Calculadora de precio (en vivo)
-  const [calcPrice, setCalcPrice] = useState<number>((initialProperty as { price?: number | null } | null)?.price ?? 0)
-  const [calcCommissionPct, setCalcCommissionPct] = useState<number>(
-    ((initialProperty as { commission_percentage?: number | null } | null)?.commission_percentage ?? 5)
-  )
-  const calcCommissionAmount = Math.round(calcPrice * (calcCommissionPct / 100))
-  const calcOwnerReceives = Math.max(calcPrice - calcCommissionAmount, 0)
+  function runCalculate() {
+    setCalcShown(calculation)
+  }
 
-  // XML feeds (multi)
-  const [xmlFeeds, setXmlFeeds] = useState<Set<string>>(
-    new Set((ipAny?.xml_feeds as string[] | undefined) ?? [])
+  // Título y descripción
+  const [title, setTitle] = useState<string>(initialProperty?.title_headline ?? '')
+  const [description, setDescription] = useState<string>(
+    initialProperty?.description_es || initialProperty?.description_en || getStr('description_de') || '',
   )
 
-  const [selectedPhotoIds, setSelectedPhotoIds] = useState<Set<string>>(new Set())
+  // Owner
   const [ownerId, setOwnerId] = useState<string | null>(initialProperty?.owner_id ?? null)
 
-  // Scroll al form cuando entramos en modo edición
+  // Fotos
+  const [selectedPhotoIds, setSelectedPhotoIds] = useState<Set<string>>(new Set())
+
   useEffect(() => {
     if (isEditing) {
       const form = document.getElementById('propForm')
@@ -198,150 +168,79 @@ export function PropertyForm({ availablePhotos = [], storageBaseUrl = '', initia
     }
   }, [isEditing])
 
-  // Precarga TODOS los inputs uncontrolled desde initialProperty al montar
-  useEffect(() => {
-    if (!initialProperty) return
-    const form = document.getElementById('propForm') as HTMLFormElement | null
-    if (!form) return
+  function handleSubmit() {
+    setError(null)
+    setSuccess(null)
 
-    // Entries del initialProperty → setea el input/select con ese name si existe
-    for (const [key, value] of Object.entries(initialProperty)) {
-      if (value === null || value === undefined) continue
-      const el = form.querySelector<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>(
-        `[name="${key}"]`
-      )
-      if (!el) continue
-      if (el.type === 'checkbox' && el instanceof HTMLInputElement) {
-        el.checked = Boolean(value)
-      } else {
-        el.value = String(value)
-      }
+    if (!title.trim()) {
+      setError('Falta el título de la propiedad. Si no lo incluyes, no aparecerá en la web.')
+      window.scrollTo({ top: document.getElementById('section-title')?.offsetTop ?? 0, behavior: 'smooth' })
+      return
     }
-    // Owner
-    if (initialProperty.owner_id) setOwnerId(initialProperty.owner_id)
-    // Fotos ya vinculadas a esta propiedad
-    // (not loaded here — el form siempre muestra las disponibles)
-  }, [initialProperty])
 
-  function update<K extends keyof typeof formState>(k: K, v: (typeof formState)[K]) {
-    setFormState((p) => ({ ...p, [k]: v }))
-  }
-
-  function toggleStatusTag(tag: string) {
-    setFormState((p) => ({
-      ...p,
-      status_tags: p.status_tags.includes(tag) ? p.status_tags.filter((t) => t !== tag) : [...p.status_tags, tag],
-    }))
-  }
-
-  async function handleGenerateAI(lang: 'en' | 'es' | 'de' | 'fr' | 'nl' | 'ru' | 'pl') {
     const form = document.getElementById('propForm') as HTMLFormElement
     if (!form) return
     const fd = new FormData(form)
-    fd.append('lang', lang)
-    // Features para prompt
-    const features: string[] = []
-    const featureKeys = ['has_pool', 'has_garage', 'has_garden', 'has_terrace', 'has_ac', 'has_sea_view', 'has_fireplace', 'has_jacuzzi', 'has_balcony']
-    for (const k of featureKeys) {
-      if (fd.get(k)) features.push(k.replace('has_', '').replace('_', ' '))
-    }
-    fd.append('features', features.join(','))
 
-    startAI(async () => {
-      const res = await generateDescription(fd)
-      if (res.description) {
-        const target = LANGUAGES.find((l) => l.code === lang)
-        if (target) update(target.key, res.description)
-      }
-      if (res.error) setError(res.error)
-    })
-  }
+    // Calcular si aún no se calculó
+    const finalSalePrice = calcShown.salePrice > 0 ? calcShown.salePrice : calculation.salePrice
+    const finalCommission = calcShown.commission > 0 ? calcShown.commission : calculation.commission
 
-  function handleSubmit(publishMode: 'hidden' | 'published' | 'private') {
-    setError(null); setSuccess(null)
-    const form = document.getElementById('propForm') as HTMLFormElement
-    if (!form) return
-    const fd = new FormData(form)
-    fd.set('title_headline', formState.title_headline)
-    LANGUAGES.forEach((lang) => {
-      fd.set(lang.key, formState[lang.key])
-    })
-    fd.set('status_tags', formState.status_tags.join(','))
-    fd.set('selected_photo_ids', JSON.stringify([...selectedPhotoIds]))
-    fd.set('is_new_build', formState.is_new_build ? '1' : '0')
-    fd.set('is_plot', formState.is_plot ? '1' : '0')
-    fd.set('publication_state', publishMode)
-    fd.set('xml_feeds', JSON.stringify([...xmlFeeds]))
-    // Calculadora — sobrescribe los inputs sueltos para garantizar consistencia
-    if (calcPrice > 0) {
-      fd.set('price', String(calcPrice))
-      fd.set('commission_percentage', String(calcCommissionPct))
-      fd.set('commission_amount', String(calcCommissionAmount))
-      fd.set('price_net', String(calcOwnerReceives))
+    fd.set('title_headline', title)
+    fd.set('description_es', description)
+    fd.set('publication_state', 'published')
+    fd.set('zone', zone)
+    fd.set('property_type', propertyType)
+    fd.set('has_guest_apartment', hasGuestApt ? '1' : '0')
+
+    if (finalSalePrice > 0) {
+      fd.set('price', String(finalSalePrice))
+      fd.set('price_net', String(priceOwner))
+      fd.set('commission_percentage', String(commissionPct))
+      fd.set('commission_amount', String(finalCommission))
     }
+
     if (canPickAgent && selectedAgentId) {
       fd.set('agent_id', selectedAgentId)
     }
 
-    const isActualPublish = publishMode === 'published'
+    if (ownerId) fd.set('owner_id', ownerId)
+
+    fd.set('selected_photo_ids', JSON.stringify([...selectedPhotoIds]))
+
     startTransition(async () => {
-      const res = await saveProperty(fd, isActualPublish)
+      const res = await saveProperty(fd, true)
       if (res?.error) setError(res.error)
-      else if (publishMode === 'published') setSuccess('🚀 Propiedad enviada a Sooprema — recibirás notificación al completarse')
-      else if (publishMode === 'private') setSuccess('🔒 Propiedad guardada como PRIVADA (no aparecerá en la web pública)')
-      else setSuccess('✅ Propiedad guardada como OCULTA (puedes seguir editando)')
+      else setSuccess('🚀 Propiedad guardada y enviada a Sooprema. Recibirás un aviso cuando termine la publicación.')
     })
   }
-
-  // Traducción automática desde EN al resto de idiomas (single-shot via OpenRouter)
-  async function handleTranslateAll() {
-    if (!formState.description_en.trim()) {
-      setError('Escribe primero la descripción en INGLÉS antes de traducir')
-      return
-    }
-    startAI(async () => {
-      const targets = LANGUAGES.filter((l) => l.code !== 'en')
-      for (const t of targets) {
-        const fd = new FormData()
-        fd.append('property_type', formState.property_type)
-        fd.append('zone', formState.zone)
-        fd.append('source_text', formState.description_en)
-        fd.append('lang', t.code)
-        fd.append('translate', '1')
-        const res = await generateDescription(fd)
-        if (res.description) update(t.key, res.description)
-      }
-      setSuccess('🌐 Traducción completada a los 6 idiomas')
-    })
-  }
-
-  const sectionClass = 'rounded-2xl border border-white/8 bg-[#131313] p-5'
-
-  const ip = initialProperty
-  const num = (v: number | null | undefined) => (v === null || v === undefined ? '' : String(v))
 
   return (
     <form id="propForm" onSubmit={(e) => e.preventDefault()} className="space-y-5">
-      {/* Hidden id para edición */}
-      {ip?.id && <input type="hidden" name="id" value={ip.id} />}
+      {initialProperty?.id && <input type="hidden" name="id" value={initialProperty.id} />}
 
-      {/* Banner modo edición */}
+      {/* Banner edición */}
       {isEditing && (
         <div className="flex items-center justify-between rounded-xl border border-[#C9A84C]/40 bg-[#C9A84C]/10 px-4 py-3">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.12em] text-[#C9A84C]">Editando propiedad</p>
-            <p className="mt-0.5 text-sm text-[#F5F0E8]">{ip?.reference} — {ip?.title || ip?.location || 'Sin título'}</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#C9A84C]">Editando propiedad</p>
+            <p className="mt-0.5 text-sm text-[#F5F0E8]">
+              {initialProperty?.reference} — {initialProperty?.title_headline || initialProperty?.location || 'Sin título'}
+            </p>
           </div>
-          <a href="/properties" className="rounded-lg border border-white/10 px-3 py-1.5 text-xs font-bold text-[#9A9080] hover:text-[#F5F0E8]">✕ Cancelar</a>
+          <a
+            href="/properties"
+            className="rounded-lg border border-white/10 px-3 py-1.5 text-xs font-bold text-[#9A9080] hover:text-[#F5F0E8]"
+          >
+            ✕ Cancelar
+          </a>
         </div>
       )}
 
-      {/* Selector de agente (solo admin/secretary) */}
+      {/* Selector de agente (admin/secretary) */}
       {canPickAgent && (
         <div className="rounded-xl border border-[#8B7CF6]/30 bg-[#8B7CF6]/8 px-4 py-3">
-          <label className="mb-1.5 block text-[9px] font-bold uppercase tracking-[0.12em] text-[#8B7CF6]">
-            Agente dueño de la propiedad *
-          </label>
+          <label className={`${labelClass} text-[#8B7CF6]`}>Agente dueño de la propiedad *</label>
           <select
             name="agent_id"
             value={selectedAgentId}
@@ -354,793 +253,616 @@ export function PropertyForm({ availablePhotos = [], storageBaseUrl = '', initia
               </option>
             ))}
           </select>
-          <p className="mt-1.5 text-[10px] text-[#9A9080]">
-            La propiedad se guardará a nombre de este agente. Solo admins y secretarías ven este campo.
-          </p>
+          <p className="mt-1.5 text-[10px] text-[#9A9080]">La propiedad se guarda a nombre de este agente.</p>
         </div>
       )}
 
-      {/* Tabs */}
-      <div className="flex flex-wrap gap-1.5 rounded-2xl border border-white/8 bg-[#131313] p-1.5">
-        {TABS.map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            onClick={() => setActiveTab(tab.id)}
-            className={`rounded-lg px-3 py-2 text-xs font-bold transition ${
-              activeTab === tab.id ? 'bg-[#C9A84C] text-black' : 'text-[#9A9080] hover:text-[#F5F0E8]'
-            }`}
-          >
-            {tab.emoji} {tab.label}
-          </button>
-        ))}
-      </div>
-
-      {/* ═══ TAB: Datos básicos ═══ */}
-      <section hidden={activeTab !== 'basics'} className={sectionClass} style={{ borderTop: '1px solid #C9A84C' }}>
-          {/* Precio + Referencia arriba (Chloe: lo más importante) */}
-          <div className="mb-5 grid gap-4 rounded-xl border border-[#C9A84C]/30 bg-[#C9A84C]/5 p-4 sm:grid-cols-2">
-            <div>
-              <label className={labelClass}>💰 Precio total € *</label>
-              <input
-                type="number"
-                value={calcPrice || ''}
-                onChange={(e) => setCalcPrice(Number(e.target.value) || 0)}
-                className={inputClass}
-                placeholder="549000"
-              />
-              <p className="mt-1 text-[10px] text-[#9A9080]">Este precio es el que sale en la web pública.</p>
-            </div>
-            <div>
-              <label className={labelClass}>🏷️ Referencia (auto si vacío)</label>
-              <input name="reference" defaultValue={ip?.reference ?? ''} className={inputClass} placeholder="A001" />
-              <p className="mt-1 text-[10px] text-[#9A9080]">Se genera por zona (Altea = A###) si lo dejas vacío.</p>
-            </div>
+      {/* Header con referencia + zona */}
+      <section className={sectionClass}>
+        <div className="grid gap-4 sm:grid-cols-3">
+          <div>
+            <label className={labelClass}>🏷️ Referencia (auto si vacío)</label>
+            <input
+              name="reference"
+              defaultValue={initialProperty?.reference ?? ''}
+              className={inputClass}
+              placeholder="A001"
+            />
           </div>
-
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <div>
-              <label className={labelClass}>Tipo de operación</label>
-              <select name="listing_type" value={formState.listing_type} onChange={(e) => update('listing_type', e.target.value as typeof formState.listing_type)} className={inputClass}>
-                {LISTING_TYPES.map((l) => <option key={l.id} value={l.id}>{l.label}</option>)}
-              </select>
-              {formState.listing_type === 'sale' && (
-                <div className="mt-2 flex flex-wrap gap-3">
-                  <label className="flex cursor-pointer items-center gap-2 text-xs text-[#F5F0E8]">
-                    <input
-                      type="checkbox"
-                      checked={formState.is_new_build}
-                      onChange={(e) => update('is_new_build', e.target.checked)}
-                      className="accent-[#C9A84C]"
-                    />
-                    🏗️ Obra nueva
-                  </label>
-                  <label className="flex cursor-pointer items-center gap-2 text-xs text-[#F5F0E8]">
-                    <input
-                      type="checkbox"
-                      checked={formState.is_plot}
-                      onChange={(e) => update('is_plot', e.target.checked)}
-                      className="accent-[#C9A84C]"
-                    />
-                    🌳 Parcela
-                  </label>
-                </div>
-              )}
-            </div>
-            <div>
-              <label className={labelClass}>Tipo de propiedad</label>
-              <select name="property_type" value={formState.property_type} onChange={(e) => update('property_type', e.target.value as typeof formState.property_type)} className={inputClass}>
-                {PROPERTY_TYPES.map((t) => <option key={t} value={t}>{t.replace(/_/g, ' ')}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className={labelClass}>Zona</label>
-              <select name="zone" value={formState.zone} onChange={(e) => update('zone', e.target.value)} className={inputClass}>
-                {ZONES.map((z) => <option key={z} value={z}>{z}</option>)}
-              </select>
-            </div>
+          <div>
+            <label className={labelClass}>📍 Zona</label>
+            <select value={zone} onChange={(e) => setZone(e.target.value)} className={inputClass}>
+              {ZONES.map((z) => (
+                <option key={z} value={z}>
+                  {z}
+                </option>
+              ))}
+            </select>
           </div>
-
-          {/* Status tags */}
-          <div className="mt-5">
-            <label className={labelClass}>Etiquetas (multi-selección)</label>
-            <div className="flex flex-wrap gap-2">
-              {STATUS_TAGS.map((tag) => {
-                const selected = formState.status_tags.includes(tag)
-                return (
-                  <button
-                    key={tag}
-                    type="button"
-                    onClick={() => toggleStatusTag(tag)}
-                    className={`rounded-lg border px-3 py-1.5 text-[11px] font-bold transition ${
-                      selected ? 'border-[#C9A84C] bg-[#C9A84C] text-black' : 'border-white/10 bg-[#1C1C1C] text-[#9A9080] hover:text-[#F5F0E8]'
-                    }`}
-                  >
-                    {tag}
-                  </button>
-                )
-              })}
-            </div>
+          <div>
+            <label className={labelClass}>🏠 Tipo de propiedad</label>
+            <select
+              value={propertyType}
+              onChange={(e) => setPropertyType(e.target.value)}
+              className={inputClass}
+            >
+              {PROPERTY_TYPES.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.label}
+                </option>
+              ))}
+            </select>
           </div>
-
-          <div className="mt-5 grid gap-4 sm:grid-cols-3">
-            <div>
-              <label className={labelClass}>Año construcción</label>
-              <input name="year_built" type="number" defaultValue={num(ip?.year_built)} className={inputClass} placeholder="2013" />
-            </div>
-            <div>
-              <label className={labelClass}>Año reforma</label>
-              <input name="year_reformed" type="number" defaultValue={num(ip?.year_reformed)} className={inputClass} />
-            </div>
-            <div>
-              <label className={labelClass}>Estado ocupación</label>
-              <select name="occupation_status" className={inputClass} defaultValue={ip?.occupation_status ?? ''}>
-                <option value="">—</option>
-                {OCCUPATION.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
-              </select>
-            </div>
-          </div>
+        </div>
       </section>
 
-      {/* ═══ TAB: Estructura ═══ */}
-      <section hidden={activeTab !== 'structure'} className={sectionClass}>
-          {/* Superficies PRIMERO (Chloe: m² es lo más importante) */}
-          <h3 className="mb-3 text-[10px] font-bold uppercase tracking-[0.18em] text-[#C9A84C]">Superficies (m²)</h3>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-            <div>
-              <label className={labelClass}>Parcela</label>
-              <input name="plot_area_m2" type="number" className={inputClass} placeholder="873" />
-            </div>
-            <div>
-              <label className={labelClass}>Construidos</label>
-              <input name="build_area_m2" type="number" className={inputClass} placeholder="127" />
-            </div>
-            <div>
-              <label className={labelClass}>Útiles</label>
-              <input name="useful_area_m2" type="number" className={inputClass} />
-            </div>
-            <div>
-              <label className={labelClass}>Terraza</label>
-              <input name="terrace_area_m2" type="number" className={inputClass} />
-            </div>
-            <div>
-              <label className={labelClass}>Jardín</label>
-              <input name="garden_area_m2" type="number" className={inputClass} />
-            </div>
-          </div>
+      {/* ═══ 1. Tamaños y habitaciones ═══ */}
+      <section className={sectionClass}>
+        <h2 className={sectionTitle}>📐 Tamaños y habitaciones</h2>
+        <p className={sectionSubtitle}>Las medidas y habitaciones de la propiedad principal.</p>
 
-          <h3 className="mt-6 mb-3 text-[10px] font-bold uppercase tracking-[0.18em] text-[#C9A84C]">Estancias</h3>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="grid gap-4 lg:grid-cols-2">
+          {/* Columna izquierda: tamaños */}
+          <div className="space-y-4">
             <div>
-              <label className={labelClass}>Habitaciones</label>
-              <input name="bedrooms" type="number" className={inputClass} placeholder="3" />
-            </div>
-            <div>
-              <label className={labelClass}>Baños</label>
-              <input name="bathrooms" type="number" className={inputClass} placeholder="2" />
-            </div>
-            <div>
-              <label className={labelClass}>Aseos</label>
-              <input name="toilets" type="number" className={inputClass} />
-            </div>
-            <div>
-              <label className={labelClass}>Salones</label>
-              <input name="living_rooms" type="number" className={inputClass} />
-            </div>
-            <div>
-              <label className={labelClass}>Comedores</label>
-              <input name="dining_rooms" type="number" className={inputClass} />
-            </div>
-          </div>
-          <div className="mt-4 grid gap-4 sm:grid-cols-3 lg:grid-cols-4">
-            <div>
-              <label className={labelClass}>Tipo de cocina</label>
-              <select name="kitchen_type" className={inputClass} defaultValue="">
+              <label className={labelClass}>Vistas</label>
+              <select name="views" className={inputClass} defaultValue={initialProperty?.views ?? ''}>
                 <option value="">—</option>
-                {KITCHEN_TYPES.map((k) => <option key={k} value={k}>{k}</option>)}
+                {VIEWS_OPTIONS.map((v) => (
+                  <option key={v} value={v}>
+                    {v}
+                  </option>
+                ))}
               </select>
             </div>
-            <div>
-              <label className={labelClass}>Planta</label>
-              <input name="floor_number" type="number" className={inputClass} placeholder="2" />
-            </div>
-            <div>
-              <label className={labelClass}>Total plantas casa</label>
-              <input name="total_floors" type="number" className={inputClass} />
-            </div>
-            <div>
-              <label className={labelClass}>Orientación</label>
-              <select name="orientation" className={inputClass} defaultValue="">
-                <option value="">—</option>
-                {ORIENTATIONS.map((o) => <option key={o} value={o}>{o}</option>)}
-              </select>
-            </div>
-          </div>
 
-          <h3 className="mt-6 mb-3 text-[10px] font-bold uppercase tracking-[0.18em] text-[#C9A84C]">Vistas</h3>
-          <select name="views" className={inputClass} defaultValue={ip?.views ?? ''}>
-            <option value="">—</option>
-            {VIEWS_OPTIONS.map((v) => <option key={v} value={v}>{v}</option>)}
-          </select>
-      </section>
-
-      {/* ═══ TAB: Equipamiento ═══ */}
-      <section hidden={activeTab !== 'equipment'} className={sectionClass}>
-          <h3 className="mb-3 text-[10px] font-bold uppercase tracking-[0.18em] text-[#C9A84C]">Principales</h3>
-          <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-4">
-            <CheckField name="has_garage" label="🚗 Garaje" />
-            <CheckField name="has_garden" label="🌳 Jardín" />
-            <CheckField name="has_guest_apartment" label="🏡 Apt. invitados" />
-          </div>
-
-          <h3 className="mt-6 mb-3 text-[10px] font-bold uppercase tracking-[0.18em] text-[#C9A84C]">Calefacción / Climatización</h3>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <div>
-              <label className={labelClass}>Calefacción (Heating)</label>
-              <select name="heating_type" className={inputClass} defaultValue={getStr('heating_type')}>
-                <option value="">—</option>
-                {HEATING_TYPES.map((h) => <option key={h} value={h}>{h}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className={labelClass}>Aire acondicionado</label>
-              <select name="ac_type" className={inputClass} defaultValue="">
-                <option value="">—</option>
-                {AC_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
-              </select>
-            </div>
-          </div>
-
-          <h3 className="mt-6 mb-3 text-[10px] font-bold uppercase tracking-[0.18em] text-[#C9A84C]">Piscina / Garaje / Terraza / Jardín / Muebles</h3>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <div>
-              <label className={labelClass}>Tipo piscina</label>
-              <select name="pool_type" className={inputClass} defaultValue="">
-                <option value="">—</option>
-                {POOL_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className={labelClass}>Plazas garaje</label>
-              <input name="garage_spaces" type="number" className={inputClass} placeholder="2" />
-            </div>
-            <div>
-              <label className={labelClass}>Tipo terraza</label>
-              <select name="terrace_type" className={inputClass} defaultValue="">
-                <option value="">—</option>
-                {TERRACE_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className={labelClass}>Tipo jardín</label>
-              <select name="garden_type" className={inputClass} defaultValue="">
-                <option value="">—</option>
-                {GARDEN_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className={labelClass}>Muebles</label>
-              <select name="furniture_status" className={inputClass} defaultValue="">
-                <option value="">—</option>
-                {FURNITURE_STATUS.map((f) => <option key={f.id} value={f.id}>{f.label}</option>)}
-              </select>
-            </div>
-          </div>
-
-          <h3 className="mt-6 mb-3 text-[10px] font-bold uppercase tracking-[0.18em] text-[#C9A84C]">Extras</h3>
-          <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-5">
-            <CheckField name="has_fireplace" label="🔥 Chimenea" />
-            <CheckField name="has_storage" label="📦 Trastero" />
-            <CheckField name="has_bbq" label="🍖 Barbacoa" />
-            <CheckField name="has_alarm" label="🚨 Alarma" />
-            <CheckField name="has_elevator" label="🛗 Ascensor" />
-            <CheckField name="has_jacuzzi" label="🛁 Jacuzzi" />
-            <CheckField name="has_balcony" label="🏠 Balcón" />
-            <CheckField name="has_summer_kitchen" label="🌞 Cocina verano" />
-            <CheckField name="has_water_deposit" label="💧 Depósito agua" />
-            <CheckField name="has_sat_tv" label="📺 TV/SAT" />
-            <CheckField name="has_internet" label="🌐 Internet" />
-            <CheckField name="has_laundry" label="🧺 Lavadero" />
-            <CheckField name="has_outdoor_shower" label="🚿 Ducha exterior" />
-            <CheckField name="has_double_glazing" label="🪟 Doble cristal" />
-            <CheckField name="has_security_door" label="🚪 Puerta seguridad" />
-            <CheckField name="has_enclosed_plot" label="🏘️ Parcela cerrada" />
-          </div>
-      </section>
-
-      {/* ═══ TAB: Apartamento de invitados ═══ */}
-      <section hidden={activeTab !== 'guests'} className={sectionClass}>
-          <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.18em] text-[#C9A84C]">🛏️ Apartamento de invitados</p>
-          <p className="mb-4 text-xs text-[#9A9080]">
-            Si la propiedad incluye apartamento de invitados, rellena estos campos.
-            En la web pública saldrá como <strong>&quot;3+2 habitaciones&quot;</strong> (casa principal + invitados).
-          </p>
-          <div className="grid gap-4 sm:grid-cols-3">
-            <div>
-              <label className={labelClass}>Habitaciones invitados</label>
-              <input name="guest_bedrooms" type="number" defaultValue={ipAny?.guest_bedrooms as number ?? ''} className={inputClass} />
-            </div>
-            <div>
-              <label className={labelClass}>Baños invitados</label>
-              <input name="guest_bathrooms" type="number" defaultValue={ipAny?.guest_bathrooms as number ?? ''} className={inputClass} />
-            </div>
-            <div>
-              <label className={labelClass}>Aseos invitados</label>
-              <input name="guest_toilets" type="number" defaultValue={ipAny?.guest_toilets as number ?? ''} className={inputClass} />
-            </div>
-          </div>
-          <div className="mt-4 grid gap-2 sm:grid-cols-3">
-            <CheckField name="guest_lounge" label="🛋️ Salón en invitados" defaultChecked={getBool('guest_lounge')} />
-            <CheckField name="guest_dining_room" label="🍽️ Comedor en invitados" defaultChecked={getBool('guest_dining_room')} />
-            <CheckField name="guest_kitchen" label="🍳 Cocina en invitados" defaultChecked={getBool('guest_kitchen')} />
-          </div>
-      </section>
-
-      {/* ═══ TAB: Precio ═══ */}
-      <section hidden={activeTab !== 'price'} className={sectionClass}>
-          <h3 className="mb-3 text-[10px] font-bold uppercase tracking-[0.18em] text-[#C9A84C]">💰 Calculadora de precio y comisión</h3>
-          <div className="rounded-2xl border border-[#C9A84C]/40 bg-[#C9A84C]/5 p-5">
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-3 sm:grid-cols-2">
               <div>
-                <label className={labelClass}>Precio total que verá el cliente €</label>
+                <label className={labelClass}>Plot size (m²)</label>
                 <input
+                  name="plot_area_m2"
                   type="number"
-                  value={calcPrice || ''}
-                  onChange={(e) => setCalcPrice(Number(e.target.value) || 0)}
+                  defaultValue={getNum('plot_area_m2')}
                   className={inputClass}
-                  placeholder="549000"
+                  placeholder="0"
                 />
               </div>
               <div>
-                <label className={labelClass}>% Comisión CBI</label>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setCalcCommissionPct(4)}
-                    className={`flex-1 rounded-lg px-3 py-2.5 text-sm font-bold transition ${calcCommissionPct === 4 ? 'bg-[#C9A84C] text-black' : 'border border-white/10 bg-[#1C1C1C] text-[#9A9080]'}`}
-                  >4%</button>
-                  <button
-                    type="button"
-                    onClick={() => setCalcCommissionPct(5)}
-                    className={`flex-1 rounded-lg px-3 py-2.5 text-sm font-bold transition ${calcCommissionPct === 5 ? 'bg-[#C9A84C] text-black' : 'border border-white/10 bg-[#1C1C1C] text-[#9A9080]'}`}
-                  >5%</button>
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={calcCommissionPct}
-                    onChange={(e) => setCalcCommissionPct(Number(e.target.value) || 0)}
-                    className={`${inputClass} w-24`}
-                  />
-                </div>
+                <label className={labelClass}>Built size (m²)</label>
+                <input
+                  name="build_area_m2"
+                  type="number"
+                  defaultValue={getNum('build_area_m2')}
+                  className={inputClass}
+                  placeholder="0"
+                />
+              </div>
+              <div>
+                <label className={labelClass}>Useful (m²)</label>
+                <input
+                  name="useful_area_m2"
+                  type="number"
+                  defaultValue={getNum('useful_area_m2')}
+                  className={inputClass}
+                  placeholder="0"
+                />
+              </div>
+              <div>
+                <label className={labelClass}>Terrace (m²)</label>
+                <input
+                  name="terrace_area_m2"
+                  type="number"
+                  defaultValue={getNum('terrace_area_m2')}
+                  className={inputClass}
+                  placeholder="0"
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <label className={labelClass}>Superficie Jardín (m²)</label>
+                <input
+                  name="garden_area_m2"
+                  type="number"
+                  defaultValue={getNum('garden_area_m2')}
+                  className={inputClass}
+                  placeholder="0"
+                />
               </div>
             </div>
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              <div className="rounded-xl border border-[#2ECC9A]/30 bg-[#2ECC9A]/8 p-4">
-                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#2ECC9A]">💵 Comisión CBI</p>
-                <p className="mt-1 text-2xl font-bold text-[#2ECC9A]">€{calcCommissionAmount.toLocaleString()}</p>
-                <p className="text-[10px] text-[#9A9080]">{calcCommissionPct}% de €{calcPrice.toLocaleString()}</p>
-              </div>
-              <div className="rounded-xl border border-[#8B7CF6]/30 bg-[#8B7CF6]/8 p-4">
-                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#8B7CF6]">🧑 Recibe el propietario</p>
-                <p className="mt-1 text-2xl font-bold text-[#8B7CF6]">€{calcOwnerReceives.toLocaleString()}</p>
-                <p className="text-[10px] text-[#9A9080]">€{calcPrice.toLocaleString()} − €{calcCommissionAmount.toLocaleString()}</p>
-              </div>
-            </div>
-          </div>
 
-          <h3 className="mt-6 mb-3 text-[10px] font-bold uppercase tracking-[0.18em] text-[#C9A84C]">Otros precios (opcional)</h3>
-          <div className="grid gap-4 sm:grid-cols-3">
-            <div>
-              <label className={labelClass}>Precio final €</label>
-              <input name="price_final" type="number" className={inputClass} />
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <label className={labelClass}>Promotion Name</label>
+                <input
+                  name="promotion_name"
+                  defaultValue={getStr('promotion_name')}
+                  className={inputClass}
+                  placeholder="Residencial Las Brisas"
+                />
+              </div>
+              <div>
+                <label className={labelClass}>Urbanization Name</label>
+                <input
+                  name="urbanization"
+                  defaultValue={getStr('urbanization')}
+                  className={inputClass}
+                  placeholder="Mascarat"
+                />
+              </div>
             </div>
-            <div>
-              <label className={labelClass}>Contraoferta €</label>
-              <input name="price_counter_offer" type="number" className={inputClass} />
-            </div>
-            <div>
-              <label className={labelClass}>Importe renta €/mes</label>
-              <input name="rental_amount" type="number" className={inputClass} />
-            </div>
-          </div>
 
-          <h3 className="mt-6 mb-3 text-[10px] font-bold uppercase tracking-[0.18em] text-[#C9A84C]">Gastos anuales</h3>
-          <div className="grid gap-4 sm:grid-cols-3">
-            <div className="grid grid-cols-[1fr_100px] gap-2">
-              <div>
-                <label className={labelClass}>IBI</label>
-                <input name="ibi_annual" type="number" className={inputClass} />
-              </div>
-              <div>
-                <label className={labelClass}>Periodo</label>
-                <select name="ibi_period" className={inputClass} defaultValue="annual">
-                  {PERIODS.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
-                </select>
-              </div>
-            </div>
-            <div className="grid grid-cols-[1fr_100px] gap-2">
-              <div>
-                <label className={labelClass}>Basura</label>
-                <input name="basura_annual" type="number" className={inputClass} />
-              </div>
-              <div>
-                <label className={labelClass}>Periodo</label>
-                <select name="basura_period" className={inputClass} defaultValue="annual">
-                  {PERIODS.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
-                </select>
-              </div>
-            </div>
-            <div className="grid grid-cols-[1fr_100px] gap-2">
-              <div>
-                <label className={labelClass}>Comunidad</label>
-                <input name="community_annual" type="number" className={inputClass} />
-              </div>
-              <div>
-                <label className={labelClass}>Periodo</label>
-                <select name="community_period" className={inputClass} defaultValue="annual">
-                  {PERIODS.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
-                </select>
-              </div>
-            </div>
-          </div>
-          <div className="mt-3">
-            <label className={labelClass}>Observaciones comunidad</label>
-            <textarea name="community_observations" rows={2} className={inputClass} />
-          </div>
-
-          <h3 className="mt-6 mb-3 text-[10px] font-bold uppercase tracking-[0.18em] text-[#C9A84C]">Vivienda turística</h3>
-          <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className={labelClass}>Código vivienda turística</label>
-              <input name="tourist_housing_code" className={inputClass} />
-            </div>
-            <div>
-              <label className={labelClass}>Estado</label>
-              <select name="tourist_housing_status" className={inputClass} defaultValue="">
+              <label className={labelClass}>Ocupación Vivienda</label>
+              <select
+                name="occupation_status"
+                className={inputClass}
+                defaultValue={initialProperty?.occupation_status ?? ''}
+              >
                 <option value="">—</option>
-                <option value="available">Disponible</option>
-                <option value="in_process">En proceso</option>
+                {OCCUPATION.map((o) => (
+                  <option key={o.id} value={o.id}>
+                    {o.label}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
+
+          {/* Columna derecha: habitaciones */}
+          <div className="space-y-3">
+            <div>
+              <label className={labelClass}>Bedrooms</label>
+              <NumberSelect name="bedrooms" defaultValue={getNum('bedrooms')} max={15} />
+            </div>
+            <div>
+              <label className={labelClass}>Bathrooms</label>
+              <NumberSelect name="bathrooms" defaultValue={getNum('bathrooms')} max={10} />
+            </div>
+            <div>
+              <label className={labelClass}>Guest toilet</label>
+              <NumberSelect name="toilets" defaultValue={getNum('toilets')} max={5} />
+            </div>
+            <div>
+              <label className={labelClass}>Lounge</label>
+              <NumberSelect name="living_rooms" defaultValue={getNum('living_rooms')} max={5} />
+            </div>
+            <div>
+              <label className={labelClass}>Dining room</label>
+              <NumberSelect name="dining_rooms" defaultValue={getNum('dining_rooms')} max={5} />
+            </div>
+            <div>
+              <label className={labelClass}>Kitchen</label>
+              <NumberSelect name="kitchens" defaultValue={getNum('kitchens')} max={5} />
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <label className={labelClass}>Build year</label>
+                <input
+                  name="year_built"
+                  type="number"
+                  defaultValue={getNum('year_built')}
+                  className={inputClass}
+                  placeholder="2013"
+                />
+              </div>
+              <div>
+                <label className={labelClass}>Renovated in</label>
+                <input
+                  name="year_reformed"
+                  type="number"
+                  defaultValue={getNum('year_reformed')}
+                  className={inputClass}
+                  placeholder="2022"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
 
-      {/* ═══ TAB: Propietario ═══ */}
-      <section hidden={activeTab !== 'owner'} className={sectionClass}>
-        <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.18em] text-[#C9A84C]">👤 Propietario</p>
-        <p className="mb-4 text-xs text-[#9A9080]">Busca un propietario existente o crea uno nuevo. Estos datos se reusan en futuras propiedades del mismo propietario.</p>
+      {/* ═══ 2. Guest Apartment ═══ */}
+      <section className={sectionClass}>
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <h2 className={sectionTitle}>🛏️ Guest Apartment</h2>
+            <p className={sectionSubtitle}>Apartamento de invitados (si la propiedad lo tiene).</p>
+          </div>
+          <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-white/10 bg-[#1C1C1C] px-3 py-2 text-xs text-[#F5F0E8]">
+            <input
+              type="checkbox"
+              checked={hasGuestApt}
+              onChange={(e) => setHasGuestApt(e.target.checked)}
+              className="accent-[#C9A84C]"
+            />
+            Tiene apartamento de invitados
+          </label>
+        </div>
+
+        {hasGuestApt && (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div>
+              <label className={labelClass}>Bedrooms</label>
+              <NumberSelect name="guest_bedrooms" defaultValue={getNum('guest_bedrooms')} max={5} />
+            </div>
+            <div>
+              <label className={labelClass}>Bathrooms</label>
+              <NumberSelect name="guest_bathrooms" defaultValue={getNum('guest_bathrooms')} max={5} />
+            </div>
+            <div>
+              <label className={labelClass}>Toilet</label>
+              <NumberSelect name="guest_toilets" defaultValue={getNum('guest_toilets')} max={3} />
+            </div>
+            <div>
+              <label className={labelClass}>Lounge</label>
+              <NumberSelect name="guest_lounge_count" max={3} />
+            </div>
+            <div>
+              <label className={labelClass}>Dining room</label>
+              <NumberSelect name="guest_dining_count" max={3} />
+            </div>
+            <div>
+              <label className={labelClass}>Kitchen</label>
+              <NumberSelect name="guest_kitchen_count" max={3} />
+            </div>
+          </div>
+        )}
+      </section>
+
+      {/* ═══ 3. Certificado energético ═══ */}
+      <section className={sectionClass}>
+        <h2 className={sectionTitle}>⚡ Certificado energético</h2>
+        <p className={sectionSubtitle}>Las dos calificaciones oficiales (emisiones y consumo).</p>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label className={labelClass}>Energy rating (emisiones)</label>
+            <select
+              name="energy_certificate"
+              className={inputClass}
+              defaultValue={initialProperty?.energy_certificate ?? ''}
+            >
+              <option value="">—</option>
+              {ENERGY.map((e) => (
+                <option key={e} value={e}>
+                  {e}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className={labelClass}>Calificación energética consumo</label>
+            <select
+              name="energy_consumption_rating"
+              className={inputClass}
+              defaultValue={getStr('energy_consumption_rating')}
+            >
+              <option value="">—</option>
+              {ENERGY.map((e) => (
+                <option key={`c-${e}`} value={e}>
+                  {e}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ 4. Calculadora de precio ═══ */}
+      <section className={sectionClass}>
+        <h2 className={sectionTitle}>💰 Precio</h2>
+        <p className={sectionSubtitle}>
+          Pon el precio que quiere recibir el dueño y el % de comisión. Pulsa Calcular para ver la comisión y el precio final.
+        </p>
+
+        <div className="grid gap-3 sm:grid-cols-[1fr_1fr_auto_1fr]">
+          <div>
+            <label className={labelClass}>Price Owner (€)</label>
+            <input
+              type="number"
+              value={priceOwner || ''}
+              onChange={(e) => setPriceOwner(Number(e.target.value) || 0)}
+              className={inputClass}
+              placeholder="500000"
+            />
+          </div>
+          <div>
+            <label className={labelClass}>% comisión CBI</label>
+            <input
+              type="number"
+              step="0.1"
+              value={commissionPct}
+              onChange={(e) => setCommissionPct(Number(e.target.value) || 0)}
+              className={inputClass}
+              placeholder="5"
+            />
+          </div>
+          <div className="flex items-end">
+            <button
+              type="button"
+              onClick={runCalculate}
+              disabled={priceOwner <= 0 || commissionPct <= 0}
+              className="h-[42px] w-full rounded-lg bg-[#3B82F6] px-5 text-sm font-bold text-white transition hover:bg-[#2563EB] disabled:opacity-40 sm:w-auto"
+            >
+              Calcular
+            </button>
+          </div>
+          <div>
+            <label className={labelClass}>Sale Price (€)</label>
+            <input
+              readOnly
+              value={calcShown.salePrice ? calcShown.salePrice.toLocaleString('es-ES') : ''}
+              className={`${inputClass} cursor-default font-bold text-[#C9A84C]`}
+              placeholder="—"
+            />
+          </div>
+        </div>
+
+        {calcShown.salePrice > 0 && (
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <div className="rounded-xl border border-[#2ECC9A]/30 bg-[#2ECC9A]/8 p-4">
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#2ECC9A]">💵 Sale commission</p>
+              <p className="mt-1 text-2xl font-bold text-[#2ECC9A]">€{calcShown.commission.toLocaleString('es-ES')}</p>
+              <p className="text-[10px] text-[#9A9080]">
+                {commissionPct}% sobre €{priceOwner.toLocaleString('es-ES')}
+              </p>
+            </div>
+            <div className="rounded-xl border border-[#C9A84C]/30 bg-[#C9A84C]/8 p-4">
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#C9A84C]">🏷️ Sale Price (web)</p>
+              <p className="mt-1 text-2xl font-bold text-[#C9A84C]">€{calcShown.salePrice.toLocaleString('es-ES')}</p>
+              <p className="text-[10px] text-[#9A9080]">Lo que ve el cliente final</p>
+            </div>
+          </div>
+        )}
+      </section>
+
+      {/* ═══ 5. Community costs ═══ */}
+      <section className={sectionClass}>
+        <h2 className={sectionTitle}>🏘️ Community costs</h2>
+        <p className={sectionSubtitle}>Gastos anuales de comunidad (€).</p>
+
+        <input
+          name="community_annual"
+          type="number"
+          defaultValue={getNum('community_annual')}
+          className={inputClass}
+          placeholder="0"
+        />
+      </section>
+
+      {/* ═══ 6. Dirección ═══ */}
+      <section className={sectionClass}>
+        <h2 className={sectionTitle}>📍 Dirección</h2>
+        <p className={sectionSubtitle}>Busca la dirección oficial. Si no se valida, los portales pueden rechazarla.</p>
+
+        <AddressPicker
+          initialQuery={getStr('location')}
+          initialLat={(ipAny?.latitude as number) ?? null}
+          initialLng={(ipAny?.longitude as number) ?? null}
+          onSelect={(d) => {
+            const form = document.getElementById('propForm') as HTMLFormElement | null
+            if (!form) return
+            const setVal = (n: string, v: string) => {
+              const el = form.querySelector<HTMLInputElement>(`[name="${n}"]`)
+              if (el) el.value = v
+            }
+            setVal('street_name', d.street_name)
+            setVal('street_number', d.street_number)
+            setVal('postal_code', d.postal_code)
+            setVal('city', d.city)
+            setVal('location', d.location)
+          }}
+        />
+
+        <div className="mt-5 grid gap-3 sm:grid-cols-[2fr_1fr_1fr_1fr]">
+          <div>
+            <label className={labelClass}>
+              Calle <span className="text-red-400">*</span>
+            </label>
+            <input
+              name="street_name"
+              defaultValue={getStr('street_name')}
+              className={inputClass}
+              placeholder="Carrer Barro"
+            />
+          </div>
+          <div>
+            <label className={labelClass}>
+              Número <span className="text-red-400">*</span>
+            </label>
+            <input
+              name="street_number"
+              defaultValue={getStr('street_number')}
+              className={inputClass}
+              placeholder="7"
+            />
+          </div>
+          <div>
+            <label className={labelClass}>Planta</label>
+            <input
+              name="apartment_floor"
+              defaultValue={getStr('apartment_floor')}
+              className={inputClass}
+              placeholder="2"
+            />
+          </div>
+          <div>
+            <label className={labelClass}>Puerta</label>
+            <input
+              name="apartment_door"
+              defaultValue={getStr('apartment_door')}
+              className={inputClass}
+              placeholder="A"
+            />
+          </div>
+        </div>
+
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <div>
+            <label className={labelClass}>
+              Población <span className="text-red-400">*</span>
+            </label>
+            <input
+              name="city"
+              defaultValue={getStr('city')}
+              className={inputClass}
+              placeholder="p. ej. Alicante"
+            />
+          </div>
+          <div>
+            <label className={labelClass}>
+              Código postal <span className="text-red-400">*</span>
+            </label>
+            <input
+              name="postal_code"
+              defaultValue={getStr('postal_code')}
+              className={inputClass}
+              placeholder="03590"
+            />
+          </div>
+        </div>
+
+        <input type="hidden" name="location" defaultValue={getStr('location')} />
+      </section>
+
+      {/* Owner (compacto, no es una sección de las capturas pero se necesita) */}
+      <section className={sectionClass}>
+        <h2 className={sectionTitle}>👤 Propietario</h2>
+        <p className={sectionSubtitle}>Asocia un propietario existente o crea uno nuevo.</p>
         <OwnerPicker value={ownerId} onChange={(id) => setOwnerId(id)} />
       </section>
 
-      {/* ═══ TAB: Dirección ═══ */}
-      <section hidden={activeTab !== 'address'} className={sectionClass}>
-          <AddressPicker
-            initialQuery={getStr('location')}
-            initialLat={(ipAny?.latitude as number) ?? null}
-            initialLng={(ipAny?.longitude as number) ?? null}
-            onSelect={(d) => {
-              const form = document.getElementById('propForm') as HTMLFormElement | null
-              if (!form) return
-              const setVal = (name: string, value: string) => {
-                const el = form.querySelector<HTMLInputElement>(`[name="${name}"]`)
-                if (el) el.value = value
-              }
-              setVal('street_name', d.street_name)
-              setVal('street_number', d.street_number)
-              setVal('postal_code', d.postal_code)
-              setVal('city', d.city)
-              setVal('location', d.location)
-            }}
-          />
+      {/* ═══ 7. Título + Descripción ═══ */}
+      <section id="section-title" className={sectionClass}>
+        <h2 className={sectionTitle}>✏️ Título y descripción</h2>
+        <p className={sectionSubtitle}>El título es obligatorio. La descripción la refinará y traducirá Sooprema automáticamente.</p>
 
-          <h3 className="mt-6 mb-3 text-[10px] font-bold uppercase tracking-[0.18em] text-[#C9A84C]">Detalles editables</h3>
-          <div className="grid gap-4 sm:grid-cols-[2fr_1fr_1fr_1fr]">
-            <div>
-              <label className={labelClass}>Calle</label>
-              <input name="street_name" defaultValue={getStr('street_name')} className={inputClass} placeholder="Carrer Barro" />
+        <div>
+          <label className={labelClass}>
+            Título de la propiedad <span className="text-red-400">*</span>
+          </label>
+          {!title.trim() && (
+            <div className="mb-2 rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-xs text-red-400">
+              ⚠️ ATENCIÓN: si no incluyes el título, la propiedad NO aparecerá en la web.
             </div>
-            <div>
-              <label className={labelClass}>Número</label>
-              <input name="street_number" defaultValue={getStr('street_number')} className={inputClass} placeholder="7" />
-            </div>
-            <div>
-              <label className={labelClass}>Planta</label>
-              <input name="apartment_floor" defaultValue={getStr('apartment_floor')} className={inputClass} placeholder="2" />
-            </div>
-            <div>
-              <label className={labelClass}>Puerta</label>
-              <input name="apartment_door" defaultValue={getStr('apartment_door')} className={inputClass} placeholder="A" />
-            </div>
-          </div>
-          <div className="mt-4 grid gap-4 sm:grid-cols-3">
-            <div>
-              <label className={labelClass}>Población</label>
-              <input name="city" defaultValue={getStr('city')} className={inputClass} placeholder="Altea" />
-            </div>
-            <div>
-              <label className={labelClass}>Código postal</label>
-              <input name="postal_code" defaultValue={getStr('postal_code')} className={inputClass} placeholder="03590" />
-            </div>
-            <div>
-              <label className={labelClass}>Urbanización</label>
-              <input name="urbanization" defaultValue={getStr('urbanization')} className={inputClass} placeholder="Mascarat" />
-            </div>
-          </div>
-          <input type="hidden" name="location" defaultValue={getStr('location')} />
-          <p className="mt-3 text-[11px] text-yellow-400/80">
-            ⚠️ <strong>IMPORTANTE:</strong> usa la búsqueda arriba y selecciona una dirección oficial del desplegable. Si la dirección no se valida en el mapa, Idealista rechazará la propiedad.
+          )}
+          <input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className={inputClass}
+            placeholder="Mediterranean Villa with Sea Views in Altea"
+          />
+        </div>
+
+        <div className="mt-5">
+          <label className={labelClass}>Descripción de la propiedad</label>
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            rows={6}
+            className={inputClass}
+            placeholder="Escribe en cualquier idioma — Sooprema la pulirá y traducirá a 7 idiomas automáticamente."
+          />
+          <p className="mt-2 text-[11px] text-[#9A9080]">
+            💡 No te preocupes por idiomas: cuando la subamos, Sooprema usa su IA propia para mejorar el texto y generar las versiones en español, inglés, alemán, francés, holandés, ruso y polaco.
           </p>
+        </div>
       </section>
 
-      {/* ═══ TAB: Descripciones ═══ */}
-      <section hidden={activeTab !== 'descriptions'} className={sectionClass}>
+      {/* ═══ 8. Fotos (opcional) ═══ */}
+      <section className={sectionClass}>
+        <div className="mb-4 flex items-center justify-between gap-3">
           <div>
-            <label className={labelClass}>Título principal (web header) *</label>
-            <input
-              value={formState.title_headline}
-              onChange={(e) => update('title_headline', e.target.value)}
-              className={inputClass}
-              placeholder="Mediterranean Villa with Flat Garden"
-            />
-            <p className="mt-1 text-[10px] text-red-400">⚠️ Si no incluyes el título, la propiedad NO aparecerá en la web pública.</p>
+            <h2 className={sectionTitle}>📸 Fotos (opcional)</h2>
+            <p className={sectionSubtitle}>
+              {availablePhotos.length} disponibles · {selectedPhotoIds.size} seleccionadas. Las fotos NO son obligatorias para subir.
+            </p>
           </div>
-
-          <div className="mt-5 flex items-center justify-between">
-            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#C9A84C]">🌐 Descripción en 7 idiomas</p>
+          <div className="flex gap-2">
             <button
               type="button"
-              onClick={handleTranslateAll}
-              disabled={isAI}
-              className="rounded-lg border border-[#8B7CF6]/40 bg-[#8B7CF6]/15 px-3 py-1.5 text-[11px] font-bold text-[#8B7CF6] hover:bg-[#8B7CF6]/25 disabled:opacity-50"
+              onClick={() => setSelectedPhotoIds(new Set(availablePhotos.map((p) => p.id)))}
+              disabled={availablePhotos.length === 0}
+              className="rounded-md border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-semibold text-[#9A9080] disabled:opacity-40"
             >
-              {isAI ? '⏳ Traduciendo...' : '🌐 Traducir desde EN a los otros 6 idiomas'}
+              Todas
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelectedPhotoIds(new Set())}
+              disabled={selectedPhotoIds.size === 0}
+              className="rounded-md border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-semibold text-[#9A9080] disabled:opacity-40"
+            >
+              Limpiar
             </button>
           </div>
+        </div>
 
-          <div className="mt-3 space-y-4">
-            {LANGUAGES.map((d) => (
-              <div key={d.code}>
-                <div className="mb-1.5 flex items-center justify-between">
-                  <label className={labelClass}>{d.flag} {d.label}</label>
-                  <button
-                    type="button"
-                    onClick={() => handleGenerateAI(d.code)}
-                    disabled={isAI}
-                    className="rounded-md border border-[#C9A84C]/30 bg-[#C9A84C]/10 px-2.5 py-1 text-[10px] font-bold text-[#C9A84C] hover:bg-[#C9A84C]/15 disabled:opacity-50"
-                  >
-                    {isAI ? '⏳' : '✨ Generar IA'}
-                  </button>
-                </div>
-                <textarea
-                  rows={4}
-                  value={formState[d.key]}
-                  onChange={(e) => update(d.key, e.target.value)}
-                  className={inputClass}
-                  placeholder={d.code === 'en' ? 'Escribe primero aquí, luego traduce a los demás idiomas...' : 'Traducción automática desde EN o escribir manualmente'}
-                />
-              </div>
-            ))}
+        {availablePhotos.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-white/10 bg-[#0A0A0A] p-8 text-center">
+            <p className="text-sm text-[#9A9080]">Sin fotos disponibles. Cuando el fotógrafo suba fotos aparecerán aquí.</p>
           </div>
-
-          <p className="mt-3 text-[11px] text-[#9A9080]/70">
-            💡 Escribe primero la descripción en INGLÉS (idioma fuente). Luego pulsa el botón morado para traducir automáticamente a los 6 idiomas restantes.
-          </p>
-      </section>
-
-      {/* ═══ TAB: Fotos ═══ */}
-      <section hidden={activeTab !== 'photos'} className={sectionClass}>
-          <div className="mb-4 flex items-center justify-between">
-            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#C9A84C]">
-              📸 Fotos de Jelle ({availablePhotos.length} disponibles) · {selectedPhotoIds.size} seleccionadas
-            </p>
-            <div className="flex gap-2">
-              <button type="button" onClick={() => setSelectedPhotoIds(new Set(availablePhotos.map((p) => p.id)))} disabled={availablePhotos.length === 0} className="rounded-md border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-semibold text-[#9A9080] disabled:opacity-40">
-                Todas
-              </button>
-              <button type="button" onClick={() => setSelectedPhotoIds(new Set())} disabled={selectedPhotoIds.size === 0} className="rounded-md border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-semibold text-[#9A9080] disabled:opacity-40">
-                Limpiar
-              </button>
-            </div>
-          </div>
-
-          {availablePhotos.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-white/10 bg-[#0A0A0A] p-8 text-center">
-              <p className="text-sm text-[#9A9080]">Sin fotos aún. Cuando Jelle suba fotos aparecerán aquí.</p>
-            </div>
-          ) : (
-            <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-4">
-              {availablePhotos.map((photo) => {
-                const selected = selectedPhotoIds.has(photo.id)
-                const imgUrl = `${storageBaseUrl}/storage/v1/object/public/property-photos/${photo.storage_path}`
-                return (
-                  <button
-                    key={photo.id}
-                    type="button"
-                    onClick={() => setSelectedPhotoIds((prev) => {
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-4">
+            {availablePhotos.map((photo) => {
+              const selected = selectedPhotoIds.has(photo.id)
+              const imgUrl = `${storageBaseUrl}/storage/v1/object/public/property-photos/${photo.storage_path}`
+              return (
+                <button
+                  key={photo.id}
+                  type="button"
+                  onClick={() =>
+                    setSelectedPhotoIds((prev) => {
                       const next = new Set(prev)
                       if (next.has(photo.id)) next.delete(photo.id)
                       else next.add(photo.id)
                       return next
-                    })}
-                    className={`group relative aspect-square overflow-hidden rounded-lg border-2 transition ${selected ? 'border-[#C9A84C] ring-2 ring-[#C9A84C]/30' : 'border-white/8 hover:border-white/20'}`}
-                  >
-                    <img src={imgUrl} alt="" className="h-full w-full object-cover" />
-                    {photo.is_drone && <span className="absolute left-1.5 top-1.5 rounded-full bg-black/70 px-1.5 py-0.5 text-[9px] font-bold text-[#C9A84C]">🚁 DRONE</span>}
-                    {selected && <div className="absolute inset-0 flex items-center justify-center bg-[#C9A84C]/30"><div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#C9A84C] text-sm font-bold text-black">✓</div></div>}
-                  </button>
-                )
-              })}
-            </div>
-          )}
-        <p className="mt-3 text-[11px] text-[#9A9080]/70">
-          💡 Las fotos de drone se ordenan automáticamente al final (Idealista no las acepta como principal).
-        </p>
-      </section>
-
-      {/* ═══ TAB: Portales ═══ */}
-      <section hidden={activeTab !== 'portals'} className={sectionClass}>
-          <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.18em] text-[#C9A84C]">🌐 Publicar en portales principales</p>
-          <div className="grid gap-3 sm:grid-cols-3">
-            <CheckField name="publish_sooprema" label="✓ Web CBI (Sooprema)" defaultChecked />
-            <CheckField name="publish_kyero" label="✓ Kyero" defaultChecked={getBool('publish_kyero')} />
-            <CheckField name="publish_idealista" label="✓ Idealista" defaultChecked />
-          </div>
-
-          <h3 className="mt-6 mb-3 text-[10px] font-bold uppercase tracking-[0.18em] text-[#C9A84C]">📤 Feeds XML (compartir con otras agencias)</h3>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {XML_FEEDS.map((f) => {
-              const checked = xmlFeeds.has(f.id)
-              return (
-                <label
-                  key={f.id}
-                  className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2.5 text-xs transition ${
-                    checked ? 'border-[#C9A84C] bg-[#C9A84C]/10 text-[#F5F0E8]' : 'border-white/10 bg-[#1C1C1C] text-[#9A9080]'
+                    })
+                  }
+                  className={`group relative aspect-square overflow-hidden rounded-lg border-2 transition ${
+                    selected ? 'border-[#C9A84C] ring-2 ring-[#C9A84C]/30' : 'border-white/8 hover:border-white/20'
                   }`}
                 >
-                  <input
-                    type="checkbox"
-                    checked={checked}
-                    onChange={() => {
-                      setXmlFeeds((prev) => {
-                        const next = new Set(prev)
-                        if (next.has(f.id)) next.delete(f.id)
-                        else next.add(f.id)
-                        return next
-                      })
-                    }}
-                    className="accent-[#C9A84C]"
-                  />
-                  {f.label}
-                </label>
+                  <img src={imgUrl} alt="" className="h-full w-full object-cover" />
+                  {photo.is_drone && (
+                    <span className="absolute left-1.5 top-1.5 rounded-full bg-black/70 px-1.5 py-0.5 text-[9px] font-bold text-[#C9A84C]">
+                      🚁 DRONE
+                    </span>
+                  )}
+                  {selected && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-[#C9A84C]/30">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#C9A84C] text-sm font-bold text-black">
+                        ✓
+                      </div>
+                    </div>
+                  )}
+                </button>
               )
             })}
           </div>
-
-          <h3 className="mt-6 mb-3 text-[10px] font-bold uppercase tracking-[0.18em] text-[#C9A84C]">🔒 Permisos del propietario</h3>
-          <div className="grid gap-3 sm:grid-cols-3">
-            <CheckField name="owner_allows_web" label="Permite publicar en la web" defaultChecked={ipAny?.owner_allows_web !== false} />
-            <CheckField name="owner_allows_idealista" label="Permite publicar en Idealista" defaultChecked={ipAny?.owner_allows_idealista !== false} />
-            <CheckField name="allow_billboard" label="🪧 Cartel de CBI permitido" defaultChecked={getBool('allow_billboard')} />
-          </div>
-
-          <h3 className="mt-6 mb-3 text-[10px] font-bold uppercase tracking-[0.18em] text-[#C9A84C]">⭐ Destacar en la web</h3>
-          <div className="grid gap-3 sm:grid-cols-3">
-            <CheckField name="featured_homepage" label="🏠 Propiedad de la semana (Homepage)" defaultChecked={getBool('featured_homepage')} />
-            <CheckField name="featured_first_position" label="1️⃣ Primera posición" defaultChecked={getBool('featured_first_position')} />
-            <CheckField name="featured_promote" label="📣 Promote / Highlights" defaultChecked={getBool('featured_promote')} />
-          </div>
-
-          <h3 className="mt-6 mb-3 text-[10px] font-bold uppercase tracking-[0.18em] text-[#C9A84C]">⚡ Certificado energético (Energy Rating)</h3>
-          <div className="flex flex-wrap gap-2">
-            {ENERGY.map((e) => (
-              <label key={e} className="flex cursor-pointer items-center justify-center rounded-lg border border-white/10 bg-[#1C1C1C] px-4 py-2 text-xs font-bold text-[#F5F0E8] has-[:checked]:border-[#C9A84C] has-[:checked]:bg-[#C9A84C] has-[:checked]:text-black">
-                <input type="radio" name="energy_certificate" value={e} defaultChecked={ip?.energy_certificate === e || (!ip?.energy_certificate && e === 'D')} className="sr-only" />
-                {e}
-              </label>
-            ))}
-          </div>
-
-          <h3 className="mt-6 mb-3 text-[10px] font-bold uppercase tracking-[0.18em] text-[#C9A84C]">⚡ Calificación energética de consumo</h3>
-          <div className="flex flex-wrap gap-2">
-            {ENERGY.map((e) => (
-              <label key={`cons-${e}`} className="flex cursor-pointer items-center justify-center rounded-lg border border-white/10 bg-[#1C1C1C] px-4 py-2 text-xs font-bold text-[#F5F0E8] has-[:checked]:border-[#2ECC9A] has-[:checked]:bg-[#2ECC9A] has-[:checked]:text-black">
-                <input type="radio" name="energy_consumption_rating" value={e} defaultChecked={getStr('energy_consumption_rating') === e} className="sr-only" />
-                {e}
-              </label>
-            ))}
-          </div>
-          <div className="mt-3 grid gap-4 sm:grid-cols-2">
-            <div>
-              <label className={labelClass}>Consumo kWh/m²/año</label>
-              <input name="energy_consumption_kwh" type="number" defaultValue={ipAny?.energy_consumption_kwh as number ?? ''} className={inputClass} />
-            </div>
-            <div>
-              <label className={labelClass}>Emisiones CO2 kg/m²/año</label>
-              <input name="co2_emissions" type="number" defaultValue={ipAny?.co2_emissions as number ?? ''} className={inputClass} />
-            </div>
-          </div>
-      </section>
-
-      {/* ═══ TAB: Llaves ═══ */}
-      <section hidden={activeTab !== 'keys'} className={sectionClass}>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label className={labelClass}>¿Quién tiene las llaves?</label>
-              <input name="keys_holder" className={inputClass} placeholder="Propietario, agente, portería..." />
-            </div>
-            <div>
-              <label className={labelClass}>Teléfono de contacto</label>
-              <input name="keys_phone" type="tel" className={inputClass} />
-            </div>
-            <div>
-              <label className={labelClass}>Recoger llaves en</label>
-              <input name="keys_pickup" className={inputClass} />
-            </div>
-            <div>
-              <label className={labelClass}>Número de llaves</label>
-              <input name="keys_count" type="number" className={inputClass} />
-            </div>
-          </div>
-          <div className="mt-4">
-            <label className={labelClass}>Info de visita</label>
-            <textarea name="visit_info" rows={3} className={inputClass} placeholder="Horarios, accesos especiales, contacto..." />
-          </div>
-
-          <h3 className="mt-6 mb-3 text-[10px] font-bold uppercase tracking-[0.18em] text-[#C9A84C]">Notas internas</h3>
-          <div className="space-y-4">
-            <div>
-              <label className={labelClass}>Descripción oficina (solo interno)</label>
-              <textarea name="office_description" rows={3} className={inputClass} />
-            </div>
-            <div>
-              <label className={labelClass}>Nota de propiedad (interna)</label>
-              <textarea name="internal_note" rows={3} className={inputClass} />
-            </div>
-          </div>
+        )}
       </section>
 
       {/* Feedback */}
-      {error && <p className="rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400">{error}</p>}
-      {success && <p className="rounded-lg border border-[#2ECC9A]/20 bg-[#2ECC9A]/10 px-4 py-3 text-sm text-[#2ECC9A]">{success}</p>}
+      {error && (
+        <p className="rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400">{error}</p>
+      )}
+      {success && (
+        <p className="rounded-lg border border-[#2ECC9A]/20 bg-[#2ECC9A]/10 px-4 py-3 text-sm text-[#2ECC9A]">
+          {success}
+        </p>
+      )}
 
-      {/* Actions (fixed bottom bar) — sobre el bottom-nav en mobile */}
+      {/* Botón único — sticky bottom */}
       <div
-        className="pb-safe sticky bottom-[calc(64px+env(safe-area-inset-bottom))] z-30 -mx-6 flex flex-col gap-2 border-t border-[#C9A84C]/15 bg-[#0A0A0A]/95 px-4 pt-3 backdrop-blur-xl sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:px-6 sm:py-3 md:bottom-0"
+        className="pb-safe sticky bottom-[calc(64px+env(safe-area-inset-bottom))] z-30 -mx-6 flex flex-col gap-2 border-t border-[#C9A84C]/15 bg-[#0A0A0A]/95 px-4 pt-3 backdrop-blur-xl sm:px-6 sm:py-3 md:bottom-0"
       >
-        <div className="flex justify-center gap-1.5 sm:justify-start">
-          {TABS.map((t, i) => (
-            <span key={t.id} className={`h-1.5 w-5 rounded-full transition ${activeTab === t.id ? 'bg-[#C9A84C]' : 'bg-white/10'}`} title={`${i + 1}. ${t.label}`} />
-          ))}
-        </div>
-        <div className="grid w-full grid-cols-3 gap-2 sm:flex sm:w-auto">
-          <button
-            type="button"
-            onClick={() => handleSubmit('hidden')}
-            disabled={isPending}
-            className="rounded-xl border border-white/10 bg-white/5 px-3 py-3 text-[10px] font-bold uppercase tracking-[0.06em] text-[#9A9080] active:scale-[0.98] hover:text-[#F5F0E8] disabled:opacity-50 sm:px-5 sm:py-2.5 sm:text-xs"
-            title="Guardar oculta — solo visible para CBI, no publica en web"
-          >
-            👁️‍🗨️ Oculta
-          </button>
-          <button
-            type="button"
-            onClick={() => handleSubmit('private')}
-            disabled={isPending}
-            className="rounded-xl border border-[#8B7CF6]/40 bg-[#8B7CF6]/10 px-3 py-3 text-[10px] font-bold uppercase tracking-[0.06em] text-[#8B7CF6] active:scale-[0.98] hover:bg-[#8B7CF6]/20 disabled:opacity-50 sm:px-5 sm:py-2.5 sm:text-xs"
-            title="Privada — propiedad existe pero el propietario no quiere que aparezca en web"
-          >
-            🔒 Privada
-          </button>
-          <button
-            type="button"
-            onClick={() => handleSubmit('published')}
-            disabled={isPending}
-            className="rounded-xl bg-[#C9A84C] px-3 py-3 text-[10px] font-bold uppercase tracking-[0.06em] text-black active:scale-[0.98] hover:bg-[#E8C96A] disabled:opacity-50 sm:px-6 sm:py-2.5 sm:text-xs"
-            title="Publicar — la propiedad sale en la web pública y se envía a Sooprema"
-          >
-            🚀 Publicar
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={handleSubmit}
+          disabled={isPending}
+          className="w-full rounded-xl bg-[#C9A84C] px-6 py-3.5 text-sm font-bold uppercase tracking-[0.06em] text-black transition active:scale-[0.98] hover:bg-[#E8C96A] disabled:opacity-50"
+        >
+          {isPending ? '⏳ Subiendo a Sooprema...' : '🚀 Subir a Sooprema'}
+        </button>
       </div>
     </form>
   )

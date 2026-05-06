@@ -1,11 +1,11 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { runSupremaJob, retrySupremaJob, cancelSupremaJob } from '@/actions/suprema'
+import { runSoopremaJob, retrySoopremaJob, cancelSoopremaJob } from '@/actions/sooprema'
 
 type JobStatus = 'queued' | 'running' | 'done' | 'error'
 
-interface SupremaJob {
+interface SoopremaJob {
   id: string
   property_id: string
   agent_id: string
@@ -21,8 +21,8 @@ interface SupremaJob {
   agent_name: string | null
 }
 
-interface SupremaDashboardProps {
-  jobs: SupremaJob[]
+interface SoopremaDashboardProps {
+  jobs: SoopremaJob[]
 }
 
 const STATUS_STYLES: Record<JobStatus, { dot: string; label: string; bg: string; text: string }> = {
@@ -32,7 +32,7 @@ const STATUS_STYLES: Record<JobStatus, { dot: string; label: string; bg: string;
   error:    { dot: 'bg-red-400',   label: 'Error',     bg: 'bg-red-500/10',       text: 'text-red-400' },
 }
 
-export function SupremaDashboard({ jobs: initialJobs }: SupremaDashboardProps) {
+export function SoopremaDashboard({ jobs: initialJobs }: SoopremaDashboardProps) {
   const [jobs, setJobs] = useState(initialJobs)
   const [expandedJob, setExpandedJob] = useState<string | null>(null)
   const [runningJobId, setRunningJobId] = useState<string | null>(null)
@@ -51,10 +51,9 @@ export function SupremaDashboard({ jobs: initialJobs }: SupremaDashboardProps) {
   function handleRun(jobId: string) {
     setRunningJobId(jobId)
     startTransition(async () => {
-      // Optimistic: mark as running
       setJobs((prev) => prev.map((j) => j.id === jobId ? { ...j, status: 'running' } : j))
 
-      const res = await runSupremaJob(jobId)
+      const res = await runSoopremaJob(jobId)
 
       if (res?.success) {
         setJobs((prev) => prev.map((j) => j.id === jobId
@@ -74,7 +73,7 @@ export function SupremaDashboard({ jobs: initialJobs }: SupremaDashboardProps) {
 
   function handleRetry(jobId: string) {
     startTransition(async () => {
-      await retrySupremaJob(jobId)
+      await retrySoopremaJob(jobId)
       setJobs((prev) => prev.map((j) => j.id === jobId
         ? { ...j, status: 'queued', error_message: null, logs: null }
         : j
@@ -84,7 +83,7 @@ export function SupremaDashboard({ jobs: initialJobs }: SupremaDashboardProps) {
 
   function handleCancel(jobId: string) {
     startTransition(async () => {
-      await cancelSupremaJob(jobId)
+      await cancelSoopremaJob(jobId)
       setJobs((prev) => prev.map((j) => j.id === jobId
         ? { ...j, status: 'error', error_message: 'Cancelled by admin' }
         : j
@@ -117,9 +116,9 @@ export function SupremaDashboard({ jobs: initialJobs }: SupremaDashboardProps) {
       {/* Info banner */}
       <div className="rounded-xl border border-[#C9A84C]/15 bg-[#C9A84C]/5 px-4 py-3">
         <p className="text-xs text-[#C9A84C]">
-          <strong>How it works:</strong> When an agent publishes a property, a job is created here.
-          Click <strong>Run</strong> to automate the submission to the Suprema portal via browser automation.
-          Photos are uploaded in order — drone photos are always placed last per Suprema requirements.
+          <strong>Cómo funciona:</strong> cuando un agente publica una propiedad se crea un job aquí.
+          Pulsa <strong>Run</strong> para automatizar la subida al portal Sooprema vía browser automation.
+          Las fotos se suben en orden — las de drone siempre van al final por requisito de Sooprema.
         </p>
       </div>
 
@@ -127,7 +126,7 @@ export function SupremaDashboard({ jobs: initialJobs }: SupremaDashboardProps) {
       {filtered.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-white/10 bg-[#131313] p-12 text-center">
           <div className="mb-3 text-4xl opacity-30">🤖</div>
-          <p className="text-sm font-semibold text-[#9A9080]">No {filterStatus !== 'all' ? filterStatus : ''} jobs</p>
+          <p className="text-sm font-semibold text-[#9A9080]">Sin jobs {filterStatus !== 'all' ? filterStatus : ''}</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -138,10 +137,8 @@ export function SupremaDashboard({ jobs: initialJobs }: SupremaDashboardProps) {
             return (
               <div key={job.id} className="overflow-hidden rounded-2xl border border-white/8 bg-[#131313]">
                 <div className="flex items-center gap-4 px-5 py-4">
-                  {/* Status dot */}
                   <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${style.dot}`} />
 
-                  {/* Property info */}
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="font-bold text-[#F5F0E8]">{job.property_reference || '—'}</span>
@@ -155,10 +152,10 @@ export function SupremaDashboard({ jobs: initialJobs }: SupremaDashboardProps) {
                       )}
                     </div>
                     <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-[#9A9080]">
-                      {job.agent_name && <span>Agent: {job.agent_name}</span>}
-                      <span>Created: {new Date(job.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
+                      {job.agent_name && <span>Agente: {job.agent_name}</span>}
+                      <span>Creado: {new Date(job.created_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
                       {job.completed_at && (
-                        <span>Completed: {new Date(job.completed_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
+                        <span>Completado: {new Date(job.completed_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
                       )}
                     </div>
                     {job.error_message && (
@@ -166,7 +163,6 @@ export function SupremaDashboard({ jobs: initialJobs }: SupremaDashboardProps) {
                     )}
                   </div>
 
-                  {/* Status badge + actions */}
                   <div className="flex shrink-0 items-center gap-2">
                     <span className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${style.bg} ${style.text}`}>
                       {isRunning && <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-yellow-400" />}
@@ -211,7 +207,6 @@ export function SupremaDashboard({ jobs: initialJobs }: SupremaDashboardProps) {
                   </div>
                 </div>
 
-                {/* Logs panel */}
                 {expandedJob === job.id && job.logs && (
                   <div className="border-t border-white/8 bg-[#0A0A0A] px-5 py-4">
                     <p className="mb-2 text-[9px] font-bold uppercase tracking-wider text-[#9A9080]">Automation Log</p>

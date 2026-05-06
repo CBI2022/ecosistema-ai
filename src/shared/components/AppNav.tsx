@@ -207,7 +207,7 @@ export function AppNav({ role }: AppNavProps) {
     { href: '/admin', label: t('team'), icon: 'users' },
     { href: '/tasks', label: t('tasks'), icon: 'check' },
     { href: '/kpi', label: t('kpi'), icon: 'chart' },
-    { href: '/suprema', label: 'Sooprema', icon: 'upload' },
+    { href: '/admin/sooprema', label: 'Sooprema', icon: 'upload' },
     { href: '/social', label: t('social'), icon: 'share' },
     { href: '/admin/knowledge', label: t('knowledge'), icon: 'brain' },
   ]
@@ -222,7 +222,6 @@ export function AppNav({ role }: AppNavProps) {
     { href: '/invoice', label: t('invoice'), icon: 'receipt' },
     { href: '/training', label: t('training'), icon: 'book' },
     { href: '/competitors', label: t('competitors'), icon: 'target' },
-    { href: '/suprema', label: 'Sooprema', icon: 'upload' },
   ]
 
   const ADMIN_TABS: NavEntry[] = [
@@ -240,7 +239,6 @@ export function AppNav({ role }: AppNavProps) {
     { href: '/dashboard', label: t('dashboard'), icon: 'home' },
     { href: '/admin', label: t('team'), icon: 'users' },
     { href: '/properties', label: t('properties'), icon: 'building' },
-    { href: '/suprema', label: 'Sooprema', icon: 'upload' },
     { href: '/tasks', label: t('tasks'), icon: 'check' },
     { href: '/kpi', label: t('kpi'), icon: 'chart' },
     { href: '/competitors', label: t('competitors'), icon: 'target' },

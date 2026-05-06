@@ -406,7 +406,7 @@ export async function saveProperty(formData: FormData, publish = false) {
         secretaries.map((s) => ({
           type: 'suprema_started',
           title: '📋 Nueva propiedad pendiente de publicar',
-          message: `${reference} está en cola. Entra a /suprema para ejecutar la publicación.`,
+          message: `${reference} está en cola. Entra a /admin/sooprema para ejecutar la publicación.`,
           target_user_id: s.id,
           is_read: false,
         }))
