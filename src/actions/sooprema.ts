@@ -30,6 +30,18 @@ export async function retrySoopremaJob(jobId: string) {
 
   if (error) return { error: error.message }
   await audit({ actor_id: user.id, actor_email: user.email, action: 'sooprema.retry', entity_type: 'suprema_jobs', entity_id: jobId })
+
+  // Disparar el job inmediatamente (fire-and-forget) — sin cron en plan Hobby.
+  const token = process.env.SOOPREMA_INTERNAL_TOKEN || process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+  const url = `${getSiteUrl()}/api/sooprema/run/${jobId}`
+  fetch(url, {
+    method: 'POST',
+    headers: { 'x-sooprema-token': token },
+    cache: 'no-store',
+  }).catch((err) => {
+    console.error('[sooprema] failed to retry job', jobId, err)
+  })
+
   revalidatePath('/admin/sooprema')
   return { success: true }
 }
@@ -54,6 +66,10 @@ export async function cancelSoopremaJob(jobId: string) {
 /**
  * Ejecuta el job real de Sooprema con Playwright.
  * Requiere maxDuration alto (300s en Vercel Pro).
+ *
+ * Esta es la API pública con verificación de auth — la usa el botón "Run"
+ * de /admin/sooprema. Para invocaciones internas (al subir propiedad)
+ * usar `processSoopremaJob` directamente desde un route handler.
  */
 export async function runSoopremaJob(jobId: string) {
   const supabase = await createClient()
@@ -70,7 +86,7 @@ export async function runSoopremaJob(jobId: string) {
 
   const { data: job } = await admin
     .from('suprema_jobs')
-    .select('*, properties(*)')
+    .select('agent_id')
     .eq('id', jobId)
     .single()
 
@@ -80,6 +96,24 @@ export async function runSoopremaJob(jobId: string) {
   if (!isPrivileged && job.agent_id !== user.id) {
     return { error: 'No autorizado' }
   }
+
+  return await processSoopremaJob(jobId)
+}
+
+/**
+ * Lógica core sin auth. Cualquier disparador (server action autenticado o
+ * route handler interno) acaba llamando aquí. NO exponer públicamente.
+ */
+export async function processSoopremaJob(jobId: string) {
+  const admin = createAdminClient()
+
+  const { data: job } = await admin
+    .from('suprema_jobs')
+    .select('*, properties(*)')
+    .eq('id', jobId)
+    .single()
+
+  if (!job) return { error: 'Job not found' }
 
   const property = (job as Record<string, unknown>).properties as Property | null
   if (!property) return { error: 'Property data not found' }

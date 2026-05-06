@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { audit } from '@/lib/audit'
+import { getSiteUrl } from '@/lib/site-url'
 
 const ZONE_PREFIXES: Record<string, string> = {
   Altea: 'A',
@@ -381,15 +382,35 @@ export async function saveProperty(formData: FormData, publish = false) {
       }
     }
 
-    await adminClient.from('suprema_jobs').insert({
-      property_id: result.id,
-      agent_id: agentId,
-      status: 'queued',
-    })
+    const { data: jobInserted } = await adminClient
+      .from('suprema_jobs')
+      .insert({
+        property_id: result.id,
+        agent_id: agentId,
+        status: 'queued',
+      })
+      .select('id')
+      .single()
     await writeClient
       .from('properties')
       .update({ suprema_status: 'publishing' })
       .eq('id', result.id)
+
+    // Disparar la automation INMEDIATAMENTE (fire-and-forget).
+    // Sin esto el job se queda 'queued' eternamente porque el cron está deshabilitado en plan Hobby.
+    if (jobInserted?.id) {
+      const token = process.env.SOOPREMA_INTERNAL_TOKEN || process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+      const url = `${getSiteUrl()}/api/sooprema/run/${jobInserted.id}`
+      // No esperamos respuesta: la action de createProperty devuelve rápido.
+      // El endpoint /api/sooprema/run/[jobId] tiene maxDuration 60s para dejar correr Playwright.
+      fetch(url, {
+        method: 'POST',
+        headers: { 'x-sooprema-token': token },
+        cache: 'no-store',
+      }).catch((err) => {
+        console.error('[sooprema] failed to trigger job', jobInserted.id, err)
+      })
+    }
 
     await adminClient.from('notifications').insert({
       type: 'suprema_started',

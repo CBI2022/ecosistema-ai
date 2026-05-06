@@ -55,15 +55,16 @@ export function SoopremaDashboard({ jobs: initialJobs }: SoopremaDashboardProps)
 
       const res = await runSoopremaJob(jobId)
 
-      if (res?.success) {
+      if (res && 'success' in res && res.success) {
         setJobs((prev) => prev.map((j) => j.id === jobId
-          ? { ...j, status: 'done', logs: (res.logs as string[]) ?? j.logs, completed_at: new Date().toISOString() }
+          ? { ...j, status: 'done', logs: res.logs ?? j.logs, completed_at: new Date().toISOString() }
           : j
         ))
         setExpandedJob(jobId)
       } else {
+        const errMsg = res && 'error' in res ? res.error : 'Unknown error'
         setJobs((prev) => prev.map((j) => j.id === jobId
-          ? { ...j, status: 'error', error_message: res?.error ?? 'Unknown error' }
+          ? { ...j, status: 'error', error_message: errMsg ?? 'Unknown error' }
           : j
         ))
       }
