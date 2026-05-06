@@ -183,10 +183,12 @@ export async function processSoopremaJob(jobId: string) {
       .eq('id', jobId)
 
     if (result.success) {
+      // Estado 'review' = borrador creado en Sooprema, pendiente de que la secretaria
+      // (Chloe) entre a Sooprema, complete ubicación/fotos/portales y publique.
       await admin
         .from('properties')
         .update({
-          suprema_status: 'published',
+          suprema_status: 'review',
           sooprema_external_id: result.sooprema_external_id || null,
           sooprema_public_url: result.sooprema_public_url || null,
         })
@@ -194,14 +196,14 @@ export async function processSoopremaJob(jobId: string) {
 
       await admin.from('notifications').insert({
         type: 'suprema_done',
-        title: '✅ Propiedad publicada en Sooprema',
-        message: `La propiedad ${property.reference || ''} está publicada. Referencia: ${property.reference}.`,
+        title: '📝 Borrador creado en Sooprema',
+        message: `${property.reference}: borrador listo en Sooprema. La secretaria lo completará y publicará.`,
         target_user_id: property.agent_id,
         is_read: false,
       })
       await sendPushToUser(property.agent_id, {
-        title: '✅ Propiedad publicada',
-        body: `${property.reference || 'Tu propiedad'} está activa en Sooprema`,
+        title: '📝 Borrador en Sooprema',
+        body: `${property.reference || 'Tu propiedad'} está como borrador. La secretaria lo completará.`,
         url: '/properties',
       })
 

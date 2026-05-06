@@ -217,7 +217,8 @@ export interface Property {
   primary_photo_id: string | null
 
   // Suprema/Sooprema tracking
-  suprema_status: 'pending' | 'publishing' | 'published' | 'error'
+  // pending: sin enviar | publishing: en proceso | review: borrador en Sooprema esperando secretaria | published: publicada | error: falló
+  suprema_status: 'pending' | 'publishing' | 'review' | 'published' | 'error'
   suprema_job_id: string | null
   sooprema_external_id: string | null
   sooprema_public_url: string | null

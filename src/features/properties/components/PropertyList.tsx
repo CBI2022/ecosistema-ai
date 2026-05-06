@@ -20,6 +20,7 @@ function StatusBadge({ status }: { status: Property['suprema_status'] }) {
   const map: Record<string, { label: string; cls: string }> = {
     pending: { label: 'Draft', cls: 'bg-white/10 text-[#9A9080]' },
     publishing: { label: 'Publishing...', cls: 'bg-yellow-500/15 text-yellow-400' },
+    review: { label: 'En revisión', cls: 'bg-[#C9A84C]/20 text-[#C9A84C]' },
     published: { label: 'Published', cls: 'bg-[#2ECC9A]/15 text-[#2ECC9A]' },
     error: { label: 'Error', cls: 'bg-red-500/15 text-red-400' },
   }

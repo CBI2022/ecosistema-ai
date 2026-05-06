@@ -102,14 +102,15 @@ export function signupRejectedEmail(name: string) {
 
 export function soopremaDoneEmail(reference: string, soopremaUrl: string) {
   return {
-    subject: `✓ Propiedad ${reference} publicada en Sooprema`,
+    subject: `📝 Borrador de ${reference} listo en Sooprema`,
     html: shell({
-      title: 'Propiedad publicada',
-      preheader: `${reference} está ya en Sooprema.`,
+      title: 'Borrador en Sooprema',
+      preheader: `${reference} está como borrador esperando a la secretaria.`,
       body: `
-        ${heading('Propiedad publicada con éxito')}
-        ${paragraph(`La propiedad <strong style="color:#F5F0E8;">${reference}</strong> ha sido subida a Sooprema correctamente.`)}
-        <div style="margin:24px 0;">${button(soopremaUrl, 'Ver en Sooprema')}</div>
+        ${heading('Borrador creado en Sooprema')}
+        ${paragraph(`La propiedad <strong style="color:#F5F0E8;">${reference}</strong> se ha subido a Sooprema con los datos básicos. Está como borrador en "propiedades ocultas".`)}
+        ${paragraph(`La secretaria entrará a Sooprema, completará ubicación, fotos y traducciones, y publicará la ficha definitiva.`)}
+        <div style="margin:24px 0;">${button(soopremaUrl, 'Ver borrador en Sooprema')}</div>
       `,
     }),
   }
