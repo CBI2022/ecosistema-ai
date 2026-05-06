@@ -509,39 +509,27 @@ export function PropertyForm({
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <div>
               <label className={labelClass}>Bedrooms</label>
-              <NumberSelect name="guest_bedrooms" defaultValue={getNum('guest_bedrooms')} max={5} />
+              <NumberSelect name="guest_bedrooms" defaultValue={getNum('guest_bedrooms')} max={10} />
             </div>
             <div>
               <label className={labelClass}>Bathrooms</label>
-              <NumberSelect name="guest_bathrooms" defaultValue={getNum('guest_bathrooms')} max={5} />
+              <NumberSelect name="guest_bathrooms" defaultValue={getNum('guest_bathrooms')} max={10} />
             </div>
             <div>
               <label className={labelClass}>Toilet</label>
-              <NumberSelect name="guest_toilets" defaultValue={getNum('guest_toilets')} max={3} />
+              <NumberSelect name="guest_toilets" defaultValue={getNum('guest_toilets')} max={10} />
             </div>
             <div>
               <label className={labelClass}>Lounge</label>
-              <select name="guest_lounge" className={inputClass} defaultValue={ipAny?.guest_lounge ? '1' : ''}>
-                <option value="">—</option>
-                <option value="1">Sí</option>
-                <option value="0">No</option>
-              </select>
+              <NumberSelect name="guest_lounge_count" defaultValue={getNum('guest_lounge_count')} max={10} />
             </div>
             <div>
               <label className={labelClass}>Dining room</label>
-              <select name="guest_dining_room" className={inputClass} defaultValue={ipAny?.guest_dining_room ? '1' : ''}>
-                <option value="">—</option>
-                <option value="1">Sí</option>
-                <option value="0">No</option>
-              </select>
+              <NumberSelect name="guest_dining_count" defaultValue={getNum('guest_dining_count')} max={10} />
             </div>
             <div>
               <label className={labelClass}>Kitchen</label>
-              <select name="guest_kitchen" className={inputClass} defaultValue={ipAny?.guest_kitchen ? '1' : ''}>
-                <option value="">—</option>
-                <option value="1">Sí</option>
-                <option value="0">No</option>
-              </select>
+              <NumberSelect name="guest_kitchen_count" defaultValue={getNum('guest_kitchen_count')} max={10} />
             </div>
           </div>
         )}

@@ -238,9 +238,13 @@ export async function saveProperty(formData: FormData, publish = false) {
     guest_bedrooms: int(formData, 'guest_bedrooms'),
     guest_bathrooms: int(formData, 'guest_bathrooms'),
     guest_toilets: int(formData, 'guest_toilets'),
-    guest_lounge: bool(formData, 'guest_lounge'),
-    guest_dining_room: bool(formData, 'guest_dining_room'),
-    guest_kitchen: bool(formData, 'guest_kitchen'),
+    guest_lounge_count: int(formData, 'guest_lounge_count'),
+    guest_dining_count: int(formData, 'guest_dining_count'),
+    guest_kitchen_count: int(formData, 'guest_kitchen_count'),
+    // Booleans derivados de los counts (compatibilidad con código que aún los usa)
+    guest_lounge: (int(formData, 'guest_lounge_count') ?? 0) > 0,
+    guest_dining_room: (int(formData, 'guest_dining_count') ?? 0) > 0,
+    guest_kitchen: (int(formData, 'guest_kitchen_count') ?? 0) > 0,
 
     // Certificados energéticos (Sooprema tiene 2 escalas + emisiones)
     energy_certificate: str(formData, 'energy_certificate') || 'D',
