@@ -81,6 +81,23 @@ export default async function TasksPage() {
     assignableUsers = data || []
   }
 
+  // Progreso del SaaS — global para todos los roles. Solo cuentan las tareas
+  // marcadas como is_saas_core=true. Las activas no Core (ej: features futuras)
+  // no afectan el porcentaje de "cuánto falta para terminar el SaaS".
+  const [{ count: saasTotal }, { count: saasDone }] = await Promise.all([
+    admin
+      .from('project_tasks')
+      .select('*', { count: 'exact', head: true })
+      .is('deleted_at', null)
+      .eq('is_saas_core', true),
+    admin
+      .from('project_tasks')
+      .select('*', { count: 'exact', head: true })
+      .is('deleted_at', null)
+      .eq('is_saas_core', true)
+      .eq('status', 'complete'),
+  ])
+
   return (
     <div>
       <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
@@ -99,6 +116,7 @@ export default async function TasksPage() {
         currentUserName={profile?.full_name || profile?.email || 'Usuario'}
         isAdmin={isAdmin}
         assignableUsers={assignableUsers}
+        saasProgress={{ total: saasTotal ?? 0, done: saasDone ?? 0 }}
       />
     </div>
   )

@@ -26,6 +26,7 @@ interface TasksDashboardProps {
   currentUserName: string
   isAdmin: boolean
   assignableUsers: Array<{ id: string; full_name: string | null; email: string; role: string }>
+  saasProgress: { total: number; done: number }
 }
 
 export const CATEGORIES = [
@@ -67,6 +68,7 @@ export function TasksDashboard({
   currentUserId,
   isAdmin,
   assignableUsers,
+  saasProgress,
 }: TasksDashboardProps) {
   const t = useTranslations('tasks')
   const [tasks, setTasks] = useState(initialTasks)
@@ -139,6 +141,25 @@ export function TasksDashboard({
     complete: completedTasks.length,
   }), [filtered, completedTasks])
 
+  // Progreso del SaaS — porcentaje de tareas Core SaaS completadas. Para admin
+  // se deriva del estado vivo (tiene todas las tasks); para roles que solo ven
+  // las suyas usamos el snapshot del server (saasProgress) para que el % global
+  // sea correcto. Ignora filtros de UI: es un indicador del proyecto entero.
+  const saasStats = useMemo(() => {
+    if (isAdmin) {
+      const coreTasks = tasks.filter((t) => t.is_saas_core)
+      const total = coreTasks.length
+      const done = coreTasks.filter((t) => t.status === 'complete').length
+      return { total, done }
+    }
+    return saasProgress
+  }, [isAdmin, tasks, saasProgress])
+
+  const saasPct = saasStats.total > 0
+    ? Math.round((saasStats.done / saasStats.total) * 100)
+    : 0
+  const saasRemaining = Math.max(0, saasStats.total - saasStats.done)
+
   function updateLocalTask(id: string, patch: Partial<TaskWithAssignee>) {
     setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, ...patch } : t)))
   }
@@ -194,6 +215,44 @@ export function TasksDashboard({
 
   return (
     <div className="space-y-5">
+      {/* Barra de progreso del SaaS — solo cuentan tareas marcadas como Core SaaS.
+          Visible para todos los roles. Mobile-first: stack vertical en móvil. */}
+      {saasStats.total > 0 && (
+        <div className="rounded-2xl border border-[#C9A84C]/25 bg-gradient-to-br from-[#C9A84C]/8 via-[#131313] to-[#131313] p-4 sm:p-5">
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#C9A84C]">
+                🏗️ Construcción del SaaS
+              </p>
+              <p className="mt-0.5 text-xs text-[#9A9080]">
+                {saasRemaining === 0
+                  ? '¡Todas las tareas Core están completadas!'
+                  : `Faltan ${saasRemaining} ${saasRemaining === 1 ? 'tarea' : 'tareas'} para terminar`}
+              </p>
+            </div>
+            <div className="flex items-baseline gap-2">
+              <span className="font-['Maharlika',serif] text-3xl font-bold text-[#C9A84C] sm:text-4xl">
+                {saasPct}%
+              </span>
+              <span className="text-xs font-semibold text-[#9A9080]">
+                {saasStats.done} / {saasStats.total}
+              </span>
+            </div>
+          </div>
+          <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-white/6">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-[#C9A84C] to-[#E8C96A] transition-[width] duration-700 ease-out"
+              style={{ width: `${saasPct}%` }}
+              role="progressbar"
+              aria-valuenow={saasPct}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-label={`Progreso del SaaS: ${saasPct}%`}
+            />
+          </div>
+        </div>
+      )}
+
       {/* Top bar */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         {isAdmin ? (

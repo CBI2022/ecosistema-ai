@@ -76,6 +76,7 @@ export async function createTask(formData: FormData) {
     status: (formData.get('status') as TaskStatus) || 'next_action',
     assigned_to: assignedTo,
     due_date: (formData.get('due_date') as string) || null,
+    is_saas_core: formData.get('is_saas_core') === 'true',
     created_by: ctx.user.id,
   })
 
@@ -98,6 +99,7 @@ export async function updateTask(taskId: string, updates: {
   status?: TaskStatus
   assigned_to?: string | null
   due_date?: string | null
+  is_saas_core?: boolean
 }) {
   const ctx = await getAuthContext()
   if ('error' in ctx) return { error: ctx.error }

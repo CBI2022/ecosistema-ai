@@ -47,6 +47,7 @@ export function TaskModal({
   const [assignedTo, setAssignedTo] = useState(task?.assigned_to || '')
   // datetime-local expects "YYYY-MM-DDTHH:MM" — trim any zone/seconds
   const [dueDate, setDueDate] = useState(task?.due_date ? task.due_date.slice(0, 16) : '')
+  const [isSaasCore, setIsSaasCore] = useState<boolean>(task?.is_saas_core ?? false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -66,6 +67,7 @@ export function TaskModal({
           status,
           assigned_to: assignedTo || null,
           due_date: dueDate || null,
+          is_saas_core: isSaasCore,
         }
       : { status, description: description || null }
 
@@ -212,6 +214,44 @@ export function TaskModal({
                   className="w-full rounded-md border border-white/10 bg-[#1C1C1C] px-2.5 py-1.5 text-xs text-[#F5F0E8] outline-none focus:border-[#C9A84C]/60 disabled:opacity-60 [color-scheme:dark]"
                 />
               </div>
+
+              {/* Core SaaS — solo admin lo ve y puede cambiarlo. Decide si la
+                  tarea cuenta para la barra de progreso del SaaS en /tasks. */}
+              {canEditAll && (
+                <>
+                  <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-[#9A9080]">
+                    <span>🏗️</span> Core SaaS
+                  </div>
+                  <div>
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={isSaasCore}
+                      onClick={() => setIsSaasCore((v) => !v)}
+                      className={`group inline-flex w-full items-center justify-between gap-3 rounded-md border px-2.5 py-1.5 text-xs transition ${
+                        isSaasCore
+                          ? 'border-[#C9A84C]/40 bg-[#C9A84C]/10 text-[#C9A84C]'
+                          : 'border-white/10 bg-[#1C1C1C] text-[#9A9080] hover:text-[#F5F0E8]'
+                      }`}
+                    >
+                      <span className="font-semibold">
+                        {isSaasCore ? 'Cuenta para la barra de progreso' : 'No cuenta para la barra de progreso'}
+                      </span>
+                      <span
+                        className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition ${
+                          isSaasCore ? 'bg-[#C9A84C]' : 'bg-white/15'
+                        }`}
+                      >
+                        <span
+                          className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition ${
+                            isSaasCore ? 'translate-x-[18px]' : 'translate-x-[3px]'
+                          }`}
+                        />
+                      </span>
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
 

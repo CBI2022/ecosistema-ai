@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { useEffect, useState, useTransition } from 'react'
+import { useEffect, useRef, useState, useTransition } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslations } from 'next-intl'
 import type { UserRole } from '@/types/database'
@@ -197,10 +197,31 @@ export function AppNav({ role }: AppNavProps) {
   const [adminOpen, setAdminOpen] = useState(false)
   const [groupSheetOpen, setGroupSheetOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const adminRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  // Cerrar dropdown Admin al hacer click fuera (desktop). Sin esto, sin hover
+  // el dropdown se quedaría abierto si el usuario decide no seleccionar nada.
+  useEffect(() => {
+    if (!adminOpen) return
+    function onPointerDown(e: PointerEvent) {
+      if (adminRef.current && !adminRef.current.contains(e.target as Node)) {
+        setAdminOpen(false)
+      }
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') setAdminOpen(false)
+    }
+    document.addEventListener('pointerdown', onPointerDown)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [adminOpen])
 
   // Subsecciones DENTRO del dropdown Admin▾ (solo admin las ve)
   const ADMIN_SUBITEMS: NavTab[] = [
@@ -332,12 +353,7 @@ export function AppNav({ role }: AppNavProps) {
           if (isGroup(entry)) {
             const groupActive = entry.items.some((it) => isActive(it.href))
             return (
-              <div
-                key={entry.key}
-                className="relative"
-                onMouseEnter={() => setAdminOpen(true)}
-                onMouseLeave={() => setAdminOpen(false)}
-              >
+              <div key={entry.key} ref={adminRef} className="relative">
                 <button
                   type="button"
                   onClick={() => setAdminOpen((v) => !v)}

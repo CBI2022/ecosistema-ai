@@ -318,6 +318,7 @@ export interface ProjectTask {
   notes: string | null
   docs_url: string | null
   position: number
+  is_saas_core: boolean
   created_at: string
   updated_at: string
   completed_at: string | null
