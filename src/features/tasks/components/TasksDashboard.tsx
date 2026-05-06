@@ -59,7 +59,7 @@ export const PRIORITY_CONFIG: Record<TaskPriority, { label: string; color: strin
 
 type ViewMode = 'kanban' | 'table' | 'calendar'
 type ScopeFilter = 'mine' | 'all'
-type SortBy = 'priority' | 'due_date' | 'created' | 'title' | 'status'
+type SortBy = 'manual' | 'priority' | 'due_date' | 'created' | 'title' | 'status'
 
 export function TasksDashboard({
   initialTasks,
@@ -76,7 +76,7 @@ export function TasksDashboard({
   const [filterCategory, setFilterCategory] = useState<string>('all')
   const [filterPriority, setFilterPriority] = useState<string>('all')
   const [filterAssignee, setFilterAssignee] = useState<string>('all')
-  const [sortBy, setSortBy] = useState<SortBy>('priority')
+  const [sortBy, setSortBy] = useState<SortBy>('manual')
   const [search, setSearch] = useState('')
   const [modalTask, setModalTask] = useState<TaskWithAssignee | null>(null)
   const [showCreate, setShowCreate] = useState(false)
@@ -103,7 +103,10 @@ export function TasksDashboard({
 
     // Sort
     const sorted = [...result]
-    if (sortBy === 'priority') {
+    if (sortBy === 'manual') {
+      // Orden manual definido por Marco (campo position en BD)
+      sorted.sort((a, b) => (a.position ?? 9999) - (b.position ?? 9999))
+    } else if (sortBy === 'priority') {
       sorted.sort((a, b) => {
         const ao = a.priority ? PRIORITY_CONFIG[a.priority].order : 99
         const bo = b.priority ? PRIORITY_CONFIG[b.priority].order : 99
@@ -335,6 +338,7 @@ export function TasksDashboard({
           className="rounded-lg border border-[#C9A84C]/30 bg-[#C9A84C]/5 px-3 py-2 text-sm font-bold text-[#C9A84C] outline-none focus:border-[#C9A84C]/60"
           title={t('sortBy')}
         >
+          <option value="manual">📌 Orden de Marco</option>
           <option value="priority">{t('sortPriority')}</option>
           <option value="due_date">{t('sortDueDate')}</option>
           <option value="created">{t('sortRecent')}</option>
