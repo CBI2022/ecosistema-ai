@@ -164,6 +164,9 @@ export async function saveProperty(formData: FormData, publish = false) {
     total_floors: int(formData, 'total_floors'),
     orientation: str(formData, 'orientation'),
 
+    // Promoción / urbanización
+    promotion_name: str(formData, 'promotion_name'),
+
     // Áreas
     build_area_m2: num(formData, 'build_area_m2'),
     plot_area_m2: num(formData, 'plot_area_m2'),

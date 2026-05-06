@@ -178,34 +178,19 @@ export function PropertyForm({
     }
   }, [isEditing])
 
-  function handleSubmit() {
-    setError(null)
-    setSuccess(null)
-
+  /**
+   * Construye el FormData común con todo lo que el form gestiona vía state
+   * (calculadora, owner, fotos, agent, has_guest, etc.).
+   */
+  function buildFormData(publicationState: 'hidden' | 'published'): FormData | null {
     const form = document.getElementById('propForm') as HTMLFormElement
-    if (!form) return
+    if (!form) return null
     const fd = new FormData(form)
 
-    // Validación cliente — leer del DOM ya que son uncontrolled
-    const titleVal = String(fd.get('title_headline') || '').trim()
-    const descVal = String(fd.get('description_es') || '').trim()
-
-    if (!titleVal) {
-      setError('Falta el título de la propiedad. Si no lo incluyes, no aparecerá en la web.')
-      document.getElementById('section-title')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-      return
-    }
-    if (!descVal) {
-      setError('Falta la descripción de la propiedad. Escribe al menos un párrafo en cualquier idioma — Sooprema la traducirá automáticamente.')
-      document.getElementById('section-title')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-      return
-    }
-
-    // Calcular si aún no se calculó
     const finalSalePrice = calcShown.salePrice > 0 ? calcShown.salePrice : calculation.salePrice
     const finalCommission = calcShown.commission > 0 ? calcShown.commission : calculation.commission
 
-    fd.set('publication_state', 'published')
+    fd.set('publication_state', publicationState)
     fd.set('zone', zone)
     fd.set('property_type', propertyType)
     fd.set('has_guest_apartment', hasGuestApt ? '1' : '0')
@@ -224,6 +209,50 @@ export function PropertyForm({
     if (ownerId) fd.set('owner_id', ownerId)
 
     fd.set('selected_photo_ids', JSON.stringify([...selectedPhotoIds]))
+
+    return fd
+  }
+
+  /**
+   * Guardar borrador: NO valida nada. Guarda lo que haya.
+   */
+  function handleSaveDraft() {
+    setError(null)
+    setSuccess(null)
+
+    const fd = buildFormData('hidden')
+    if (!fd) return
+
+    startTransition(async () => {
+      const res = await saveProperty(fd, false)
+      if (res?.error) setError(res.error)
+      else setSuccess('💾 Borrador guardado. Puedes seguir editando — solo tú lo ves hasta que pulses "Subir a Sooprema".')
+    })
+  }
+
+  /**
+   * Subir a Sooprema: valida título y descripción antes.
+   */
+  function handleSubmit() {
+    setError(null)
+    setSuccess(null)
+
+    const fd = buildFormData('published')
+    if (!fd) return
+
+    const titleVal = String(fd.get('title_headline') || '').trim()
+    const descVal = String(fd.get('description_es') || '').trim()
+
+    if (!titleVal) {
+      setError('Falta el título de la propiedad. Si no lo incluyes, no aparecerá en la web.')
+      document.getElementById('section-title')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      return
+    }
+    if (!descVal) {
+      setError('Falta la descripción de la propiedad. Escribe al menos un párrafo en cualquier idioma — Sooprema la traducirá automáticamente.')
+      document.getElementById('section-title')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      return
+    }
 
     startTransition(async () => {
       const res = await saveProperty(fd, true)
@@ -882,15 +911,23 @@ export function PropertyForm({
         </p>
       )}
 
-      {/* Botón único — sticky bottom */}
+      {/* Botones — sticky bottom */}
       <div
-        className="pb-safe sticky bottom-[calc(64px+env(safe-area-inset-bottom))] z-30 -mx-6 flex flex-col gap-2 border-t border-[#C9A84C]/15 bg-[#0A0A0A]/95 px-4 pt-3 backdrop-blur-xl sm:px-6 sm:py-3 md:bottom-0"
+        className="pb-safe sticky bottom-[calc(64px+env(safe-area-inset-bottom))] z-30 -mx-6 flex flex-col gap-2 border-t border-[#C9A84C]/15 bg-[#0A0A0A]/95 px-4 pt-3 backdrop-blur-xl sm:flex-row sm:px-6 sm:py-3 md:bottom-0"
       >
+        <button
+          type="button"
+          onClick={handleSaveDraft}
+          disabled={isPending}
+          className="w-full rounded-xl border border-white/15 bg-white/5 px-6 py-3.5 text-sm font-bold uppercase tracking-[0.06em] text-[#F5F0E8] transition active:scale-[0.98] hover:bg-white/10 disabled:opacity-50 sm:w-auto sm:flex-1"
+        >
+          {isPending ? '⏳ Guardando...' : '💾 Guardar borrador'}
+        </button>
         <button
           type="button"
           onClick={handleSubmit}
           disabled={isPending}
-          className="w-full rounded-xl bg-[#C9A84C] px-6 py-3.5 text-sm font-bold uppercase tracking-[0.06em] text-black transition active:scale-[0.98] hover:bg-[#E8C96A] disabled:opacity-50"
+          className="w-full rounded-xl bg-[#C9A84C] px-6 py-3.5 text-sm font-bold uppercase tracking-[0.06em] text-black transition active:scale-[0.98] hover:bg-[#E8C96A] disabled:opacity-50 sm:w-auto sm:flex-[2]"
         >
           {isPending ? '⏳ Subiendo a Sooprema...' : '🚀 Subir a Sooprema'}
         </button>
