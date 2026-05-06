@@ -158,7 +158,6 @@ export function TasksDashboard({
   const saasPct = saasStats.total > 0
     ? Math.round((saasStats.done / saasStats.total) * 100)
     : 0
-  const saasRemaining = Math.max(0, saasStats.total - saasStats.done)
 
   function updateLocalTask(id: string, patch: Partial<TaskWithAssignee>) {
     setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, ...patch } : t)))
@@ -219,25 +218,13 @@ export function TasksDashboard({
           Visible para todos los roles. Mobile-first: stack vertical en móvil. */}
       {saasStats.total > 0 && (
         <div className="rounded-2xl border border-[#C9A84C]/25 bg-gradient-to-br from-[#C9A84C]/8 via-[#131313] to-[#131313] p-4 sm:p-5">
-          <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#C9A84C]">
-                🏗️ Construcción del SaaS
-              </p>
-              <p className="mt-0.5 text-xs text-[#9A9080]">
-                {saasRemaining === 0
-                  ? '¡Todas las tareas Core están completadas!'
-                  : `Faltan ${saasRemaining} ${saasRemaining === 1 ? 'tarea' : 'tareas'} para terminar`}
-              </p>
-            </div>
-            <div className="flex items-baseline gap-2">
-              <span className="font-['Maharlika',serif] text-3xl font-bold text-[#C9A84C] sm:text-4xl">
-                {saasPct}%
-              </span>
-              <span className="text-xs font-semibold text-[#9A9080]">
-                {saasStats.done} / {saasStats.total}
-              </span>
-            </div>
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#C9A84C]">
+              🏗️ Construcción del SaaS
+            </p>
+            <span className="font-['Maharlika',serif] text-3xl font-bold text-[#C9A84C] sm:text-4xl">
+              {saasPct}%
+            </span>
           </div>
           <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-white/6">
             <div
@@ -296,11 +283,6 @@ export function TasksDashboard({
             className="flex items-center gap-1.5 rounded-xl border border-[#2ECC9A]/25 bg-[#2ECC9A]/5 px-3 py-2 text-xs font-bold text-[#2ECC9A] transition hover:bg-[#2ECC9A]/10"
           >
             ✅ {t('completed')}
-            {completedTasks.length > 0 && (
-              <span className="rounded-full bg-[#2ECC9A]/15 px-1.5 py-0.5 text-[10px] font-bold">
-                {completedTasks.length}
-              </span>
-            )}
           </button>
 
           {/* Papelera — solo admin */}
@@ -310,11 +292,6 @@ export function TasksDashboard({
               className="flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-bold text-[#9A9080] transition hover:text-[#F5F0E8]"
             >
               🗑 {t('trash')}
-              {trashedTasks.length > 0 && (
-                <span className="rounded-full bg-white/10 px-1.5 py-0.5 text-[10px] font-bold">
-                  {trashedTasks.length}
-                </span>
-              )}
             </button>
           )}
 
@@ -330,14 +307,13 @@ export function TasksDashboard({
         </div>
       </div>
 
-      {/* Stats — 5 columnas GTD: en mobile grid-cols-2 (legible sin scroll), en desktop 5 cols */}
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-5 sm:gap-2.5">
+      {/* Stats — 4 columnas GTD activas (Complete vive en su modal aparte) */}
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-2.5">
         {[
           { label: t('total'), value: stats.total, color: '#F5F0E8', emoji: '📋' },
           { label: t('statusNextAction'), value: stats.next_action, color: STATUS_CONFIG.next_action.color, emoji: STATUS_CONFIG.next_action.emoji },
           { label: t('statusWaiting'), value: stats.waiting, color: STATUS_CONFIG.waiting.color, emoji: STATUS_CONFIG.waiting.emoji },
           { label: t('statusSomeday'), value: stats.someday, color: STATUS_CONFIG.someday.color, emoji: STATUS_CONFIG.someday.emoji },
-          { label: t('statusComplete'), value: stats.complete, color: STATUS_CONFIG.complete.color, emoji: STATUS_CONFIG.complete.emoji },
         ].map((s) => (
           <div
             key={s.label}
