@@ -164,79 +164,23 @@ export async function runSoopremaAutomation(
       log(`⚠ No se pudo capturar el external_id de la URL: ${page.url()}`)
     }
 
-    // ═════════ PASO CRÍTICO: GUARDAR COMO BORRADOR ═════════
-    // Click "Continue" solo crea una sesión temporal con ID — Sooprema NO guarda
-    // la propiedad en BD hasta que se pulsa "Confirmar y salir" (o equivalente).
-    // Si paramos aquí sin clickar ese botón, la sesión se descarta y la propiedad
-    // NO aparece en "propiedades ocultas" (visto 2026-05-06 con Z111 ID 939248).
-    //
-    // Estrategia: avanzar pasos uno a uno SIN tocar campos (para no corromper
-    // como hizo A888) hasta encontrar el botón "Confirmar y salir" y clickarlo.
-    log('Buscando botón "Confirmar y salir" para guardar borrador...')
-    let saved = false
-    for (let i = 0; i < 8; i++) {
-      // Intentar click en "Confirmar y salir" / "Guardar borrador" / similares
-      const submitFinal = page.locator(
-        'button:has-text("Confirmar y salir"), ' +
-        'button:has-text("Guardar borrador"), ' +
-        'button:has-text("Guardar"), ' +
-        '.propertyuploadhelp__submit, ' +
-        'a:has-text("Confirmar y salir")'
-      ).first()
-
-      try {
-        if (await submitFinal.count() > 0 && await submitFinal.isVisible().catch(() => false)) {
-          const btnText = (await submitFinal.textContent().catch(() => '')) || ''
-          log(`✓ Encontrado botón: "${btnText.trim()}" → clickando para guardar borrador`)
-          await submitFinal.click({ timeout: 5000 })
-          await page.waitForTimeout(3500)
-          await dismissPopups(page, log)
-          await page.waitForLoadState('networkidle').catch(() => {})
-          saved = true
-          stepsCompleted++
-          break
-        }
-      } catch (err) {
-        log(`  Error al clickar submit: ${(err as Error).message.slice(0, 80)}`)
-      }
-
-      // Si no está, avanzar al siguiente step (sin tocar campos del step actual)
-      const nextBtn = page.locator('.propertyuploadnavigation__submit--next, button:has-text("Siguiente"), button:has-text("Next")').first()
-      try {
-        if (await nextBtn.count() > 0 && await nextBtn.isVisible().catch(() => false)) {
-          await nextBtn.click({ timeout: 5000 })
-          await page.waitForTimeout(2500)
-          await dismissPopups(page, log)
-          stepsCompleted++
-          log(`  Avanzado al paso ${i + 2} buscando "Confirmar y salir"...`)
-        } else {
-          log(`  No hay botón "Siguiente" visible (paso ${i + 2}). Saliendo del loop.`)
-          break
-        }
-      } catch (err) {
-        log(`  Error al avanzar: ${(err as Error).message.slice(0, 80)}`)
-        break
-      }
-    }
-
-    if (!saved) {
-      log(`⚠ NO se pudo clickar "Confirmar y salir" — la propiedad NO se guardó como borrador en Sooprema`)
-    }
+    // ═════════ PARAR AQUÍ ═════════
+    // Devolvemos OK con el ID temporal. Marco está investigando exactamente
+    // cómo Sooprema acepta un borrador (qué botón guarda en "propiedades ocultas").
+    // Cuando lo sepa, ajustamos el último paso.
 
     const sooprema_public_url = soopremaExternalId
       ? `https://www.costablancainvestments.com/admin/propiedades/editar/${soopremaExternalId}/`
       : null
 
-    if (saved && soopremaExternalId) {
-      log(`✅ Borrador guardado en Sooprema. La secretaria lo verá en "propiedades ocultas".`)
-    } else if (soopremaExternalId) {
-      log(`⚠ Sesión creada (ID ${soopremaExternalId}) pero no se guardó — Sooprema descartará la sesión.`)
+    if (soopremaExternalId) {
+      log(`✅ Sesión Sooprema con ID ${soopremaExternalId}. (Pendiente: confirmar acción exacta para guardar borrador.)`)
     } else {
       log(`❌ No se generó la propiedad — revisar credenciales/campos obligatorios.`)
     }
 
     return {
-      success: saved && !!soopremaExternalId,
+      success: !!soopremaExternalId,
       logs,
       sooprema_external_id: soopremaExternalId,
       sooprema_public_url,
