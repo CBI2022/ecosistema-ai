@@ -45,17 +45,27 @@ const PROPERTY_TYPES = [
   { id: 'commercial', label: 'Local comercial' },
 ]
 
+// Lista oficial Sooprema (21 opciones — captura confirmada)
 const VIEWS_OPTIONS = [
-  'Sea and mountains', 'To the sea', 'First line', 'Open', 'Panoramas',
-  'To the mountain', 'Good views', 'To the garden', 'Community area',
-  'Golf course', 'Others',
+  'Community area', 'First line', 'Golf course', 'Good views', 'Green zone',
+  'National Park', 'Open', 'Others', 'Panoramas', 'Sea and mountains',
+  'Sports area', 'To the Castle', 'To the city', 'To the exterior',
+  'To the garden', 'To the mountain', 'To the park', 'To the sea',
+  'To the square', 'To the street', 'To the valley',
 ]
 
+// Lista oficial Sooprema (Ocupación Vivienda — captura confirmada)
 const OCCUPATION = [
   { id: 'free', label: 'Libre' },
-  { id: 'empty', label: 'Vacía' },
+  { id: 'empty', label: 'Propiedad vacía' },
   { id: 'rented', label: 'Con inquilino' },
   { id: 'occupied_illegally', label: 'Ocupada ilegalmente' },
+]
+
+// Lista oficial Sooprema (Kitchen — captura confirmada)
+const KITCHEN_TYPES = [
+  'American', 'French', 'Furnished', 'Independent', 'Not available',
+  'Open', 'Two kitchens', 'With cupboards', 'With island', 'Yes',
 ]
 
 const ENERGY = ['A', 'B', 'C', 'D', 'E', 'F', 'G']
@@ -438,7 +448,18 @@ export function PropertyForm({
             </div>
             <div>
               <label className={labelClass}>Kitchen</label>
-              <NumberSelect name="kitchens" defaultValue={getNum('kitchens')} max={5} />
+              <select
+                name="kitchen_type"
+                className={inputClass}
+                defaultValue={getStr('kitchen_type')}
+              >
+                <option value="">—</option>
+                {KITCHEN_TYPES.map((k) => (
+                  <option key={k} value={k}>
+                    {k}
+                  </option>
+                ))}
+              </select>
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
@@ -500,15 +521,27 @@ export function PropertyForm({
             </div>
             <div>
               <label className={labelClass}>Lounge</label>
-              <NumberSelect name="guest_lounge_count" max={3} />
+              <select name="guest_lounge" className={inputClass} defaultValue={ipAny?.guest_lounge ? '1' : ''}>
+                <option value="">—</option>
+                <option value="1">Sí</option>
+                <option value="0">No</option>
+              </select>
             </div>
             <div>
               <label className={labelClass}>Dining room</label>
-              <NumberSelect name="guest_dining_count" max={3} />
+              <select name="guest_dining_room" className={inputClass} defaultValue={ipAny?.guest_dining_room ? '1' : ''}>
+                <option value="">—</option>
+                <option value="1">Sí</option>
+                <option value="0">No</option>
+              </select>
             </div>
             <div>
               <label className={labelClass}>Kitchen</label>
-              <NumberSelect name="guest_kitchen_count" max={3} />
+              <select name="guest_kitchen" className={inputClass} defaultValue={ipAny?.guest_kitchen ? '1' : ''}>
+                <option value="">—</option>
+                <option value="1">Sí</option>
+                <option value="0">No</option>
+              </select>
             </div>
           </div>
         )}
