@@ -14,6 +14,11 @@ import {
   shootCompletedToAgentEmail,
 } from '@/lib/email/templates'
 import { getSiteUrl } from '@/lib/site-url'
+import {
+  createShootEvent,
+  updateShootEvent,
+  cancelShootEvent,
+} from '@/lib/google-calendar'
 
 // Helper: localizar al fotógrafo activo (de momento Jelle, único photographer aprobado).
 // Si hay varios en el futuro, este helper elegirá por disponibilidad/load.
@@ -48,23 +53,47 @@ export async function getBookedSlots(fromDate: string, toDate: string) {
 }
 
 // Bloqueos que el fotógrafo ha marcado como no-disponibles (vacaciones, días personales)
+// Combina photographer_blocks (manual) + google_calendar_busy (sincronizado de su Calendar)
 export async function getPhotographerBlocks(fromDate: string, toDate: string) {
   const admin = createAdminClient()
   const photographer = await getActivePhotographer()
   if (!photographer) return []
 
-  const { data } = await admin
-    .from('photographer_blocks')
-    .select('block_date, block_time, reason')
-    .eq('photographer_id', photographer.id)
-    .gte('block_date', fromDate)
-    .lte('block_date', toDate)
+  const [{ data: manual }, { data: googleBusy }] = await Promise.all([
+    admin
+      .from('photographer_blocks')
+      .select('block_date, block_time, reason')
+      .eq('photographer_id', photographer.id)
+      .gte('block_date', fromDate)
+      .lte('block_date', toDate),
+    admin
+      .from('google_calendar_busy')
+      .select('busy_date, busy_start, busy_end, is_all_day, summary')
+      .eq('user_id', photographer.id)
+      .gte('busy_date', fromDate)
+      .lte('busy_date', toDate),
+  ])
 
-  return (data || []).map((b) => ({
-    date: b.block_date as string,
-    time: (b.block_time as string | null) ?? null, // null = todo el día
-    reason: (b.reason as string | null) ?? null,
-  }))
+  const out: { date: string; time: string | null; reason: string | null }[] = []
+
+  for (const b of manual || []) {
+    out.push({
+      date: b.block_date as string,
+      time: (b.block_time as string | null) ?? null,
+      reason: (b.reason as string | null) ?? null,
+    })
+  }
+
+  // Eventos de Google Calendar — todo el día → null; con hora → registramos el slot inicial
+  for (const g of googleBusy || []) {
+    out.push({
+      date: g.busy_date as string,
+      time: g.is_all_day ? null : ((g.busy_start as string | null)?.slice(0, 5) ?? null),
+      reason: (g.summary as string | null) ?? 'Ocupado en Google Calendar',
+    })
+  }
+
+  return out
 }
 
 export async function bookShoot(formData: FormData) {
@@ -231,6 +260,23 @@ export async function confirmShoot(shootId: string) {
   if (error) return { error: error.message }
 
   const shoot = await loadShootForNotify(shootId)
+
+  // Sincronizar con Google Calendar de Jelle (si conectado)
+  if (shoot && auth.user) {
+    const eventId = await createShootEvent(auth.user.id, {
+      id: shootId,
+      shoot_date: shoot.shoot_date,
+      shoot_time: shoot.shoot_time,
+      property_address: shoot.property_address,
+      property_reference: (shoot as { property_reference?: string | null }).property_reference ?? null,
+      notes: shoot.notes,
+      agent_name: shoot.agent?.full_name ?? null,
+    })
+    if (eventId) {
+      await admin.from('photo_shoots').update({ google_event_id: eventId }).eq('id', shootId)
+    }
+  }
+
   if (shoot?.agent) {
     const info = {
       agentName: shoot.agent.full_name ?? 'Agente',
@@ -269,6 +315,10 @@ export async function rejectShoot(shootId: string, reason?: string) {
   if (auth.error) return { error: auth.error }
 
   const admin = createAdminClient()
+  // Cargar antes para tener event_id si existía
+  const before = await loadShootForNotify(shootId)
+  const eventIdBefore = (before as unknown as { google_event_id?: string | null } | null)?.google_event_id ?? null
+
   const { error } = await admin
     .from('photo_shoots')
     .update({
@@ -278,6 +328,11 @@ export async function rejectShoot(shootId: string, reason?: string) {
     })
     .eq('id', shootId)
   if (error) return { error: error.message }
+
+  // Si había evento creado en Calendar, cancelarlo
+  if (eventIdBefore && auth.user) {
+    cancelShootEvent(auth.user.id, eventIdBefore).catch(() => {})
+  }
 
   const shoot = await loadShootForNotify(shootId)
   if (shoot?.agent) {
@@ -347,6 +402,8 @@ export async function rescheduleShoot(
     notes: original.notes,
   }
 
+  const eventIdBefore = (original as unknown as { google_event_id?: string | null }).google_event_id ?? null
+
   const { error } = await admin
     .from('photo_shoots')
     .update({
@@ -357,6 +414,27 @@ export async function rescheduleShoot(
     })
     .eq('id', shootId)
   if (error) return { error: error.message }
+
+  // Sincronizar con Google Calendar (si conectado): update si existía evento, create si no
+  if (auth.user) {
+    const shootForCal = {
+      id: shootId,
+      shoot_date: newDate,
+      shoot_time: newTime,
+      property_address: original.property_address,
+      property_reference: (original as { property_reference?: string | null }).property_reference ?? null,
+      notes: original.notes,
+      agent_name: original.agent?.full_name ?? null,
+    }
+    if (eventIdBefore) {
+      updateShootEvent(auth.user.id, eventIdBefore, shootForCal).catch(() => {})
+    } else {
+      const newEventId = await createShootEvent(auth.user.id, shootForCal)
+      if (newEventId) {
+        await admin.from('photo_shoots').update({ google_event_id: newEventId }).eq('id', shootId)
+      }
+    }
+  }
 
   if (original.agent) {
     const newInfo = { ...oldInfo, date: newDate, time: newTime }
@@ -439,7 +517,7 @@ export async function cancelShootAsAgent(shootId: string) {
   const admin = createAdminClient()
   const { data: shoot } = await admin
     .from('photo_shoots')
-    .select('id, agent_id, photographer_id, property_address, shoot_date, shoot_time, status')
+    .select('id, agent_id, photographer_id, property_address, shoot_date, shoot_time, status, google_event_id')
     .eq('id', shootId)
     .single()
   if (!shoot) return { error: 'Shoot no encontrado' }
@@ -453,6 +531,11 @@ export async function cancelShootAsAgent(shootId: string) {
     .update({ status: 'cancelled', updated_at: new Date().toISOString() })
     .eq('id', shootId)
   if (error) return { error: error.message }
+
+  // Cancelar evento en Google Calendar de Jelle si existía
+  if (shoot.photographer_id && shoot.google_event_id) {
+    cancelShootEvent(shoot.photographer_id, shoot.google_event_id).catch(() => {})
+  }
 
   // Avisar a Jelle si era él quien la tenía asignada
   if (shoot.photographer_id) {

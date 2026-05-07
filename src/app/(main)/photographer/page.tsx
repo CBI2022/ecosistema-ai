@@ -5,6 +5,8 @@ import { PhotoSetsManager } from '@/features/photographer/components/PhotoSetsMa
 import { PendingShootsList } from '@/features/photographer/components/PendingShootsList'
 import { PhotographerBlocksManager } from '@/features/photographer/components/PhotographerBlocksManager'
 import { UpcomingShootsActions } from '@/features/photographer/components/UpcomingShootsActions'
+import { GoogleCalendarCard } from '@/features/photographer/components/GoogleCalendarCard'
+import { isGoogleCalendarConfigured, syncBusyTimes } from '@/lib/google-calendar'
 
 interface ShootRow {
   id: string
@@ -32,7 +34,11 @@ function getMonthDays(year: number, month: number) {
   return days
 }
 
-export default async function PhotographerPage() {
+export default async function PhotographerPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ google?: string; reason?: string }>
+}) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
@@ -46,6 +52,27 @@ export default async function PhotographerPage() {
 
   if (profile?.role !== 'photographer' && profile?.role !== 'admin') {
     redirect('/dashboard')
+  }
+
+  const params = await searchParams
+  const googleFlash = params.google === 'connected' ? 'connected' : params.google === 'error' ? 'error' : null
+
+  // Estado de la conexión a Google Calendar
+  const { data: googleConn } = await admin
+    .from('google_calendar_connections')
+    .select('google_email, connected_at')
+    .eq('user_id', user.id)
+    .maybeSingle()
+  const googleConfigured = isGoogleCalendarConfigured()
+  const googleConnected = !!googleConn
+
+  // Sync silencioso de busy times al entrar (próximos 60 días). No bloquea la página.
+  if (googleConnected) {
+    const start = new Date().toISOString().split('T')[0]
+    const endDt = new Date()
+    endDt.setDate(endDt.getDate() + 60)
+    const end = endDt.toISOString().split('T')[0]
+    syncBusyTimes(user.id, start, end).catch(() => {})
   }
 
   const now = new Date()
@@ -249,6 +276,16 @@ export default async function PhotographerPage() {
           </div>
         ))}
       </div>
+
+      {/* Google Calendar — banner conectar/conectado */}
+      <GoogleCalendarCard
+        configured={googleConfigured}
+        connected={googleConnected}
+        email={googleConn?.google_email ?? null}
+        connectedAt={googleConn?.connected_at ?? null}
+        initialFlash={googleFlash}
+        errorReason={params.reason ?? null}
+      />
 
       {/* 1. Solicitudes pendientes (solo si hay) */}
       <PendingShootsList shoots={pendingShoots} />
