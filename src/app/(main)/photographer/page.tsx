@@ -17,6 +17,7 @@ interface ShootRow {
   shoot_time: string
   status: string
   notes: string | null
+  is_extraordinary: boolean | null
   profiles: { full_name: string | null; phone: string | null } | null
 }
 
@@ -86,7 +87,7 @@ export default async function PhotographerPage({
 
   const { data: shootsRaw } = await admin
     .from('photo_shoots')
-    .select('id, agent_id, property_address, property_reference, shoot_date, shoot_time, status, notes, profiles:agent_id(full_name, phone)')
+    .select('id, agent_id, property_address, property_reference, shoot_date, shoot_time, status, notes, is_extraordinary, profiles:agent_id(full_name, phone)')
     .gte('shoot_date', monthStart)
     .lt('shoot_date', nextMonthStart)
     .order('shoot_date', { ascending: true })
@@ -94,11 +95,13 @@ export default async function PhotographerPage({
   const shoots = (shootsRaw || []) as unknown as ShootRow[]
 
   // Solicitudes pendientes — todas las que están en estado 'requested' (también de meses futuros)
+  // Las extraordinarias salen primero para que Jelle las atienda con prioridad
   const { data: pendingRaw } = await admin
     .from('photo_shoots')
-    .select('id, property_address, property_reference, shoot_date, shoot_time, notes, profiles:agent_id(full_name, phone)')
+    .select('id, property_address, property_reference, shoot_date, shoot_time, notes, is_extraordinary, profiles:agent_id(full_name, phone)')
     .eq('status', 'requested')
     .gte('shoot_date', todayIso)
+    .order('is_extraordinary', { ascending: false })
     .order('shoot_date', { ascending: true })
     .limit(20)
 
@@ -113,6 +116,7 @@ export default async function PhotographerPage({
       notes: s.notes,
       agent_name: ag?.full_name ?? null,
       agent_phone: ag?.phone ?? null,
+      is_extraordinary: !!(s as unknown as { is_extraordinary?: boolean }).is_extraordinary,
     }
   })
 

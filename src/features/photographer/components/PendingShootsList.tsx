@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { confirmShoot, rejectShoot, rescheduleShoot } from '@/actions/photo-shoots'
+import { TIME_SLOTS } from '@/features/photographer/lib/shoot-rules'
 
 interface PendingShoot {
   id: string
@@ -12,13 +13,12 @@ interface PendingShoot {
   notes: string | null
   agent_name: string | null
   agent_phone: string | null
+  is_extraordinary?: boolean
 }
 
 interface Props {
   shoots: PendingShoot[]
 }
-
-const TIME_SLOTS = ['09:00', '10:00', '11:00', '12:00', '13:00', '15:00', '16:00', '17:00', '18:00']
 
 function formatES(dateIso: string) {
   const d = new Date(dateIso + 'T00:00:00')
@@ -95,7 +95,11 @@ export function PendingShootsList({ shoots }: Props) {
         {shoots.map((s) => (
           <div
             key={s.id}
-            className="rounded-xl border border-white/8 bg-[#1C1C1C] p-4"
+            className={`rounded-xl border p-4 ${
+              s.is_extraordinary
+                ? 'border-purple-400/40 bg-purple-500/5'
+                : 'border-white/8 bg-[#1C1C1C]'
+            }`}
           >
             <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
               <div className="min-w-0 flex-1">
@@ -106,13 +110,20 @@ export function PendingShootsList({ shoots }: Props) {
                   👤 {s.agent_name ?? 'Agente'}
                   {s.agent_phone ? ` · ${s.agent_phone}` : ''}
                 </p>
-                <p className="mt-1 text-xs text-[#C9A84C]">
+                <p className={`mt-1 text-xs ${s.is_extraordinary ? 'text-purple-300' : 'text-[#C9A84C]'}`}>
                   📅 {formatES(s.shoot_date)} · <strong>{s.shoot_time.slice(0, 5)}</strong>
                 </p>
               </div>
-              <span className="rounded-full bg-[#C9A84C]/15 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider text-[#C9A84C]">
-                Pendiente
-              </span>
+              <div className="flex shrink-0 flex-col items-end gap-1">
+                {s.is_extraordinary && (
+                  <span className="rounded-full bg-purple-500/20 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider text-purple-300">
+                    ⚠️ Extraordinaria
+                  </span>
+                )}
+                <span className="rounded-full bg-[#C9A84C]/15 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider text-[#C9A84C]">
+                  Pendiente
+                </span>
+              </div>
             </div>
 
             {s.notes && (

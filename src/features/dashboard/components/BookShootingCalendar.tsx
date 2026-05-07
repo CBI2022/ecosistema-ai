@@ -1,8 +1,15 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
+import {
+  TIME_SLOTS,
+  MAX_SHOOTS_PER_DAY,
+  SHOOT_DURATION_HOURS,
+  SHOOT_BUFFER_HOURS,
+  isSlotBlockedByBuffer,
+  isDayAtCap,
+} from '@/features/photographer/lib/shoot-rules'
 
-const TIME_SLOTS = ['09:00', '10:00', '11:00', '12:00', '13:00', '15:00', '16:00', '17:00', '18:00']
 const WEEK_DAYS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
 const MONTHS_ES = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -74,6 +81,7 @@ export function BookShootingCalendar({ onClose }: BookShootingCalendarProps) {
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [extraordinaryMode, setExtraordinaryMode] = useState(false)
 
   const grid = useMemo(() => buildMonthGrid(year, month), [year, month])
   const allBooked = realBooked
@@ -124,14 +132,32 @@ export function BookShootingCalendar({ onClose }: BookShootingCalendarProps) {
       .map((b) => b.time as string)
   }
 
+  // Slots ocupados directamente: shoot exacto + bloqueo manual del fotógrafo
   function unavailableTimesForDate(iso: string) {
     return [...bookedTimesForDate(iso), ...blockedTimesForDate(iso)]
   }
 
-  const todayIso = toISODate(today)
-  const bookedToday = selectedDate ? unavailableTimesForDate(selectedDate) : []
+  // Slots BLOQUEADOS POR BUFFER (un shoot existente proyecta 4h alrededor)
+  function bufferBlockedSlotsForDate(iso: string): Set<string> {
+    const existing = bookedTimesForDate(iso)
+    const out = new Set<string>()
+    for (const slot of TIME_SLOTS) {
+      if (isSlotBlockedByBuffer(slot, existing)) out.add(slot)
+    }
+    return out
+  }
 
-  async function handleBook() {
+  // Cap del día (máx 3 shoots): si llega al cap → bloqueamos todos los slots
+  function isDayAtCapFor(iso: string): boolean {
+    return isDayAtCap(bookedCountForDate(iso))
+  }
+
+  const todayIso = toISODate(today)
+  const dayUnavailable = selectedDate ? unavailableTimesForDate(selectedDate) : []
+  const dayBufferBlocked = selectedDate ? bufferBlockedSlotsForDate(selectedDate) : new Set<string>()
+  const dayAtCap = selectedDate ? isDayAtCapFor(selectedDate) : false
+
+  async function handleBook(extraordinary = false) {
     if (!address || !selectedDate || !selectedTime) {
       setError('Completa todos los campos')
       return
@@ -144,6 +170,7 @@ export function BookShootingCalendar({ onClose }: BookShootingCalendarProps) {
     fd.append('shoot_date', selectedDate)
     fd.append('shoot_time', selectedTime)
     fd.append('notes', notes)
+    if (extraordinary) fd.append('is_extraordinary', 'true')
     const res = await bookShoot(fd)
     setLoading(false)
     if (res?.error) setError(res.error)
@@ -219,12 +246,13 @@ export function BookShootingCalendar({ onClose }: BookShootingCalendarProps) {
               {/* Grid */}
               <div className="grid grid-cols-7 gap-1">
                 {grid.map((cell, i) => {
-                  const count = unavailableTimesForDate(cell.iso).length
+                  const shoots = bookedTimesForDate(cell.iso).length
                   const isSelected = selectedDate === cell.iso
                   const isToday = cell.iso === todayIso
                   const isPast = cell.iso < todayIso
                   const isFullDayBlocked = isFullDayBlocked_(cell.iso)
-                  const isFull = count >= TIME_SLOTS.length || isFullDayBlocked
+                  const atCap = isDayAtCap(shoots)
+                  const isFull = atCap || isFullDayBlocked
                   const disabled = !cell.inMonth || isPast || isFull
 
                   return (
@@ -240,7 +268,9 @@ export function BookShootingCalendar({ onClose }: BookShootingCalendarProps) {
                         disabled
                           ? isFullDayBlocked && cell.inMonth && !isPast
                             ? 'cursor-not-allowed border-blue-400/40 bg-blue-500/8 text-blue-300/60'
-                            : 'cursor-not-allowed border-transparent text-[#9A9080]/20'
+                            : atCap && cell.inMonth && !isPast
+                              ? 'cursor-not-allowed border-red-500/30 bg-red-500/8 text-red-400/60'
+                              : 'cursor-not-allowed border-transparent text-[#9A9080]/20'
                           : isSelected
                             ? 'border-[#C9A84C] bg-[#C9A84C] text-black font-bold'
                             : isToday
@@ -252,13 +282,13 @@ export function BookShootingCalendar({ onClose }: BookShootingCalendarProps) {
                       {isFullDayBlocked && cell.inMonth && !isPast && (
                         <span className="text-[8px] font-bold text-blue-300/80">NO DISP</span>
                       )}
-                      {!isFullDayBlocked && cell.inMonth && count > 0 && !isFull && (
-                        <span className={`text-[8px] ${isSelected ? 'text-black/70' : 'text-[#C9A84C]'}`}>
-                          {count}/{TIME_SLOTS.length}
-                        </span>
-                      )}
-                      {!isFullDayBlocked && isFull && cell.inMonth && !isPast && (
+                      {!isFullDayBlocked && atCap && cell.inMonth && !isPast && (
                         <span className="text-[8px] text-red-400">LLENO</span>
+                      )}
+                      {!isFullDayBlocked && !atCap && cell.inMonth && shoots > 0 && (
+                        <span className={`text-[8px] ${isSelected ? 'text-black/70' : 'text-[#C9A84C]'}`}>
+                          {shoots}/{MAX_SHOOTS_PER_DAY}
+                        </span>
                       )}
                     </button>
                   )
@@ -277,13 +307,19 @@ export function BookShootingCalendar({ onClose }: BookShootingCalendarProps) {
                 </span>
                 <span className="flex items-center gap-1.5">
                   <span className="h-3 w-3 rounded border border-red-400 bg-red-500/10" />
-                  Lleno
+                  Lleno (3/3)
                 </span>
                 <span className="flex items-center gap-1.5">
                   <span className="h-3 w-3 rounded border border-blue-400/50 bg-blue-500/10" />
                   Jelle no disponible
                 </span>
               </div>
+
+              {/* Reglas — visible siempre */}
+              <p className="mt-3 rounded-lg bg-[#0A0A0A] px-3 py-2 text-[10px] leading-relaxed text-[#9A9080]">
+                ⓘ Cada shoot dura ~{SHOOT_DURATION_HOURS}h. Después hay {SHOOT_BUFFER_HOURS}h de margen para que Jelle se desplace.
+                Máximo {MAX_SHOOTS_PER_DAY} shoots/día. Horario: 09:30–15:00.
+              </p>
             </div>
 
             {/* Right panel — slots + form */}
@@ -302,20 +338,37 @@ export function BookShootingCalendar({ onClose }: BookShootingCalendarProps) {
                     Horarios · {new Date(selectedDate + 'T00:00:00').toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}
                   </p>
 
+                  {dayAtCap && !extraordinaryMode && (
+                    <p className="mb-3 rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-300">
+                      Día lleno ({MAX_SHOOTS_PER_DAY}/{MAX_SHOOTS_PER_DAY} shoots).
+                      Pulsa <strong>Solicitud extraordinaria</strong> abajo si es urgente.
+                    </p>
+                  )}
+
                   <div className="mb-4 grid grid-cols-3 gap-2">
                     {TIME_SLOTS.map((slot) => {
-                      const taken = bookedToday.includes(slot)
+                      const takenDirect = dayUnavailable.includes(slot)
+                      const blockedByBuffer = dayBufferBlocked.has(slot) && !takenDirect
+                      const blockedByCap = dayAtCap && !takenDirect && !blockedByBuffer
+                      // En modo extraordinaria, solo bloqueamos el slot exacto reservado
+                      const disabled = extraordinaryMode ? takenDirect : (takenDirect || blockedByBuffer || blockedByCap)
                       const selected = selectedTime === slot
                       return (
                         <button
                           key={slot}
-                          disabled={taken}
+                          disabled={disabled}
                           onClick={() => { setSelectedTime(slot); setError(null) }}
                           className={`rounded-lg border py-2 text-xs font-bold transition ${
-                            taken
-                              ? 'cursor-not-allowed border-red-500/20 bg-red-500/5 text-red-400/40 line-through'
+                            disabled
+                              ? takenDirect
+                                ? 'cursor-not-allowed border-red-500/20 bg-red-500/5 text-red-400/40 line-through'
+                                : blockedByBuffer
+                                  ? 'cursor-not-allowed border-amber-500/20 bg-amber-500/5 text-amber-400/50'
+                                  : 'cursor-not-allowed border-white/5 bg-[#1C1C1C]/50 text-[#9A9080]/30'
                               : selected
-                                ? 'border-[#C9A84C] bg-[#C9A84C] text-black'
+                                ? extraordinaryMode
+                                  ? 'border-purple-400 bg-purple-500/30 text-purple-100'
+                                  : 'border-[#C9A84C] bg-[#C9A84C] text-black'
                                 : 'border-white/10 bg-[#1C1C1C] text-[#F5F0E8] hover:border-[#C9A84C]/40'
                           }`}
                         >
@@ -325,8 +378,20 @@ export function BookShootingCalendar({ onClose }: BookShootingCalendarProps) {
                     })}
                   </div>
 
+                  {!extraordinaryMode && (
+                    <p className="mb-4 rounded-lg bg-[#0A0A0A] px-3 py-2 text-[10px] text-[#9A9080]">
+                      ⓘ Los huecos en ámbar están bloqueados por margen ({SHOOT_BUFFER_HOURS}h alrededor de cada shoot).
+                    </p>
+                  )}
+
                   {selectedTime && (
                     <div className="space-y-3 border-t border-white/8 pt-4">
+                      {extraordinaryMode && (
+                        <div className="rounded-lg border border-purple-400/30 bg-purple-500/8 px-3 py-2 text-[11px] text-purple-200">
+                          ⚠️ <strong>Solicitud extraordinaria.</strong> Saltas las reglas estándar (horario, margen o cap diario).
+                          Jelle decide caso por caso. Explica el motivo en notas.
+                        </div>
+                      )}
                       <div>
                         <label className="mb-1.5 block text-[9px] font-bold uppercase tracking-[0.12em] text-[#9A9080]">
                           Dirección de la propiedad *
@@ -341,13 +406,13 @@ export function BookShootingCalendar({ onClose }: BookShootingCalendarProps) {
                       </div>
                       <div>
                         <label className="mb-1.5 block text-[9px] font-bold uppercase tracking-[0.12em] text-[#9A9080]">
-                          Notas (opcional)
+                          {extraordinaryMode ? 'Motivo de la excepción *' : 'Notas (opcional)'}
                         </label>
                         <textarea
                           rows={2}
                           value={notes}
                           onChange={(e) => setNotes(e.target.value)}
-                          placeholder="Acceso, instrucciones..."
+                          placeholder={extraordinaryMode ? 'Villa de 12M€, propietario solo puede ese día...' : 'Acceso, instrucciones...'}
                           className="w-full rounded-lg border border-white/10 bg-[#1C1C1C] px-3 py-2 text-sm text-[#F5F0E8] outline-none focus:border-[#C9A84C]/60 placeholder-[#9A9080]"
                         />
                       </div>
@@ -357,14 +422,41 @@ export function BookShootingCalendar({ onClose }: BookShootingCalendarProps) {
                         </p>
                       )}
                       <button
-                        onClick={handleBook}
-                        disabled={loading || !address}
-                        className="w-full rounded-xl bg-[#C9A84C] py-3 text-sm font-bold uppercase tracking-[0.06em] text-black transition hover:bg-[#E8C96A] disabled:opacity-50"
+                        onClick={() => handleBook(extraordinaryMode)}
+                        disabled={loading || !address || (extraordinaryMode && !notes.trim())}
+                        className={`w-full rounded-xl py-3 text-sm font-bold uppercase tracking-[0.06em] transition disabled:opacity-50 ${
+                          extraordinaryMode
+                            ? 'bg-purple-500 text-white hover:bg-purple-600'
+                            : 'bg-[#C9A84C] text-black hover:bg-[#E8C96A]'
+                        }`}
                       >
-                        {loading ? 'Reservando...' : `📅 Reservar ${selectedTime}`}
+                        {loading
+                          ? 'Reservando...'
+                          : extraordinaryMode
+                            ? `⚠️ Pedir excepción a las ${selectedTime}`
+                            : `📅 Reservar ${selectedTime}`}
                       </button>
                     </div>
                   )}
+
+                  {/* Botón toggle modo extraordinaria */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setExtraordinaryMode(!extraordinaryMode)
+                      setSelectedTime(null)
+                      setError(null)
+                    }}
+                    className={`mt-4 w-full rounded-lg border py-2 text-[11px] font-semibold transition ${
+                      extraordinaryMode
+                        ? 'border-white/15 bg-white/5 text-[#9A9080] hover:text-[#F5F0E8]'
+                        : 'border-purple-400/30 bg-purple-500/5 text-purple-300 hover:bg-purple-500/10'
+                    }`}
+                  >
+                    {extraordinaryMode
+                      ? '↩ Volver a reserva normal'
+                      : '⚠️ Necesito algo fuera de las reglas (Solicitud extraordinaria)'}
+                  </button>
                 </>
               )}
             </div>

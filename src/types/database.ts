@@ -251,6 +251,7 @@ export interface PhotoShoot {
   duration_hours: number
   status: 'requested' | 'scheduled' | 'completed' | 'cancelled' | 'rejected'
   notes: string | null
+  is_extraordinary: boolean
   google_event_id: string | null
   created_at: string
   updated_at: string

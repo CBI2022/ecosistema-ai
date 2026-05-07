@@ -19,6 +19,15 @@ import {
   updateShootEvent,
   cancelShootEvent,
 } from '@/lib/google-calendar'
+import {
+  SHOOT_LOCKOUT_HOURS,
+  MAX_SHOOTS_PER_DAY,
+  FIRST_SLOT,
+  LAST_SLOT,
+  isSlotBlockedByBuffer,
+  isDayAtCap,
+  timeToMinutes,
+} from '@/features/photographer/lib/shoot-rules'
 
 // Helper: localizar al fotógrafo activo (de momento Jelle, único photographer aprobado).
 // Si hay varios en el futuro, este helper elegirá por disponibilidad/load.
@@ -107,44 +116,77 @@ export async function bookShoot(formData: FormData) {
   const shootTime = formData.get('shoot_time') as string
   const propertyAddress = formData.get('property_address') as string
   const notes = (formData.get('notes') as string) || null
+  const isExtraordinary = formData.get('is_extraordinary') === 'true'
 
   if (!shootDate || !shootTime || !propertyAddress) {
     return { error: 'Faltan datos obligatorios' }
   }
 
   const admin = createAdminClient()
-
-  // 1) Verificar que el día/hora no esté bloqueado por el fotógrafo
   const photographer = await getActivePhotographer()
-  if (photographer) {
-    const { data: blocks } = await admin
-      .from('photographer_blocks')
-      .select('block_time')
-      .eq('photographer_id', photographer.id)
-      .eq('block_date', shootDate)
 
-    const blocked = (blocks || []).some(
-      (b) => b.block_time === null || b.block_time === shootTime,
-    )
-    if (blocked) {
-      return { error: 'Jelle no está disponible ese día/hora. Elige otro hueco.' }
+  // Reglas del workflow de Jelle. Las extraordinarias las salta — Jelle decide al confirmar.
+  if (!isExtraordinary) {
+    // 1) Horario válido (entre 09:30 y 15:00)
+    const tMin = timeToMinutes(shootTime)
+    if (tMin < timeToMinutes(FIRST_SLOT) || tMin > timeToMinutes(LAST_SLOT)) {
+      return {
+        error: `Fuera del horario de Jelle (${FIRST_SLOT}–${LAST_SLOT}). Usa "Solicitud extraordinaria".`,
+      }
+    }
+
+    // 2) Día completo bloqueado por el fotógrafo
+    if (photographer) {
+      const { data: blocks } = await admin
+        .from('photographer_blocks')
+        .select('block_time')
+        .eq('photographer_id', photographer.id)
+        .eq('block_date', shootDate)
+
+      const blocked = (blocks || []).some(
+        (b) => b.block_time === null || (b.block_time as string).slice(0, 5) === shootTime,
+      )
+      if (blocked) {
+        return { error: 'Jelle no está disponible ese día/hora. Elige otro hueco o usa solicitud extraordinaria.' }
+      }
+    }
+
+    // 3) Cap de shoots por día (3 máx)
+    const { data: dayShoots } = await admin
+      .from('photo_shoots')
+      .select('shoot_time, is_extraordinary')
+      .eq('shoot_date', shootDate)
+      .not('status', 'in', '("cancelled","rejected")')
+
+    const standardShoots = (dayShoots || []).filter((s) => !s.is_extraordinary)
+    if (isDayAtCap(standardShoots.length)) {
+      return {
+        error: `Día lleno (máx ${MAX_SHOOTS_PER_DAY} shoots/día). Usa "Solicitud extraordinaria" si es urgente.`,
+      }
+    }
+
+    // 4) Buffer de 4h respecto a otros shoots ya en ese día
+    const existingTimes = (dayShoots || []).map((s) => (s.shoot_time as string).slice(0, 5))
+    if (isSlotBlockedByBuffer(shootTime, existingTimes)) {
+      return {
+        error: `Necesitamos ${SHOOT_LOCKOUT_HOURS}h libres alrededor de cada shoot (transporte + setup). Elige otro hueco.`,
+      }
+    }
+  } else {
+    // Extraordinaria: solo verificamos que el slot exacto no esté ya tomado
+    const { data: conflict } = await admin
+      .from('photo_shoots')
+      .select('id')
+      .eq('shoot_date', shootDate)
+      .eq('shoot_time', shootTime)
+      .not('status', 'in', '("cancelled","rejected")')
+      .maybeSingle()
+    if (conflict) {
+      return { error: 'Ese hueco ya está reservado. Elige otra hora.' }
     }
   }
 
-  // 2) Verificar overbooking — mismo día + hora
-  const { data: conflict } = await admin
-    .from('photo_shoots')
-    .select('id')
-    .eq('shoot_date', shootDate)
-    .eq('shoot_time', shootTime)
-    .not('status', 'in', '("cancelled","rejected")')
-    .maybeSingle()
-
-  if (conflict) {
-    return { error: 'Ese hueco ya está reservado. Elige otra hora.' }
-  }
-
-  // 3) Crear el shoot en estado 'requested' (pendiente de confirmación de Jelle)
+  // Crear el shoot en estado 'requested' (pendiente de confirmación de Jelle)
   const { data: created, error } = await admin
     .from('photo_shoots')
     .insert({
@@ -156,6 +198,7 @@ export async function bookShoot(formData: FormData) {
       shoot_time: shootTime,
       notes,
       status: 'requested',
+      is_extraordinary: isExtraordinary,
     })
     .select('id')
     .single()
@@ -179,12 +222,16 @@ export async function bookShoot(formData: FormData) {
   const siteUrl = getSiteUrl()
 
   if (photographer) {
-    const tplJ = shootRequestedToPhotographerEmail(info, `${siteUrl}/photographer`)
+    const prefix = isExtraordinary ? '⚠️ Solicitud extraordinaria' : '📸 Nueva solicitud de shoot'
+    const tplJ = shootRequestedToPhotographerEmail(
+      { ...info, notes: isExtraordinary ? `[EXTRAORDINARIA — fuera del horario habitual]\n${info.notes ?? ''}`.trim() : info.notes },
+      `${siteUrl}/photographer`,
+    )
     if (photographer.email) {
       sendEmail({ to: photographer.email, subject: tplJ.subject, html: tplJ.html }).catch(() => {})
     }
     sendPushToUser(photographer.id, {
-      title: '📸 Nueva solicitud de shoot',
+      title: prefix,
       body: `${info.agentName} · ${info.date} a las ${info.time}`,
       url: '/photographer',
       tag: `shoot-${created.id}`,
@@ -192,8 +239,8 @@ export async function bookShoot(formData: FormData) {
 
     // Notificación in-app para Jelle
     await admin.from('notifications').insert({
-      type: 'shoot_requested',
-      title: '📸 Nueva solicitud de shoot',
+      type: isExtraordinary ? 'shoot_requested_extraordinary' : 'shoot_requested',
+      title: prefix,
       message: `${info.agentName} pidió shoot el ${info.date} a las ${info.time}`,
       target_user_id: photographer.id,
       is_read: false,

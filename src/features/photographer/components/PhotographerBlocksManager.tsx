@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { blockDay, unblockDay } from '@/actions/photo-shoots'
+import { TIME_SLOTS } from '@/features/photographer/lib/shoot-rules'
 
 interface Block {
   id: string
@@ -13,8 +14,6 @@ interface Block {
 interface Props {
   blocks: Block[]
 }
-
-const TIME_SLOTS = ['09:00', '10:00', '11:00', '12:00', '13:00', '15:00', '16:00', '17:00', '18:00']
 
 function formatES(dateIso: string) {
   const d = new Date(dateIso + 'T00:00:00')
