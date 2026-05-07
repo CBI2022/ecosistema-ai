@@ -2,6 +2,21 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
 import { PhotoSetsManager } from '@/features/photographer/components/PhotoSetsManager'
+import { PendingShootsList } from '@/features/photographer/components/PendingShootsList'
+import { PhotographerBlocksManager } from '@/features/photographer/components/PhotographerBlocksManager'
+import { UpcomingShootsActions } from '@/features/photographer/components/UpcomingShootsActions'
+
+interface ShootRow {
+  id: string
+  agent_id: string
+  property_address: string | null
+  property_reference: string | null
+  shoot_date: string
+  shoot_time: string
+  status: string
+  notes: string | null
+  profiles: { full_name: string | null; phone: string | null } | null
+}
 
 function getMonthDays(year: number, month: number) {
   const days: Date[] = []
@@ -19,9 +34,7 @@ function getMonthDays(year: number, month: number) {
 
 export default async function PhotographerPage() {
   const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
   const admin = createAdminClient()
@@ -38,14 +51,83 @@ export default async function PhotographerPage() {
   const now = new Date()
   const year = now.getFullYear()
   const month = now.getMonth()
+  const todayIso = now.toISOString().split('T')[0]
 
-  const { data: shoots } = await admin
+  // Shoots del mes en curso (para el calendario visual)
+  const monthStart = `${year}-${String(month + 1).padStart(2, '0')}-01`
+  const nextMonthStart = `${year}-${String(month + 2).padStart(2, '0')}-01`
+
+  const { data: shootsRaw } = await admin
     .from('photo_shoots')
-    .select('*, profiles:agent_id(full_name, phone)')
+    .select('id, agent_id, property_address, property_reference, shoot_date, shoot_time, status, notes, profiles:agent_id(full_name, phone)')
+    .gte('shoot_date', monthStart)
+    .lt('shoot_date', nextMonthStart)
     .order('shoot_date', { ascending: true })
-    .gte('shoot_date', `${year}-${String(month + 1).padStart(2, '0')}-01`)
-    .lte('shoot_date', `${year}-${String(month + 2).padStart(2, '0')}-01`)
 
+  const shoots = (shootsRaw || []) as unknown as ShootRow[]
+
+  // Solicitudes pendientes — todas las que están en estado 'requested' (también de meses futuros)
+  const { data: pendingRaw } = await admin
+    .from('photo_shoots')
+    .select('id, property_address, property_reference, shoot_date, shoot_time, notes, profiles:agent_id(full_name, phone)')
+    .eq('status', 'requested')
+    .gte('shoot_date', todayIso)
+    .order('shoot_date', { ascending: true })
+    .limit(20)
+
+  const pendingShoots = (pendingRaw || []).map((s) => {
+    const ag = (s as unknown as { profiles: { full_name: string | null; phone: string | null } | null }).profiles
+    return {
+      id: s.id as string,
+      property_address: s.property_address,
+      property_reference: s.property_reference,
+      shoot_date: s.shoot_date as string,
+      shoot_time: s.shoot_time as string,
+      notes: s.notes,
+      agent_name: ag?.full_name ?? null,
+      agent_phone: ag?.phone ?? null,
+    }
+  })
+
+  // Próximos shoots confirmados (scheduled), incluyendo pasados sin marcar como completed
+  const { data: upcomingRaw } = await admin
+    .from('photo_shoots')
+    .select('id, property_address, property_reference, shoot_date, shoot_time, status, notes, profiles:agent_id(full_name, phone)')
+    .eq('status', 'scheduled')
+    .order('shoot_date', { ascending: true })
+    .limit(20)
+
+  const upcomingShoots = (upcomingRaw || []).map((s) => {
+    const ag = (s as unknown as { profiles: { full_name: string | null; phone: string | null } | null }).profiles
+    return {
+      id: s.id as string,
+      property_address: s.property_address,
+      property_reference: s.property_reference,
+      shoot_date: s.shoot_date as string,
+      shoot_time: s.shoot_time as string,
+      status: s.status as string,
+      notes: s.notes,
+      agent_name: ag?.full_name ?? null,
+      agent_phone: ag?.phone ?? null,
+    }
+  })
+
+  // Bloqueos del fotógrafo — desde hoy
+  const { data: blocksRaw } = await admin
+    .from('photographer_blocks')
+    .select('id, block_date, block_time, reason')
+    .eq('photographer_id', user.id)
+    .gte('block_date', todayIso)
+    .order('block_date', { ascending: true })
+
+  const blocks = (blocksRaw || []).map((b) => ({
+    id: b.id as string,
+    block_date: b.block_date as string,
+    block_time: (b.block_time as string | null) ?? null,
+    reason: (b.reason as string | null) ?? null,
+  }))
+
+  // Stats
   const { count: totalShoots } = await admin
     .from('photo_shoots')
     .select('*', { count: 'exact', head: true })
@@ -55,7 +137,9 @@ export default async function PhotographerPage() {
     .from('property_photos')
     .select('*', { count: 'exact', head: true })
 
-  // Cargar sets subidos por este fotógrafo
+  const confirmedThisMonth = shoots.filter((s) => s.status === 'scheduled' || s.status === 'completed').length
+
+  // Sets de fotos subidos por este fotógrafo
   const { data: myPhotos } = await admin
     .from('property_photos')
     .select('id, storage_path, file_name, is_drone, sort_order, shoot_id, created_at, agent_id, profiles!property_photos_agent_id_fkey(full_name)')
@@ -63,7 +147,6 @@ export default async function PhotographerPage() {
     .order('created_at', { ascending: false })
     .limit(500)
 
-  // Obtener address/ref de cada shoot
   const shootIds = [...new Set((myPhotos || []).map((p) => p.shoot_id).filter(Boolean))] as string[]
   const shootsById = new Map<string, { property_address: string | null; property_reference: string | null }>()
   if (shootIds.length > 0) {
@@ -72,11 +155,13 @@ export default async function PhotographerPage() {
       .select('id, property_address, property_reference')
       .in('id', shootIds)
     for (const s of shootInfos || []) {
-      shootsById.set(s.id, { property_address: s.property_address, property_reference: s.property_reference })
+      shootsById.set(s.id as string, {
+        property_address: s.property_address as string | null,
+        property_reference: s.property_reference as string | null,
+      })
     }
   }
 
-  // Agrupar por shoot_id (o por agent+día si no hay shoot)
   type SetEntry = {
     key: string
     shoot_id: string | null
@@ -89,149 +174,196 @@ export default async function PhotographerPage() {
   }
   const setsMap = new Map<string, SetEntry>()
   for (const photo of myPhotos || []) {
-    const key = photo.shoot_id || `${photo.agent_id}_${photo.created_at.slice(0, 10)}`
-    const agentProfile = (photo as any).profiles as { full_name?: string } | null
-    const shootInfo = photo.shoot_id ? shootsById.get(photo.shoot_id) : null
+    const key = (photo.shoot_id as string | null) || `${photo.agent_id}_${(photo.created_at as string).slice(0, 10)}`
+    const agentProfile = (photo as unknown as { profiles: { full_name?: string } | null }).profiles
+    const shootInfo = photo.shoot_id ? shootsById.get(photo.shoot_id as string) : null
     const existing = setsMap.get(key)
     if (existing && existing.photos) {
       existing.photos.push(photo)
     } else {
       setsMap.set(key, {
         key,
-        shoot_id: photo.shoot_id,
-        agent_id: photo.agent_id,
+        shoot_id: (photo.shoot_id as string | null) ?? null,
+        agent_id: photo.agent_id as string,
         agent_name: agentProfile?.full_name ?? null,
         property_reference: shootInfo?.property_reference ?? null,
         property_address: shootInfo?.property_address ?? null,
         photos: [photo],
-        created_at: photo.created_at,
+        created_at: photo.created_at as string,
       })
     }
   }
   const photoSets = Array.from(setsMap.values())
 
-  const days = getMonthDays(year, month)
-  const monthName = now.toLocaleString('en', { month: 'long', year: 'numeric' })
-
-  const shootsByDate = new Map<string, typeof shoots>()
-  for (const shoot of shoots || []) {
+  // Agrupar shoots por fecha para el calendario visual
+  const shootsByDate = new Map<string, ShootRow[]>()
+  for (const shoot of shoots) {
     const key = shoot.shoot_date
     if (!shootsByDate.has(key)) shootsByDate.set(key, [])
     shootsByDate.get(key)!.push(shoot)
   }
 
-  const upcomingDeadline = (shoots || []).filter(
-    (s) => s.status === 'scheduled' && s.shoot_date >= now.toISOString().split('T')[0]
-  )
+  const blocksByDate = new Map<string, { time: string | null; reason: string | null }[]>()
+  for (const b of blocks) {
+    const key = b.block_date
+    if (!blocksByDate.has(key)) blocksByDate.set(key, [])
+    blocksByDate.get(key)!.push({ time: b.block_time, reason: b.reason })
+  }
+
+  const days = getMonthDays(year, month)
+  const monthName = now.toLocaleString('es', { month: 'long', year: 'numeric' })
 
   return (
-    <div className="space-y-6">
-      {/* Stats */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+    <div className="space-y-5 sm:space-y-6">
+      {/* Header */}
+      <div>
+        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#C9A84C]">Mi calendario</p>
+        <h1 className="mt-1 text-2xl font-bold text-[#F5F0E8] sm:text-3xl">
+          Hola Jelle 👋
+        </h1>
+        <p className="mt-1 text-sm text-[#9A9080]">
+          Aquí ves todas las solicitudes y shoots confirmados.
+        </p>
+      </div>
+
+      {/* Stats — 4 tarjetas mobile-first */}
+      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-3">
         {[
-          { label: 'Shoots completados', value: totalShoots ?? 0, color: '#2ECC9A' },
-          { label: 'Fotos subidas', value: totalPhotos ?? 0, color: '#C9A84C' },
-          { label: 'Shoots este mes', value: shoots?.length ?? 0, color: '#8B5CF6' },
-          { label: 'Pendientes', value: upcomingDeadline.length, color: '#F5F0E8' },
+          { label: 'Pendientes', value: pendingShoots.length, color: '#C9A84C', highlight: pendingShoots.length > 0 },
+          { label: 'Este mes', value: confirmedThisMonth, color: '#2ECC9A' },
+          { label: 'Fotos subidas', value: totalPhotos ?? 0, color: '#8B5CF6' },
+          { label: 'Completados', value: totalShoots ?? 0, color: '#F5F0E8' },
         ].map((s) => (
-          <div key={s.label} className="rounded-[10px] border border-white/8 bg-[#1C1C1C] p-4">
-            <p className="mb-1 text-[9px] font-bold uppercase tracking-[0.12em] text-[#9A9080]">{s.label}</p>
-            <p className="text-3xl font-bold" style={{ color: s.color }}>{s.value}</p>
+          <div
+            key={s.label}
+            className={`rounded-[12px] border bg-[#1C1C1C] p-3.5 sm:p-4 ${
+              s.highlight ? 'border-[#C9A84C]/40' : 'border-white/8'
+            }`}
+          >
+            <p className="mb-1 text-[9px] font-bold uppercase tracking-[0.12em] text-[#9A9080]">
+              {s.label}
+            </p>
+            <p className="text-2xl font-bold sm:text-3xl" style={{ color: s.color }}>
+              {s.value}
+            </p>
           </div>
         ))}
       </div>
 
-      {/* Calendar */}
-      <div className="rounded-2xl border border-[#C9A84C]/12 bg-[#131313] p-5" style={{ borderTop: '1px solid #C9A84C' }}>
-        <div className="mb-5 flex items-center justify-between">
+      {/* 1. Solicitudes pendientes (solo si hay) */}
+      <PendingShootsList shoots={pendingShoots} />
+
+      {/* 2. Calendario mensual */}
+      <div className="rounded-2xl border border-white/8 bg-[#131313] p-4 sm:p-5" style={{ borderTop: '1px solid #C9A84C' }}>
+        <div className="mb-4 flex items-center justify-between">
           <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#C9A84C]">
             📅 {monthName}
           </p>
-          <a href="/photographer/upload" className="rounded-lg bg-[#C9A84C] px-4 py-2 text-xs font-bold text-black transition hover:bg-[#E8C96A]">
-            + Upload Photos
+          <a
+            href="/photographer/upload"
+            className="rounded-lg bg-[#C9A84C] px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-black transition active:scale-95 hover:bg-[#E8C96A]"
+          >
+            + Subir fotos
           </a>
         </div>
 
-        {/* Day headers */}
+        {/* Headers semana */}
         <div className="mb-2 grid grid-cols-7 gap-1">
-          {['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map((d) => (
-            <div key={d} className="text-center text-[9px] font-bold uppercase tracking-wide text-[#9A9080]">{d}</div>
+          {['L','M','X','J','V','S','D'].map((d) => (
+            <div key={d} className="text-center text-[10px] font-bold uppercase tracking-wide text-[#9A9080]">
+              {d}
+            </div>
           ))}
         </div>
 
-        {/* Days grid */}
+        {/* Días */}
         <div className="grid grid-cols-7 gap-1">
           {days.map((day, idx) => {
             const isCurrentMonth = day.getMonth() === month
             const dateKey = day.toISOString().split('T')[0]
-            const isToday = dateKey === now.toISOString().split('T')[0]
+            const isToday = dateKey === todayIso
             const daySheets = shootsByDate.get(dateKey) ?? []
+            const dayBlocks = blocksByDate.get(dateKey) ?? []
+            const fullDayBlocked = dayBlocks.some((b) => b.time === null)
+
+            // Color del fondo del día según contenido
+            let bgClass = 'border-transparent'
+            if (isToday) bgClass = 'border-[#C9A84C]/50 bg-[#C9A84C]/8'
+            else if (fullDayBlocked) bgClass = 'border-blue-400/30 bg-blue-500/8'
 
             return (
               <div
                 key={idx}
-                className={`min-h-[64px] rounded-lg p-1.5 text-[11px] transition ${
-                  !isCurrentMonth ? 'opacity-20' : ''
-                } ${isToday ? 'border border-[#C9A84C]/50 bg-[#C9A84C]/8' : 'border border-transparent hover:border-white/10'}`}
+                className={`min-h-[60px] rounded-lg border p-1.5 text-[11px] transition ${
+                  !isCurrentMonth ? 'opacity-25' : ''
+                } ${bgClass} hover:border-white/15`}
               >
-                <span className={`font-bold ${isToday ? 'text-[#C9A84C]' : 'text-[#9A9080]'}`}>
+                <span className={`text-[11px] font-bold ${isToday ? 'text-[#C9A84C]' : 'text-[#9A9080]'}`}>
                   {day.getDate()}
                 </span>
                 <div className="mt-1 space-y-0.5">
-                  {daySheets.slice(0, 2).map((s) => (
-                    <div
-                      key={s.id}
-                      className={`rounded px-1 py-0.5 text-[9px] font-semibold leading-tight ${
-                        s.status === 'completed'
-                          ? 'bg-[#2ECC9A]/20 text-[#2ECC9A]'
-                          : s.status === 'cancelled'
-                            ? 'bg-red-500/20 text-red-400'
-                            : 'bg-[#C9A84C]/20 text-[#C9A84C]'
-                      }`}
-                    >
-                      {s.shoot_time?.slice(0, 5)} {(s as any).profiles?.full_name?.split(' ')[0] ?? 'Agent'}
-                    </div>
-                  ))}
+                  {daySheets.slice(0, 2).map((s) => {
+                    const colorMap: Record<string, string> = {
+                      requested: 'bg-[#C9A84C]/20 text-[#C9A84C]',
+                      scheduled: 'bg-[#2ECC9A]/20 text-[#2ECC9A]',
+                      completed: 'bg-[#9A9080]/20 text-[#9A9080] line-through',
+                      cancelled: 'bg-red-500/15 text-red-400/70 line-through',
+                      rejected: 'bg-red-500/15 text-red-400/70 line-through',
+                    }
+                    const color = colorMap[s.status] ?? 'bg-white/10 text-[#F5F0E8]'
+                    return (
+                      <div
+                        key={s.id}
+                        className={`truncate rounded px-1 py-0.5 text-[9px] font-semibold leading-tight ${color}`}
+                        title={`${s.shoot_time?.slice(0, 5)} · ${s.profiles?.full_name ?? 'Agente'} · ${s.property_address ?? ''}`}
+                      >
+                        {s.shoot_time?.slice(0, 5)} {s.profiles?.full_name?.split(' ')[0] ?? 'Agente'}
+                      </div>
+                    )
+                  })}
                   {daySheets.length > 2 && (
-                    <div className="text-[8px] text-[#9A9080]">+{daySheets.length - 2} more</div>
+                    <div className="text-[8px] text-[#9A9080]">+{daySheets.length - 2}</div>
+                  )}
+                  {dayBlocks.length > 0 && !fullDayBlocked && (
+                    <div className="rounded bg-blue-500/15 px-1 py-0.5 text-[9px] font-semibold text-blue-300">
+                      🛑 {dayBlocks.length}
+                    </div>
                   )}
                 </div>
               </div>
             )
           })}
         </div>
+
+        {/* Leyenda */}
+        <div className="mt-4 flex flex-wrap gap-3 border-t border-white/6 pt-3 text-[10px] text-[#9A9080]">
+          <span className="flex items-center gap-1.5">
+            <span className="h-2.5 w-2.5 rounded-full bg-[#C9A84C]" />
+            Pendiente
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="h-2.5 w-2.5 rounded-full bg-[#2ECC9A]" />
+            Confirmado
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="h-2.5 w-2.5 rounded-full bg-[#9A9080]" />
+            Completado
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="h-2.5 w-2.5 rounded-full bg-blue-400" />
+            Bloqueado
+          </span>
+        </div>
       </div>
 
-      {/* Sets subidos — gestión */}
-      <PhotoSetsManager sets={photoSets as any} />
+      {/* 3. Próximos confirmados (con marcar completado) */}
+      <UpcomingShootsActions shoots={upcomingShoots} />
 
-      {/* Upcoming shoots list */}
-      <div className="rounded-2xl border border-white/8 bg-[#131313] p-5">
-        <p className="mb-4 text-[9px] font-bold uppercase tracking-[0.18em] text-[#C9A84C]">
-          Próximos shoots
-        </p>
-        {upcomingDeadline.length === 0 ? (
-          <p className="text-sm text-[#9A9080]/60">No shoots scheduled</p>
-        ) : (
-          <div className="space-y-2.5">
-            {upcomingDeadline.map((s) => (
-              <div key={s.id} className="flex items-center justify-between rounded-xl border border-white/6 bg-[#1C1C1C] px-4 py-3">
-                <div>
-                  <p className="text-sm font-semibold text-[#F5F0E8]">
-                    {s.property_address || s.property_reference || 'Unnamed property'}
-                  </p>
-                  <p className="text-xs text-[#9A9080]">
-                    {(s as any).profiles?.full_name ?? 'Agent'} · {s.shoot_date} at {s.shoot_time?.slice(0,5)}
-                  </p>
-                </div>
-                <span className="rounded-full bg-[#C9A84C]/15 px-2.5 py-1 text-[9px] font-bold uppercase text-[#C9A84C]">
-                  Scheduled
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+      {/* 4. Bloquear días */}
+      <PhotographerBlocksManager blocks={blocks} />
+
+      {/* 5. Sets de fotos subidos */}
+      {photoSets.length > 0 && <PhotoSetsManager sets={photoSets as never} />}
     </div>
   )
 }

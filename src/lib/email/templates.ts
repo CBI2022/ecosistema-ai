@@ -147,3 +147,170 @@ export function taskAssignedEmail(taskTitle: string, assignerName: string, taskU
     }),
   }
 }
+
+// ============ SHOOTS — Sesiones fotográficas con Jelle ============
+
+interface ShootInfo {
+  agentName: string
+  address: string
+  date: string // YYYY-MM-DD
+  time: string // HH:MM
+  notes?: string | null
+}
+
+function formatShootDateES(iso: string): string {
+  // Acepta YYYY-MM-DD; añade T00:00:00 para evitar shift por timezone
+  const d = new Date(iso + 'T00:00:00')
+  return d.toLocaleDateString('es-ES', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  })
+}
+
+function shootBlock(info: ShootInfo): string {
+  return `
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px;background:#0A0A0A;border:1px solid rgba(201,168,76,0.2);border-radius:12px;">
+      <tr><td style="padding:16px 18px;">
+        <p style="margin:0 0 4px;font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#C9A84C;">📍 Propiedad</p>
+        <p style="margin:0 0 14px;font-size:15px;color:#F5F0E8;font-weight:600;">${info.address}</p>
+        <p style="margin:0 0 4px;font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#C9A84C;">📅 Cuándo</p>
+        <p style="margin:0 0 14px;font-size:15px;color:#F5F0E8;">${formatShootDateES(info.date)} · <strong>${info.time}</strong></p>
+        <p style="margin:0 0 4px;font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#C9A84C;">👤 Agente</p>
+        <p style="margin:0 0 ${info.notes ? '14px' : '0'};font-size:15px;color:#F5F0E8;">${info.agentName}</p>
+        ${info.notes ? `
+          <p style="margin:0 0 4px;font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#C9A84C;">📝 Notas</p>
+          <p style="margin:0;font-size:14px;color:#9A9080;line-height:1.6;">${info.notes}</p>
+        ` : ''}
+      </td></tr>
+    </table>
+  `
+}
+
+// Para Jelle: nuevo shoot solicitado
+export function shootRequestedToPhotographerEmail(info: ShootInfo, dashboardUrl: string) {
+  return {
+    subject: `📸 Nueva solicitud de shoot · ${info.address}`,
+    html: shell({
+      title: 'Nueva solicitud de shoot',
+      preheader: `${info.agentName} te ha pedido un shoot el ${info.date} a las ${info.time}.`,
+      body: `
+        ${heading('Nueva solicitud de sesión')}
+        ${paragraph(`<strong style="color:#F5F0E8;">${info.agentName}</strong> te ha solicitado una sesión fotográfica. Confirma, reprograma o rechaza desde tu calendario.`)}
+        ${shootBlock(info)}
+        <div style="margin:24px 0;">${button(dashboardUrl, 'Abrir mi calendario')}</div>
+      `,
+    }),
+  }
+}
+
+// Para el agente: tu solicitud está pendiente
+export function shootRequestedToAgentEmail(info: ShootInfo, dashboardUrl: string) {
+  return {
+    subject: `📸 Solicitud enviada · ${info.address}`,
+    html: shell({
+      title: 'Solicitud de shoot enviada',
+      preheader: `Esperando confirmación de Jelle para el ${info.date} a las ${info.time}.`,
+      body: `
+        ${heading('Solicitud enviada a Jelle')}
+        ${paragraph('Hemos enviado tu petición a Jelle. Te avisaremos en cuanto la confirme o proponga otra hora.')}
+        ${shootBlock(info)}
+        <div style="margin:24px 0;">${button(dashboardUrl, 'Ver mi shoot')}</div>
+      `,
+    }),
+  }
+}
+
+// Para el agente: Jelle confirmó
+export function shootConfirmedToAgentEmail(info: ShootInfo, dashboardUrl: string) {
+  return {
+    subject: `✅ Jelle confirmó tu shoot · ${info.address}`,
+    html: shell({
+      title: 'Shoot confirmado',
+      preheader: `${info.date} a las ${info.time} — confirmado por Jelle.`,
+      body: `
+        ${heading('¡Confirmado!')}
+        ${paragraph('Jelle estará allí para hacer las fotos. Anótalo en tu agenda.')}
+        ${shootBlock(info)}
+        <div style="margin:24px 0;">${button(dashboardUrl, 'Ver mi shoot')}</div>
+      `,
+    }),
+  }
+}
+
+// Para el agente: Jelle reprogramó
+export function shootRescheduledToAgentEmail(
+  oldInfo: ShootInfo,
+  newInfo: ShootInfo,
+  dashboardUrl: string,
+) {
+  return {
+    subject: `🔄 Jelle reprogramó tu shoot · ${oldInfo.address}`,
+    html: shell({
+      title: 'Shoot reprogramado',
+      preheader: `Nueva fecha: ${newInfo.date} a las ${newInfo.time}.`,
+      body: `
+        ${heading('Jelle propone otra fecha')}
+        ${paragraph(`Tu shoot del <strong style="color:#F5F0E8;">${formatShootDateES(oldInfo.date)} a las ${oldInfo.time}</strong> ha sido movido. Nueva propuesta:`)}
+        ${shootBlock(newInfo)}
+        <div style="margin:24px 0;">${button(dashboardUrl, 'Ver mi shoot')}</div>
+      `,
+    }),
+  }
+}
+
+// Para el agente: Jelle rechazó
+export function shootRejectedToAgentEmail(info: ShootInfo, dashboardUrl: string, reason?: string | null) {
+  return {
+    subject: `❌ Jelle no puede ese día · ${info.address}`,
+    html: shell({
+      title: 'Shoot no disponible',
+      preheader: 'Reserva otra fecha desde el dashboard.',
+      body: `
+        ${heading('Esa fecha no le va')}
+        ${paragraph(`Jelle no puede atender la sesión que pediste para el <strong style="color:#F5F0E8;">${formatShootDateES(info.date)} a las ${info.time}</strong> en ${info.address}.`)}
+        ${reason ? paragraph(`<em style="color:#F5F0E8;">"${reason}"</em>`) : ''}
+        ${paragraph('Reserva otra fecha desde tu dashboard cuando quieras.')}
+        <div style="margin:24px 0;">${button(dashboardUrl, 'Reservar otra fecha')}</div>
+      `,
+    }),
+  }
+}
+
+// Para el agente: shoot completado, fotos en camino
+export function shootCompletedToAgentEmail(info: ShootInfo, dashboardUrl: string) {
+  return {
+    subject: `📷 Shoot completado · ${info.address}`,
+    html: shell({
+      title: 'Shoot completado',
+      preheader: 'Tus fotos están en proceso de edición.',
+      body: `
+        ${heading('Shoot completado')}
+        ${paragraph('Jelle ha terminado la sesión. Las fotos están en proceso de edición y aparecerán pronto en tu galería.')}
+        ${shootBlock(info)}
+        <div style="margin:24px 0;">${button(dashboardUrl, 'Ver mis fotos')}</div>
+      `,
+    }),
+  }
+}
+
+// Recordatorio 24h antes — versión genérica para ambos lados
+export function shootReminderEmail(info: ShootInfo, recipientRole: 'agent' | 'photographer', dashboardUrl: string) {
+  const isJelle = recipientRole === 'photographer'
+  return {
+    subject: `⏰ Recordatorio: shoot mañana · ${info.address}`,
+    html: shell({
+      title: 'Recordatorio de shoot',
+      preheader: `Mañana ${info.time} en ${info.address}.`,
+      body: `
+        ${heading('Recordatorio: shoot mañana')}
+        ${paragraph(isJelle
+          ? 'Recuerda tu sesión fotográfica de mañana. Aquí los detalles:'
+          : 'Tu sesión fotográfica con Jelle es mañana. Aquí los detalles:')}
+        ${shootBlock(info)}
+        <div style="margin:24px 0;">${button(dashboardUrl, 'Abrir dashboard')}</div>
+      `,
+    }),
+  }
+}

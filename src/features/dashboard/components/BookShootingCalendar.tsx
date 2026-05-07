@@ -53,35 +53,10 @@ function buildMonthGrid(year: number, month: number) {
   return days
 }
 
-// FAKE data — mientras no está conectado Google Calendar de Jelle,
-// pre-poblamos algunos slots ocupados en las próximas semanas para que
-// el calendario se vea realista.
-function generateFakeBookedSlots(): BookedSlot[] {
-  const slots: BookedSlot[] = []
-  const today = new Date()
-  const seeds = [
-    [1, '10:00'], [1, '11:00'],
-    [2, '09:00'], [2, '16:00'],
-    [3, '12:00'],
-    [5, '10:00'], [5, '15:00'], [5, '16:00'],
-    [7, '09:00'],
-    [8, '11:00'], [8, '13:00'],
-    [10, '15:00'],
-    [12, '09:00'], [12, '10:00'], [12, '17:00'],
-    [14, '11:00'],
-    [16, '10:00'], [16, '16:00'],
-    [18, '12:00'], [18, '13:00'],
-    [21, '09:00'], [21, '10:00'],
-    [24, '11:00'],
-    [27, '15:00'], [27, '16:00'],
-  ] as const
-
-  for (const [offsetDays, time] of seeds) {
-    const d = new Date(today)
-    d.setDate(d.getDate() + offsetDays)
-    slots.push({ date: toISODate(d), time, duration: 2 })
-  }
-  return slots
+interface BlockedSlot {
+  date: string
+  time: string | null // null = todo el día
+  reason: string | null
 }
 
 export function BookShootingCalendar({ onClose }: BookShootingCalendarProps) {
@@ -91,7 +66,7 @@ export function BookShootingCalendar({ onClose }: BookShootingCalendarProps) {
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const [selectedTime, setSelectedTime] = useState<string | null>(null)
   const [realBooked, setRealBooked] = useState<BookedSlot[]>([])
-  const [fakeBooked] = useState<BookedSlot[]>(generateFakeBookedSlots())
+  const [blocked, setBlocked] = useState<BlockedSlot[]>([])
 
   // Form fields
   const [address, setAddress] = useState('')
@@ -101,16 +76,26 @@ export function BookShootingCalendar({ onClose }: BookShootingCalendarProps) {
   const [error, setError] = useState<string | null>(null)
 
   const grid = useMemo(() => buildMonthGrid(year, month), [year, month])
-  const allBooked = [...realBooked, ...fakeBooked]
+  const allBooked = realBooked
 
-  // Cargar slots reservados reales al cambiar de mes
+  // Cargar slots reservados reales y bloqueos del fotógrafo al cambiar de mes
   useEffect(() => {
     (async () => {
       const first = toISODate(new Date(year, month, 1))
       const last = toISODate(new Date(year, month + 1, 0))
-      const { getBookedSlots } = await import('@/actions/photo-shoots')
-      const slots = await getBookedSlots(first, last)
+      const { getBookedSlots, getPhotographerBlocks } = await import('@/actions/photo-shoots')
+      const [slots, blocks] = await Promise.all([
+        getBookedSlots(first, last),
+        getPhotographerBlocks(first, last),
+      ])
       setRealBooked(slots.map((s) => ({ ...s, time: s.time.slice(0, 5) })))
+      setBlocked(
+        blocks.map((b) => ({
+          date: b.date,
+          time: b.time ? b.time.slice(0, 5) : null,
+          reason: b.reason,
+        })),
+      )
     })()
   }, [year, month])
 
@@ -129,8 +114,22 @@ export function BookShootingCalendar({ onClose }: BookShootingCalendarProps) {
     return allBooked.filter((s) => s.date === iso).map((s) => s.time)
   }
 
+  function isFullDayBlocked_(iso: string) {
+    return blocked.some((b) => b.date === iso && b.time === null)
+  }
+
+  function blockedTimesForDate(iso: string) {
+    return blocked
+      .filter((b) => b.date === iso && b.time !== null)
+      .map((b) => b.time as string)
+  }
+
+  function unavailableTimesForDate(iso: string) {
+    return [...bookedTimesForDate(iso), ...blockedTimesForDate(iso)]
+  }
+
   const todayIso = toISODate(today)
-  const bookedToday = selectedDate ? bookedTimesForDate(selectedDate) : []
+  const bookedToday = selectedDate ? unavailableTimesForDate(selectedDate) : []
 
   async function handleBook() {
     if (!address || !selectedDate || !selectedTime) {
@@ -169,11 +168,15 @@ export function BookShootingCalendar({ onClose }: BookShootingCalendarProps) {
         </div>
 
         {success ? (
-          <div className="px-6 py-16 text-center">
-            <div className="mb-3 text-5xl">✅</div>
-            <p className="text-lg font-bold text-[#2ECC9A]">¡Sesión reservada!</p>
+          <div className="px-6 py-12 text-center">
+            <div className="mb-3 text-5xl">📨</div>
+            <p className="text-lg font-bold text-[#C9A84C]">¡Solicitud enviada a Jelle!</p>
             <p className="mt-1 text-sm text-[#9A9080]">
-              {selectedDate} · {selectedTime} — Jelle la verá en su calendario
+              {selectedDate} · {selectedTime}
+            </p>
+            <p className="mx-auto mt-3 max-w-sm text-xs text-[#9A9080]">
+              Jelle recibirá un aviso. Te avisaremos por email y notificación cuando confirme,
+              proponga otra hora o no pueda ese día.
             </p>
             <button
               onClick={onClose}
@@ -216,11 +219,12 @@ export function BookShootingCalendar({ onClose }: BookShootingCalendarProps) {
               {/* Grid */}
               <div className="grid grid-cols-7 gap-1">
                 {grid.map((cell, i) => {
-                  const count = bookedCountForDate(cell.iso)
+                  const count = unavailableTimesForDate(cell.iso).length
                   const isSelected = selectedDate === cell.iso
                   const isToday = cell.iso === todayIso
                   const isPast = cell.iso < todayIso
-                  const isFull = count >= TIME_SLOTS.length
+                  const isFullDayBlocked = isFullDayBlocked_(cell.iso)
+                  const isFull = count >= TIME_SLOTS.length || isFullDayBlocked
                   const disabled = !cell.inMonth || isPast || isFull
 
                   return (
@@ -234,7 +238,9 @@ export function BookShootingCalendar({ onClose }: BookShootingCalendarProps) {
                       }}
                       className={`relative flex aspect-square flex-col items-center justify-center rounded-lg border text-sm transition ${
                         disabled
-                          ? 'cursor-not-allowed border-transparent text-[#9A9080]/20'
+                          ? isFullDayBlocked && cell.inMonth && !isPast
+                            ? 'cursor-not-allowed border-blue-400/40 bg-blue-500/8 text-blue-300/60'
+                            : 'cursor-not-allowed border-transparent text-[#9A9080]/20'
                           : isSelected
                             ? 'border-[#C9A84C] bg-[#C9A84C] text-black font-bold'
                             : isToday
@@ -243,12 +249,15 @@ export function BookShootingCalendar({ onClose }: BookShootingCalendarProps) {
                       }`}
                     >
                       <span>{cell.date.getDate()}</span>
-                      {cell.inMonth && count > 0 && !isFull && (
+                      {isFullDayBlocked && cell.inMonth && !isPast && (
+                        <span className="text-[8px] font-bold text-blue-300/80">NO DISP</span>
+                      )}
+                      {!isFullDayBlocked && cell.inMonth && count > 0 && !isFull && (
                         <span className={`text-[8px] ${isSelected ? 'text-black/70' : 'text-[#C9A84C]'}`}>
                           {count}/{TIME_SLOTS.length}
                         </span>
                       )}
-                      {isFull && cell.inMonth && !isPast && (
+                      {!isFullDayBlocked && isFull && cell.inMonth && !isPast && (
                         <span className="text-[8px] text-red-400">LLENO</span>
                       )}
                     </button>
@@ -257,7 +266,7 @@ export function BookShootingCalendar({ onClose }: BookShootingCalendarProps) {
               </div>
 
               {/* Legend */}
-              <div className="mt-4 flex flex-wrap items-center gap-4 text-[10px] text-[#9A9080]">
+              <div className="mt-4 flex flex-wrap items-center gap-3 text-[10px] text-[#9A9080]">
                 <span className="flex items-center gap-1.5">
                   <span className="h-3 w-3 rounded border border-[#C9A84C]/40 bg-[#C9A84C]/5" />
                   Hoy
@@ -268,7 +277,11 @@ export function BookShootingCalendar({ onClose }: BookShootingCalendarProps) {
                 </span>
                 <span className="flex items-center gap-1.5">
                   <span className="h-3 w-3 rounded border border-red-400 bg-red-500/10" />
-                  Día lleno
+                  Lleno
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span className="h-3 w-3 rounded border border-blue-400/50 bg-blue-500/10" />
+                  Jelle no disponible
                 </span>
               </div>
             </div>

@@ -29,6 +29,9 @@ export default async function DashboardPage({
     .eq('id', user.id)
     .single()
 
+  // El fotógrafo tiene su propia vista — no entra al dashboard del agente.
+  if (profile?.role === 'photographer') redirect('/photographer')
+
   const canManage = profile?.role === 'admin' || profile?.role === 'secretary'
   const params = await searchParams
   const teamView = canManage && params.view === 'team'

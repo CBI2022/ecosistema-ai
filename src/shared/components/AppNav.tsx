@@ -267,10 +267,11 @@ export function AppNav({ role }: AppNavProps) {
     { href: '/contracts', label: t('contracts'), icon: 'signature' },
   ]
 
+  // Jelle solo necesita su calendario y subir fotos. Notificaciones y ajustes
+  // están siempre accesibles desde el header (campanita y avatar).
   const PHOTOGRAPHER_TABS: NavEntry[] = [
     { href: '/photographer', label: t('myShoots'), icon: 'camera' },
     { href: '/photographer/upload', label: t('uploadPhotos'), icon: 'cameraPlus' },
-    { href: '/tasks', label: t('tasks'), icon: 'check' },
   ]
 
   const DC_TABS: NavEntry[] = [

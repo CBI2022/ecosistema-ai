@@ -249,7 +249,7 @@ export interface PhotoShoot {
   shoot_date: string
   shoot_time: string
   duration_hours: number
-  status: 'scheduled' | 'completed' | 'cancelled'
+  status: 'requested' | 'scheduled' | 'completed' | 'cancelled' | 'rejected'
   notes: string | null
   google_event_id: string | null
   created_at: string
