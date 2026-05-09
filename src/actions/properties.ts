@@ -191,7 +191,20 @@ export async function saveProperty(formData: FormData, publish = false) {
     latitude: num(formData, 'latitude'),
     longitude: num(formData, 'longitude'),
 
-    // Descripciones (7 idiomas)
+    // Descripción base (notas crudas del agente — NO se sube a Sooprema)
+    description_base: str(formData, 'description_base'),
+    description_source_lang: str(formData, 'description_source_lang') || 'es',
+
+    // Títulos en 7 idiomas (lo que se sube a Sooprema)
+    title_es: str(formData, 'title_es'),
+    title_en: str(formData, 'title_en'),
+    title_de: str(formData, 'title_de'),
+    title_fr: str(formData, 'title_fr'),
+    title_nl: str(formData, 'title_nl'),
+    title_ru: str(formData, 'title_ru'),
+    title_pl: str(formData, 'title_pl'),
+
+    // Descripciones en 7 idiomas (lo que se sube a Sooprema)
     description_es: str(formData, 'description_es'),
     description_en: str(formData, 'description_en'),
     description_de: str(formData, 'description_de'),
@@ -504,6 +517,271 @@ Output only the description text, in ${langLabel}.`
   } catch {
     return { error: 'No se pudo generar la descripción. Inténtalo de nuevo.' }
   }
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// AI: generación + traducción multi-idioma del título + descripción Pro
+// ──────────────────────────────────────────────────────────────────────
+
+const LANG_NAMES: Record<string, string> = {
+  es: 'Spanish (Español)',
+  en: 'English',
+  de: 'German (Deutsch)',
+  fr: 'French (Français)',
+  nl: 'Dutch (Nederlands)',
+  ru: 'Russian (Русский)',
+  pl: 'Polish (Polski)',
+}
+
+const TARGET_LANGS = ['es', 'en', 'de', 'fr', 'nl', 'ru', 'pl'] as const
+
+interface PropertyContext {
+  property_type?: string | null
+  zone?: string | null
+  bedrooms?: number | null
+  bathrooms?: number | null
+  build_area_m2?: number | null
+  plot_area_m2?: number | null
+  terrace_area_m2?: number | null
+  garden_area_m2?: number | null
+  price?: number | null
+  views?: string | null
+  has_pool?: boolean | null
+  has_garage?: boolean | null
+  has_garden?: boolean | null
+  has_terrace?: boolean | null
+  has_ac?: boolean | null
+  has_sea_view?: boolean | null
+  year_built?: number | null
+  year_reformed?: number | null
+}
+
+function buildStructuredFactsBlock(ctx: PropertyContext): string {
+  const facts: string[] = []
+  if (ctx.property_type) facts.push(`Type: ${ctx.property_type}`)
+  if (ctx.zone) facts.push(`Zone: ${ctx.zone}, Costa Blanca, Spain`)
+  if (ctx.bedrooms) facts.push(`${ctx.bedrooms} bedrooms`)
+  if (ctx.bathrooms) facts.push(`${ctx.bathrooms} bathrooms`)
+  if (ctx.build_area_m2) facts.push(`${ctx.build_area_m2}m² built`)
+  if (ctx.plot_area_m2) facts.push(`${ctx.plot_area_m2}m² plot`)
+  if (ctx.terrace_area_m2) facts.push(`${ctx.terrace_area_m2}m² terrace`)
+  if (ctx.garden_area_m2) facts.push(`${ctx.garden_area_m2}m² garden`)
+  if (ctx.price) facts.push(`Price: €${ctx.price.toLocaleString('en-US')}`)
+  if (ctx.views) facts.push(`Views: ${ctx.views}`)
+  if (ctx.year_built) facts.push(`Year built: ${ctx.year_built}`)
+  if (ctx.year_reformed) facts.push(`Year reformed: ${ctx.year_reformed}`)
+
+  const features: string[] = []
+  if (ctx.has_pool) features.push('pool')
+  if (ctx.has_sea_view) features.push('sea view')
+  if (ctx.has_garden) features.push('garden')
+  if (ctx.has_terrace) features.push('terrace')
+  if (ctx.has_garage) features.push('garage')
+  if (ctx.has_ac) features.push('air conditioning')
+  if (features.length) facts.push(`Features: ${features.join(', ')}`)
+
+  return facts.join('\n')
+}
+
+async function callOpenRouter(prompt: string, opts: { maxTokens?: number; model?: string } = {}): Promise<string | null> {
+  const apiKey = process.env.OPENROUTER_API_KEY
+  if (!apiKey) {
+    console.error('[ai] OPENROUTER_API_KEY missing')
+    return null
+  }
+  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: opts.model || 'anthropic/claude-sonnet-4.6',
+      messages: [{ role: 'user', content: prompt }],
+      max_tokens: opts.maxTokens || 800,
+    }),
+  })
+  if (!response.ok) {
+    console.error('[ai] OpenRouter request failed', response.status, await response.text().catch(() => ''))
+    return null
+  }
+  const json = await response.json()
+  const content = json.choices?.[0]?.message?.content
+  return typeof content === 'string' ? content.trim() : null
+}
+
+function parseTitleAndDescription(raw: string): { title: string; description: string } {
+  // Modelos a veces devuelven JSON, a veces "Title: ...\nDescription: ..."
+  // Intentamos JSON primero, luego regex.
+  const jsonMatch = raw.match(/\{[\s\S]*\}/)
+  if (jsonMatch) {
+    try {
+      const parsed = JSON.parse(jsonMatch[0]) as { title?: string; description?: string }
+      if (parsed.title && parsed.description) {
+        return { title: parsed.title.trim(), description: parsed.description.trim() }
+      }
+    } catch {
+      // pasa a regex
+    }
+  }
+  const titleMatch = raw.match(/(?:Title|TÍTULO|TITLE):\s*([^\n]+)/i)
+  const descMatch = raw.match(/(?:Description|DESCRIPCIÓN|DESCRIPTION):\s*([\s\S]+)$/i)
+  return {
+    title: (titleMatch?.[1] || '').trim(),
+    description: (descMatch?.[1] || raw).trim(),
+  }
+}
+
+/**
+ * Genera título + descripción Pro en el idioma origen, combinando:
+ * - los datos estructurados de la propiedad (precio, m², dormitorios, vistas, etc.)
+ * - las notas crudas que el agente escribió en `description_base`
+ *
+ * Devuelve el par (title, description) en el idioma indicado.
+ * Lo llama el botón "Generar con IA" del form de propiedades.
+ */
+export async function generatePropertyTitleAndDescription(args: {
+  baseText: string
+  lang: string
+  context: PropertyContext
+}): Promise<{ title?: string; description?: string; error?: string }> {
+  const lang = TARGET_LANGS.includes(args.lang as typeof TARGET_LANGS[number]) ? args.lang : 'es'
+  const langLabel = LANG_NAMES[lang]
+  const facts = buildStructuredFactsBlock(args.context)
+  const baseText = args.baseText?.trim() || '(no extra notes)'
+
+  const prompt = `You are a senior luxury real estate copywriter at Costa Blanca Investments (CBI), an exclusive Costa Blanca Norte agency in Spain. Write a professional, polished, evocative listing for a high-net-worth international buyer.
+
+Combine TWO sources of truth:
+
+[STRUCTURED FACTS — from our database]
+${facts || '(none)'}
+
+[AGENT'S RAW NOTES — human context, may contain typos or incomplete sentences]
+${baseText}
+
+OUTPUT INSTRUCTIONS:
+- Language: ${langLabel}
+- Output strictly in this JSON format and nothing else:
+{"title": "...", "description": "..."}
+- Title: max 80 chars, evocative, mentions the property type + key feature + location (ej: "Mediterranean Villa with Sea Views in Altea").
+- Description: 4-6 sentences, professional luxury tone, NO bullets, NO emojis, NO "this villa offers" clichés. Mention lifestyle, key features, location benefits, and end with a sentence about distances (beach, Alicante airport, Valencia airport).
+- If a fact appears in BOTH sources, prefer the agent's wording when it's more specific.
+- If structured facts are minimal, lean more on the agent's notes.
+- Never invent specific numbers (price, m², year) that aren't in the structured facts.
+
+Output the JSON only.`
+
+  const raw = await callOpenRouter(prompt, { maxTokens: 700 })
+  if (!raw) return { error: 'No se pudo generar. Revisa que OPENROUTER_API_KEY esté configurada.' }
+  const { title, description } = parseTitleAndDescription(raw)
+  if (!title || !description) return { error: 'Respuesta de la IA incompleta. Inténtalo de nuevo.' }
+  return { title, description }
+}
+
+/**
+ * Traduce un par (title, description) del idioma origen a los 6 idiomas restantes.
+ * Devuelve un mapa { es: {title, description}, en: {...}, ... }
+ * Lo llama el botón "Traducir a 7 idiomas".
+ */
+export async function translatePropertyTextsToAllLanguages(args: {
+  sourceLang: string
+  sourceTitle: string
+  sourceDescription: string
+}): Promise<{
+  translations?: Record<string, { title: string; description: string }>
+  error?: string
+}> {
+  const sourceLang = args.sourceLang
+  const sourceLangLabel = LANG_NAMES[sourceLang] || 'English'
+
+  if (!args.sourceTitle || !args.sourceDescription) {
+    return { error: 'Falta el título o la descripción de origen para traducir.' }
+  }
+
+  const targets = TARGET_LANGS.filter((l) => l !== sourceLang)
+  const targetLabels = targets.map((l) => `- ${l}: ${LANG_NAMES[l]}`).join('\n')
+
+  const prompt = `You are a professional translator specialized in luxury real estate. Translate the following title and description from ${sourceLangLabel} to the listed target languages. Keep the professional, evocative tone and the same structure. Do not add or remove information. For each target language output the translated title and description.
+
+[SOURCE — ${sourceLangLabel}]
+TITLE: ${args.sourceTitle}
+DESCRIPTION: ${args.sourceDescription}
+
+[TARGET LANGUAGES]
+${targetLabels}
+
+OUTPUT FORMAT — strict JSON, no other text:
+{
+${targets.map((l) => `  "${l}": { "title": "...", "description": "..." }`).join(',\n')}
+}`
+
+  const raw = await callOpenRouter(prompt, { maxTokens: 3500 })
+  if (!raw) return { error: 'No se pudo traducir. Revisa OPENROUTER_API_KEY.' }
+
+  // Extraer JSON
+  const jsonMatch = raw.match(/\{[\s\S]*\}/)
+  if (!jsonMatch) return { error: 'Respuesta de la IA inválida.' }
+
+  try {
+    const parsed = JSON.parse(jsonMatch[0]) as Record<string, { title: string; description: string }>
+    // Añadir el idioma origen al resultado para tener el set completo de 7
+    const result: Record<string, { title: string; description: string }> = {
+      [sourceLang]: { title: args.sourceTitle, description: args.sourceDescription },
+    }
+    for (const lang of targets) {
+      const t = parsed[lang]
+      if (t?.title && t?.description) {
+        result[lang] = { title: t.title.trim(), description: t.description.trim() }
+      }
+    }
+    return { translations: result }
+  } catch {
+    return { error: 'No se pudo parsear la traducción. Inténtalo de nuevo.' }
+  }
+}
+
+/**
+ * Persiste los textos generados/traducidos en la BD de la propiedad.
+ * El form llama esto cuando el agente edita los textos Pro y guarda.
+ */
+export async function savePropertyTexts(args: {
+  propertyId: string
+  baseText: string
+  sourceLang: string
+  texts: Record<string, { title: string; description: string }>
+}): Promise<{ success?: boolean; error?: string }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'No autenticado' }
+
+  const adminClient = createAdminClient()
+  const { data: callerProfile } = await adminClient
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+  const isElevated = callerProfile?.role === 'admin' || callerProfile?.role === 'secretary'
+  const writeClient = isElevated ? adminClient : supabase
+
+  const update: Record<string, string | null> = {
+    description_base: args.baseText || null,
+    description_source_lang: args.sourceLang,
+  }
+  for (const lang of TARGET_LANGS) {
+    const t = args.texts[lang]
+    update[`title_${lang}`] = t?.title || null
+    update[`description_${lang}`] = t?.description || null
+  }
+
+  const { error } = await writeClient
+    .from('properties')
+    .update(update)
+    .eq('id', args.propertyId)
+
+  if (error) return { error: error.message }
+  revalidatePath('/properties')
+  return { success: true }
 }
 
 export async function deleteProperty(propertyId: string) {

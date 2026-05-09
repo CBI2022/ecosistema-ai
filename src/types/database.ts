@@ -149,9 +149,26 @@ export interface Property {
   longitude: number | null
 
   // Descripciones
+  // - description_base: notas crudas del agente (contexto para la IA, NO se sube a Sooprema)
+  // - description_<lang>: versión Pro generada por la IA y editable, se sube a Sooprema
+  // - title_<lang>: título Pro generado en cada idioma, se sube a Sooprema
+  // - description_source_lang: idioma de origen desde el que se traducen los demás
+  description_base: string | null
+  description_source_lang: string | null
+  title_es: string | null
+  title_en: string | null
+  title_de: string | null
+  title_fr: string | null
+  title_nl: string | null
+  title_ru: string | null
+  title_pl: string | null
   description_es: string | null
   description_en: string | null
+  description_de: string | null
+  description_fr: string | null
   description_nl: string | null
+  description_ru: string | null
+  description_pl: string | null
   views: string | null
 
   // Features core

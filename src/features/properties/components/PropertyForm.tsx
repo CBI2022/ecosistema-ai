@@ -4,6 +4,7 @@ import { useState, useTransition, useEffect, useMemo } from 'react'
 import { saveProperty } from '@/actions/properties'
 import { OwnerPicker } from './OwnerPicker'
 import { AddressPicker } from './AddressPicker'
+import { TitleAndDescriptionEditor } from './TitleAndDescriptionEditor'
 import type { Property } from '@/types/database'
 
 interface AgentPhoto {
@@ -787,44 +788,74 @@ export function PropertyForm({
         <OwnerPicker value={ownerId} onChange={(id) => setOwnerId(id)} />
       </section>
 
-      {/* ═══ 7. Título + Descripción ═══ */}
+      {/* ═══ 7. Título + Descripción (CBI lo refina y traduce a 7 idiomas) ═══ */}
       <section id="section-title" className={sectionClass}>
         <h2 className={sectionTitle}>✏️ Título y descripción</h2>
-        <p className={sectionSubtitle}>El título es obligatorio. La descripción la refinará y traducirá Sooprema automáticamente.</p>
+        <p className={sectionSubtitle}>
+          CBI genera y traduce con su IA propia los textos profesionales en 7 idiomas. Lo que aquí veas Pro es lo que se sube a Sooprema.
+        </p>
 
-        <div>
-          <label className={labelClass}>
-            Título de la propiedad <span className="text-red-400">*</span>
-          </label>
-          {titleEmpty && (
-            <div className="mb-2 rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-xs text-red-400">
-              ⚠️ ATENCIÓN: si no incluyes el título, la propiedad NO aparecerá en la web.
-            </div>
-          )}
-          <input
-            name="title_headline"
-            defaultValue={initialTitle}
-            onChange={(e) => setTitleEmpty(!e.target.value.trim())}
-            className={inputClass}
-            placeholder="Mediterranean Villa with Sea Views in Altea"
-          />
-        </div>
-
-        <div className="mt-5">
-          <label className={labelClass}>
-            Descripción de la propiedad <span className="text-red-400">*</span>
-          </label>
-          <textarea
-            name="description_es"
-            defaultValue={initialDescription}
-            rows={6}
-            className={inputClass}
-            placeholder="Escribe en cualquier idioma — Sooprema la pulirá y traducirá a 7 idiomas automáticamente."
-          />
-          <p className="mt-2 text-[11px] text-[#9A9080]">
-            💡 No te preocupes por idiomas: cuando la subamos, Sooprema usa su IA propia para mejorar el texto y generar las versiones en español, inglés, alemán, francés, holandés, ruso y polaco.
-          </p>
-        </div>
+        <TitleAndDescriptionEditor
+          initial={{
+            description_base: initialProperty?.description_base ?? null,
+            description_source_lang: initialProperty?.description_source_lang ?? 'es',
+            title_es: initialProperty?.title_es ?? null,
+            title_en: initialProperty?.title_en ?? null,
+            title_de: initialProperty?.title_de ?? null,
+            title_fr: initialProperty?.title_fr ?? null,
+            title_nl: initialProperty?.title_nl ?? null,
+            title_ru: initialProperty?.title_ru ?? null,
+            title_pl: initialProperty?.title_pl ?? null,
+            description_es: initialProperty?.description_es ?? null,
+            description_en: initialProperty?.description_en ?? null,
+            description_de: initialProperty?.description_de ?? null,
+            description_fr: initialProperty?.description_fr ?? null,
+            description_nl: initialProperty?.description_nl ?? null,
+            description_ru: initialProperty?.description_ru ?? null,
+            description_pl: initialProperty?.description_pl ?? null,
+            legacy_title: initialTitle,
+            legacy_description: initialDescription,
+          }}
+          getContext={() => {
+            const form = document.getElementById('propForm') as HTMLFormElement | null
+            const fd = form ? new FormData(form) : null
+            const num = (k: string): number | null => {
+              const v = fd?.get(k)
+              if (v === null || v === undefined || v === '') return null
+              const n = Number(v)
+              return isNaN(n) ? null : n
+            }
+            const str = (k: string): string | null => {
+              const v = fd?.get(k)
+              if (v === null || v === undefined || v === '') return null
+              return String(v)
+            }
+            const bool = (k: string): boolean => {
+              const v = fd?.get(k)
+              return v === 'on' || v === 'true' || v === '1'
+            }
+            return {
+              property_type: str('property_type'),
+              zone: str('zone'),
+              bedrooms: num('bedrooms'),
+              bathrooms: num('bathrooms'),
+              build_area_m2: num('build_area_m2'),
+              plot_area_m2: num('plot_area_m2'),
+              terrace_area_m2: num('terrace_area_m2'),
+              garden_area_m2: num('garden_area_m2'),
+              price: num('price'),
+              views: str('views'),
+              has_pool: bool('has_pool'),
+              has_garage: bool('has_garage'),
+              has_garden: bool('has_garden'),
+              has_terrace: bool('has_terrace'),
+              has_ac: bool('has_ac'),
+              has_sea_view: bool('has_sea_view'),
+              year_built: num('year_built'),
+              year_reformed: num('year_reformed'),
+            }
+          }}
+        />
       </section>
 
       {/* ═══ 8. Fotos (opcional) ═══ */}
