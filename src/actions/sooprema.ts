@@ -169,7 +169,10 @@ export async function processSoopremaJob(jobId: string) {
       photos,
     })
 
-    const result = await runSoopremaAutomation(fields, { timeout: 60000 })
+    const result = await runSoopremaAutomation(fields, {
+      timeout: 60000,
+      photosDriveLink: (property as unknown as Record<string, unknown>).photos_drive_link as string | null | undefined,
+    })
 
     const finalStatus = result.success ? 'done' : 'error'
     await admin

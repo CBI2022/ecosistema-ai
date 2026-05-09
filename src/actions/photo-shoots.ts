@@ -117,6 +117,7 @@ export async function bookShoot(formData: FormData) {
   const propertyAddress = formData.get('property_address') as string
   const notes = (formData.get('notes') as string) || null
   const isExtraordinary = formData.get('is_extraordinary') === 'true'
+  const locationLink = (formData.get('location_link') as string) || null
 
   if (!shootDate || !shootTime || !propertyAddress) {
     return { error: 'Faltan datos obligatorios' }
@@ -194,6 +195,7 @@ export async function bookShoot(formData: FormData) {
       photographer_id: photographer?.id ?? null,
       property_address: propertyAddress,
       property_reference: (formData.get('property_reference') as string) || null,
+      location_link: locationLink,
       shoot_date: shootDate,
       shoot_time: shootTime,
       notes,
@@ -649,4 +651,230 @@ export async function updateShootStatus(
   if (status === 'completed') return completeShoot(shootId)
   if (status === 'cancelled') return cancelShootAsAgent(shootId)
   return confirmShoot(shootId) // 'scheduled' = confirmar
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// FLUJO DE ENTREGA Y VINCULACIÓN DE FOTOS
+// ─────────────────────────────────────────────────────────────────────
+
+/**
+ * Jelle pega el link de Drive con las fotos editadas y entrega al agente.
+ * Llamada por la pantalla del fotógrafo cuando termina una sesión.
+ */
+export async function deliverShootPhotos(shootId: string, driveLink: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'No autenticado' }
+
+  if (!driveLink || !driveLink.trim()) {
+    return { error: 'Pega el link de la carpeta de Drive con las fotos' }
+  }
+  // Validación mínima de que sea un link de Drive
+  if (!/drive\.google\.com|docs\.google\.com/.test(driveLink)) {
+    return { error: 'El link no parece de Google Drive. Asegúrate de pegar el link de la carpeta.' }
+  }
+
+  const admin = createAdminClient()
+
+  const { data: shoot } = await admin
+    .from('photo_shoots')
+    .select('id, agent_id, photographer_id, property_address, property_reference, shoot_date')
+    .eq('id', shootId)
+    .single()
+  if (!shoot) return { error: 'Sesión no encontrada' }
+
+  // Verificar permisos: solo el fotógrafo asignado o un admin
+  const { data: caller } = await admin
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+  const isAdminOrSecretary = caller?.role === 'admin' || caller?.role === 'secretary'
+  if (!isAdminOrSecretary && shoot.photographer_id !== user.id) {
+    return { error: 'No autorizado: solo el fotógrafo asignado puede entregar las fotos.' }
+  }
+
+  // Marcar como entregado
+  const { error } = await admin
+    .from('photo_shoots')
+    .update({
+      photos_drive_link: driveLink.trim(),
+      delivered_at: new Date().toISOString(),
+      status: 'delivered',
+    })
+    .eq('id', shootId)
+  if (error) return { error: error.message }
+
+  // Notificar al agente: push + email + in-app
+  const { data: agent } = await admin
+    .from('profiles')
+    .select('full_name, email')
+    .eq('id', shoot.agent_id)
+    .single()
+  const refOrAddr = shoot.property_reference || shoot.property_address || 'tu propiedad'
+  const siteUrl = getSiteUrl()
+
+  await admin.from('notifications').insert({
+    type: 'shoot_photos_delivered',
+    title: '📸 Fotos listas',
+    message: `Jelle ha entregado las fotos de ${refOrAddr}. Asóciala a la propiedad para publicar.`,
+    target_user_id: shoot.agent_id,
+    is_read: false,
+  })
+
+  sendPushToUser(shoot.agent_id, {
+    title: '📸 Tus fotos están listas',
+    body: `${refOrAddr} — entra al SaaS para asociarlas a la propiedad`,
+    url: '/dashboard',
+    tag: `shoot-delivered-${shootId}`,
+  }).catch(() => {})
+
+  if (agent?.email) {
+    sendEmail({
+      to: agent.email,
+      subject: `📸 Fotos listas: ${refOrAddr}`,
+      html: `
+        <div style="font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#0A0A0A;color:#F5F0E8;padding:32px;border-radius:16px;max-width:560px;margin:auto">
+          <h2 style="color:#C9A84C;margin:0 0 16px;font-size:20px">📸 Tus fotos están listas</h2>
+          <p style="color:#9A9080;line-height:1.6">Jelle acaba de entregar las fotos de <strong style="color:#F5F0E8">${refOrAddr}</strong>.</p>
+          <p style="color:#9A9080;line-height:1.6">Entra al SaaS para asociarlas a la propiedad y publicarla en Sooprema.</p>
+          <p style="margin:24px 0">
+            <a href="${siteUrl}/dashboard" style="display:inline-block;background:#C9A84C;color:#000;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold">Ver en CBI</a>
+          </p>
+          <p style="color:#6A6070;font-size:12px;margin-top:24px">Carpeta de Drive: <a href="${driveLink}" style="color:#C9A84C">${driveLink}</a></p>
+        </div>
+      `,
+    }).catch(() => {})
+  }
+
+  revalidatePath('/photographer')
+  revalidatePath('/dashboard')
+  return { success: true }
+}
+
+/**
+ * El agente vincula una sesión entregada a una propiedad concreta.
+ * Esto copia el link Drive a la propiedad para que la automation lo use al publicar.
+ */
+export async function linkShootToProperty(shootId: string, propertyId: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'No autenticado' }
+
+  const admin = createAdminClient()
+
+  const { data: shoot } = await admin
+    .from('photo_shoots')
+    .select('id, agent_id, photos_drive_link, status')
+    .eq('id', shootId)
+    .single()
+  if (!shoot) return { error: 'Sesión no encontrada' }
+  if (!shoot.photos_drive_link) return { error: 'Esta sesión todavía no tiene link de fotos' }
+
+  const { data: caller } = await admin
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+  const isElevated = caller?.role === 'admin' || caller?.role === 'secretary'
+  if (!isElevated && shoot.agent_id !== user.id) {
+    return { error: 'No autorizado' }
+  }
+
+  // Verificar que la propiedad pertenece al agente (o caller es elevado)
+  const { data: prop } = await admin
+    .from('properties')
+    .select('id, agent_id, reference')
+    .eq('id', propertyId)
+    .single()
+  if (!prop) return { error: 'Propiedad no encontrada' }
+  if (!isElevated && prop.agent_id !== user.id) {
+    return { error: 'No autorizado: la propiedad no es tuya' }
+  }
+
+  // Actualizar shoot + property
+  const [{ error: e1 }, { error: e2 }] = await Promise.all([
+    admin.from('photo_shoots')
+      .update({
+        linked_property_id: propertyId,
+        linked_at: new Date().toISOString(),
+        status: 'linked',
+      })
+      .eq('id', shootId),
+    admin.from('properties')
+      .update({ photos_drive_link: shoot.photos_drive_link })
+      .eq('id', propertyId),
+  ])
+  if (e1) return { error: e1.message }
+  if (e2) return { error: e2.message }
+
+  revalidatePath('/dashboard')
+  revalidatePath('/properties')
+  return { success: true, propertyReference: prop.reference }
+}
+
+/**
+ * Lista de sesiones del agente que tienen fotos entregadas pero AÚN NO están vinculadas
+ * a ninguna propiedad. Las muestra el banner del dashboard.
+ */
+export async function getDeliveredShootsForAgent(): Promise<Array<{
+  id: string
+  property_address: string | null
+  property_reference: string | null
+  shoot_date: string
+  delivered_at: string | null
+  photos_drive_link: string | null
+  notes: string | null
+}>> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return []
+  const admin = createAdminClient()
+  const { data } = await admin
+    .from('photo_shoots')
+    .select('id, property_address, property_reference, shoot_date, delivered_at, photos_drive_link, notes')
+    .eq('agent_id', user.id)
+    .eq('status', 'delivered')
+    .order('delivered_at', { ascending: false })
+  return data || []
+}
+
+/**
+ * Lista de sesiones del fotógrafo (propias) que están confirmadas/pasadas pero
+ * sin entregar todavía. Las muestra la pantalla de Jelle.
+ */
+export async function getPendingDeliveriesForPhotographer(): Promise<Array<{
+  id: string
+  agent_id: string
+  agent_name: string | null
+  property_address: string | null
+  property_reference: string | null
+  shoot_date: string
+  shoot_time: string
+  notes: string | null
+  status: string
+}>> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return []
+  const admin = createAdminClient()
+  const { data: shoots } = await admin
+    .from('photo_shoots')
+    .select('id, agent_id, property_address, property_reference, shoot_date, shoot_time, notes, status')
+    .eq('photographer_id', user.id)
+    .in('status', ['scheduled', 'completed'])
+    .order('shoot_date', { ascending: false })
+    .limit(30)
+  if (!shoots || shoots.length === 0) return []
+  const agentIds = [...new Set(shoots.map((s) => s.agent_id))]
+  const { data: agents } = await admin
+    .from('profiles')
+    .select('id, full_name, email')
+    .in('id', agentIds)
+  const agentMap = new Map((agents || []).map((a) => [a.id, a.full_name || a.email]))
+  return shoots.map((s) => ({
+    ...s,
+    shoot_time: String(s.shoot_time).slice(0, 5),
+    agent_name: agentMap.get(s.agent_id) || null,
+  }))
 }

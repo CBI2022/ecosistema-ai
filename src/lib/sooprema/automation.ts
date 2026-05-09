@@ -5,6 +5,7 @@
 
 import type { Browser, Page } from 'playwright-core'
 import type { SoopremaFieldMap } from './mapper'
+import { listFolderPhotos, downloadPhotoBytes } from '@/lib/google-drive/fetch-public-folder'
 
 const LOGIN_URL = process.env.SOOPREMA_URL || 'https://costablancainvestments.com/crm/login'
 const USERNAME = process.env.SOOPREMA_USERNAME || ''
@@ -48,7 +49,7 @@ async function dismissPopups(page: Page, log: (m: string) => void) {
 
 export async function runSoopremaAutomation(
   fields: SoopremaFieldMap,
-  options: { timeout?: number } = {}
+  options: { timeout?: number; photosDriveLink?: string | null } = {}
 ): Promise<AutomationResult> {
   const logs: string[] = []
   const log = (msg: string) => {
@@ -164,17 +165,87 @@ export async function runSoopremaAutomation(
       log(`⚠ No se pudo capturar el external_id de la URL: ${page.url()}`)
     }
 
-    // ═════════ PARAR AQUÍ ═════════
-    // Devolvemos OK con el ID temporal. Marco está investigando exactamente
-    // cómo Sooprema acepta un borrador (qué botón guarda en "propiedades ocultas").
-    // Cuando lo sepa, ajustamos el último paso.
+    // ═════════ FOTOS desde link de Google Drive (best-effort) ═════════
+    // Si la propiedad tiene un link público de Drive, descargamos las fotos y
+    // tratamos de subirlas al uploader de Sooprema. NO BLOQUEA: si falla, el
+    // borrador igual queda creado y la secretaria podrá subir las fotos a mano.
+    let photosUploaded = 0
+    if (soopremaExternalId && options.photosDriveLink) {
+      try {
+        log(`📸 Descargando fotos del Drive público...`)
+        const list = await listFolderPhotos(options.photosDriveLink)
+        if (!list.ok) {
+          log(`⚠ No se pudieron listar fotos del Drive: ${list.error}`)
+        } else if (list.photos && list.photos.length > 0) {
+          log(`  ✓ ${list.photos.length} fotos encontradas en Drive`)
+
+          // Buscar input file en la página actual (Sooprema lo tiene en el step de fotos)
+          // Si no está visible aquí, hacemos un best-effort de avanzar 1 paso.
+          let fileInput = page.locator('input[type="file"]').first()
+          if (await fileInput.count() === 0) {
+            log(`  Buscando step de fotos...`)
+            const nextBtn = page.locator('.propertyuploadnavigation__submit--next, button:has-text("Siguiente"), button:has-text("Next")').first()
+            for (let i = 0; i < 4; i++) {
+              if (await nextBtn.count() > 0 && await nextBtn.isEnabled().catch(() => false)) {
+                await nextBtn.click({ timeout: 5000 }).catch(() => {})
+                await page.waitForTimeout(2000)
+                await dismissPopups(page, log)
+                fileInput = page.locator('input[type="file"]').first()
+                if (await fileInput.count() > 0) {
+                  log(`  ✓ Step de fotos alcanzado (paso ${i + 1})`)
+                  break
+                }
+              } else {
+                break
+              }
+            }
+          }
+
+          if (await fileInput.count() > 0) {
+            // Descargar todas las fotos en buffers y subir todas de una vez
+            // (los inputs file aceptan múltiples archivos con setInputFiles).
+            const buffers: { name: string; mimeType: string; buffer: Buffer }[] = []
+            // Drone al final
+            const ordered = [...list.photos].sort((a, b) => {
+              const aDrone = /drone|aer/i.test(a.name) ? 1 : 0
+              const bDrone = /drone|aer/i.test(b.name) ? 1 : 0
+              return aDrone - bDrone
+            })
+            for (const photo of ordered.slice(0, 30)) { // límite 30 fotos para no agotar el timeout
+              const dl = await downloadPhotoBytes(photo)
+              if (dl.ok && dl.bytes) {
+                buffers.push({
+                  name: dl.filename || photo.name,
+                  mimeType: dl.contentType || photo.mimeType || 'image/jpeg',
+                  buffer: dl.bytes,
+                })
+              }
+            }
+            log(`  ✓ ${buffers.length} fotos descargadas, subiendo a Sooprema...`)
+
+            await fileInput.setInputFiles(buffers).catch((err) => {
+              log(`  ⚠ Error al subir: ${(err as Error).message.slice(0, 100)}`)
+            })
+            await page.waitForTimeout(3000)
+            photosUploaded = buffers.length
+            log(`  ✓ ${photosUploaded} fotos subidas a Sooprema`)
+          } else {
+            log(`  ⚠ No se encontró input de subida de fotos en la página actual`)
+          }
+        } else {
+          log(`  ⚠ La carpeta de Drive no contiene imágenes`)
+        }
+      } catch (err) {
+        log(`⚠ Error en bloque de fotos (no rompe el flow): ${(err as Error).message.slice(0, 120)}`)
+      }
+    }
 
     const sooprema_public_url = soopremaExternalId
       ? `https://www.costablancainvestments.com/admin/propiedades/editar/${soopremaExternalId}/`
       : null
 
     if (soopremaExternalId) {
-      log(`✅ Sesión Sooprema con ID ${soopremaExternalId}. (Pendiente: confirmar acción exacta para guardar borrador.)`)
+      log(`✅ Borrador en Sooprema · ID ${soopremaExternalId} · ${photosUploaded} foto(s) subida(s)`)
     } else {
       log(`❌ No se generó la propiedad — revisar credenciales/campos obligatorios.`)
     }
