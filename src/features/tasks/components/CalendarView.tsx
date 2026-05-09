@@ -146,12 +146,13 @@ export function CalendarView({
                 {/* Hasta 2 tasks visibles */}
                 <div className="mt-1 flex flex-col gap-0.5 overflow-hidden">
                   {dayTasks.slice(0, 2).map((t) => {
-                    const pri = PRIORITY_CONFIG[t.priority]
+                    const pri = t.priority ? PRIORITY_CONFIG[t.priority] : null
+                    const color = pri?.color ?? '#9A9080'
                     return (
                       <div
                         key={t.id}
                         className="truncate rounded px-1 py-0.5 text-[9px] font-semibold"
-                        style={{ background: `${pri.color}20`, color: pri.color }}
+                        style={{ background: `${color}20`, color }}
                         title={t.title}
                       >
                         {t.title}
@@ -219,7 +220,7 @@ export function CalendarView({
 
 function TaskMiniCard({ task, onClick }: { task: TaskWithAssignee; onClick: () => void }) {
   const st = STATUS_CONFIG[task.status]
-  const pri = PRIORITY_CONFIG[task.priority]
+  const pri = task.priority ? PRIORITY_CONFIG[task.priority] : null
   return (
     <button
       onClick={onClick}
@@ -229,9 +230,11 @@ function TaskMiniCard({ task, onClick }: { task: TaskWithAssignee; onClick: () =
         <span className="rounded px-1.5 py-0.5 text-[8px] font-bold uppercase" style={{ background: `${st.color}20`, color: st.color }}>
           {st.emoji}
         </span>
-        <span className={`rounded px-1.5 py-0.5 text-[8px] font-bold uppercase ${pri.bg}`} style={{ color: pri.color }}>
-          {pri.label}
-        </span>
+        {pri && (
+          <span className={`rounded px-1.5 py-0.5 text-[8px] font-bold uppercase ${pri.bg}`} style={{ color: pri.color }}>
+            {pri.label}
+          </span>
+        )}
       </div>
       <p className="line-clamp-2 text-xs font-semibold text-[#F5F0E8]">{task.title}</p>
     </button>

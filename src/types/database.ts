@@ -329,7 +329,7 @@ export interface ProjectTask {
   title: string
   description: string | null
   category: string
-  priority: TaskPriority
+  priority: TaskPriority | null
   status: TaskStatus
   assigned_to: string | null
   created_by: string | null

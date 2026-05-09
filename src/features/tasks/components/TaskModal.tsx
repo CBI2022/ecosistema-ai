@@ -42,7 +42,7 @@ export function TaskModal({
   const [title, setTitle] = useState(task?.title || '')
   const [description, setDescription] = useState(task?.description || '')
   const [category, setCategory] = useState(task?.category || 'general')
-  const [priority, setPriority] = useState<TaskPriority>(task?.priority || 'medium')
+  const [priority, setPriority] = useState<TaskPriority | ''>(task?.priority ?? '')
   const [status, setStatus] = useState<TaskStatus>(task?.status || 'next_action')
   const [assignedTo, setAssignedTo] = useState(task?.assigned_to || '')
   // datetime-local expects "YYYY-MM-DDTHH:MM" — trim any zone/seconds
@@ -63,7 +63,7 @@ export function TaskModal({
           title,
           description: description || null,
           category,
-          priority,
+          priority: priority || null,
           status,
           assigned_to: assignedTo || null,
           due_date: dueDate || null,
@@ -149,10 +149,11 @@ export function TaskModal({
               <div>
                 <select
                   value={priority}
-                  onChange={(e) => setPriority(e.target.value as TaskPriority)}
+                  onChange={(e) => setPriority(e.target.value as TaskPriority | '')}
                   disabled={!canEditAll}
                   className="w-full rounded-md border border-white/10 bg-[#1C1C1C] px-2.5 py-1.5 text-xs text-[#F5F0E8] outline-none focus:border-[#C9A84C]/60 disabled:opacity-60"
                 >
+                  <option value="">— Sin prioridad —</option>
                   {(Object.keys(PRIORITY_CONFIG) as TaskPriority[]).map((p) => (
                     <option key={p} value={p}>{PRIORITY_CONFIG[p].label}</option>
                   ))}

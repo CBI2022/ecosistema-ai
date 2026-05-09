@@ -78,7 +78,7 @@ export function TasksDashboard({
   const [filterCategory, setFilterCategory] = useState<string>('all')
   const [filterPriority, setFilterPriority] = useState<string>('all')
   const [filterAssignee, setFilterAssignee] = useState<string>('all')
-  const [sortBy, setSortBy] = useState<SortBy>('manual')
+  const [sortBy, setSortBy] = useState<SortBy>('priority')
   const [search, setSearch] = useState('')
   const [modalTask, setModalTask] = useState<TaskWithAssignee | null>(null)
   const [showCreate, setShowCreate] = useState(false)
@@ -97,7 +97,9 @@ export function TasksDashboard({
     const result = activeTasks.filter((t) => {
       if (scope === 'mine' && t.assigned_to !== currentUserId) return false
       if (filterCategory !== 'all' && t.category !== filterCategory) return false
-      if (filterPriority !== 'all' && t.priority !== filterPriority) return false
+      if (filterPriority === 'none') {
+        if (t.priority !== null) return false
+      } else if (filterPriority !== 'all' && t.priority !== filterPriority) return false
       if (filterAssignee !== 'all' && t.assigned_to !== filterAssignee) return false
       if (search && !`${t.title} ${t.description || ''}`.toLowerCase().includes(search.toLowerCase())) return false
       return true
@@ -106,13 +108,14 @@ export function TasksDashboard({
     // Sort
     const sorted = [...result]
     if (sortBy === 'manual') {
-      // Orden manual definido por Marco (campo position en BD)
       sorted.sort((a, b) => (a.position ?? 9999) - (b.position ?? 9999))
     } else if (sortBy === 'priority') {
+      // urgent → high → medium → low → sin prioridad (null) al final
       sorted.sort((a, b) => {
         const ao = a.priority ? PRIORITY_CONFIG[a.priority].order : 99
         const bo = b.priority ? PRIORITY_CONFIG[b.priority].order : 99
-        return ao - bo
+        if (ao !== bo) return ao - bo
+        return (a.position ?? 9999) - (b.position ?? 9999)
       })
     } else if (sortBy === 'due_date') {
       sorted.sort((a, b) => {
@@ -352,6 +355,7 @@ export function TasksDashboard({
           {(Object.keys(PRIORITY_CONFIG) as TaskPriority[]).map((p) => (
             <option key={p} value={p}>{PRIORITY_CONFIG[p].label}</option>
           ))}
+          <option value="none">Sin prioridad</option>
         </select>
         {isAdmin && scope === 'all' && (
           <select
@@ -373,7 +377,6 @@ export function TasksDashboard({
           className="rounded-lg border border-[#C9A84C]/30 bg-[#C9A84C]/5 px-3 py-2 text-sm font-bold text-[#C9A84C] outline-none focus:border-[#C9A84C]/60"
           title={t('sortBy')}
         >
-          <option value="manual">📌 Orden de Marco</option>
           <option value="priority">{t('sortPriority')}</option>
           <option value="due_date">{t('sortDueDate')}</option>
           <option value="created">{t('sortRecent')}</option>

@@ -87,7 +87,7 @@ export function CompletedModal({ tasks, canEdit, onClose, onReopen, onOpenTask }
             <div className="space-y-2">
               {filtered.map((task) => {
                 const cat = CATEGORIES.find((c) => c.id === task.category) || CATEGORIES[CATEGORIES.length - 1]
-                const pri = PRIORITY_CONFIG[task.priority]
+                const pri = task.priority ? PRIORITY_CONFIG[task.priority] : null
                 const assignee = task.assignee
                 return (
                   <div
@@ -108,9 +108,11 @@ export function CompletedModal({ tasks, canEdit, onClose, onReopen, onOpenTask }
                         >
                           {cat.emoji} {cat.label}
                         </span>
-                        <span className={`rounded px-1.5 py-0.5 text-[9px] font-bold uppercase ${pri.bg}`} style={{ color: pri.color }}>
-                          {pri.label}
-                        </span>
+                        {pri && (
+                          <span className={`rounded px-1.5 py-0.5 text-[9px] font-bold uppercase ${pri.bg}`} style={{ color: pri.color }}>
+                            {pri.label}
+                          </span>
+                        )}
                       </div>
                       <p className="truncate text-sm font-semibold text-[#F5F0E8]">
                         {task.title}

@@ -72,7 +72,7 @@ export async function createTask(formData: FormData) {
     title,
     description: (formData.get('description') as string) || null,
     category: (formData.get('category') as string) || 'general',
-    priority: (formData.get('priority') as TaskPriority) || 'medium',
+    priority: (formData.get('priority') as TaskPriority) || null,
     status: (formData.get('status') as TaskStatus) || 'next_action',
     assigned_to: assignedTo,
     due_date: (formData.get('due_date') as string) || null,
@@ -95,7 +95,7 @@ export async function updateTask(taskId: string, updates: {
   title?: string
   description?: string | null
   category?: string
-  priority?: TaskPriority
+  priority?: TaskPriority | null
   status?: TaskStatus
   assigned_to?: string | null
   due_date?: string | null
