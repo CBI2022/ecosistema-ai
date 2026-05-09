@@ -1,12 +1,24 @@
 'use client'
 
-import { useTransition } from 'react'
-import { disconnectMyGoogleCalendar } from '@/actions/google-calendar'
+import { useEffect, useState, useTransition } from 'react'
+import {
+  disconnectMyGoogleCalendar,
+  listMyCalendars,
+  setMyActiveCalendar,
+} from '@/actions/google-calendar'
+
+interface CalendarOption {
+  id: string
+  summary: string
+  primary: boolean
+  backgroundColor?: string | null
+}
 
 interface Props {
   configured: boolean
   connected: boolean
   email: string | null
+  calendarId: string | null
   connectedAt: string | null
   initialFlash?: 'connected' | 'error' | null
   errorReason?: string | null
@@ -16,11 +28,35 @@ export function GoogleCalendarCard({
   configured,
   connected,
   email,
+  calendarId,
   connectedAt,
   initialFlash,
   errorReason,
 }: Props) {
   const [pending, startTransition] = useTransition()
+  const [calendars, setCalendars] = useState<CalendarOption[]>([])
+  const [loadingCals, setLoadingCals] = useState(false)
+  const [savedFlash, setSavedFlash] = useState(false)
+
+  // Cargar lista de calendarios cuando el usuario está conectado
+  useEffect(() => {
+    if (!connected) return
+    setLoadingCals(true)
+    listMyCalendars()
+      .then((res) => setCalendars(res.calendars ?? []))
+      .finally(() => setLoadingCals(false))
+  }, [connected])
+
+  function handleSelectCalendar(newId: string) {
+    if (newId === (calendarId || 'primary')) return
+    startTransition(async () => {
+      const res = await setMyActiveCalendar(newId)
+      if (!res.error) {
+        setSavedFlash(true)
+        setTimeout(() => setSavedFlash(false), 3000)
+      }
+    })
+  }
 
   function handleDisconnect() {
     if (!confirm('¿Seguro que quieres desconectar tu Google Calendar? Los shoots ya creados no se borrarán.')) return
@@ -28,6 +64,9 @@ export function GoogleCalendarCard({
       await disconnectMyGoogleCalendar()
     })
   }
+
+  const activeCalendarSummary =
+    calendars.find((c) => c.id === (calendarId || 'primary'))?.summary ?? null
 
   if (!configured) {
     return (
@@ -59,10 +98,6 @@ export function GoogleCalendarCard({
                   Cuenta: <strong className="text-[#F5F0E8]">{email}</strong>
                 </p>
               )}
-              <p className="mt-1.5 text-[11px] leading-relaxed text-[#9A9080]">
-                Cada shoot que confirmes se crea automáticamente en tu Google Calendar. Cualquier evento
-                personal que metas en tu Calendar bloquea ese horario para que los agentes no te reserven ahí.
-              </p>
               {initialFlash === 'connected' && (
                 <p className="mt-2 inline-block rounded-full bg-[#2ECC9A]/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[#2ECC9A]">
                   ¡Conectado correctamente!
@@ -77,6 +112,49 @@ export function GoogleCalendarCard({
           >
             {pending ? 'Desconectando...' : 'Desconectar'}
           </button>
+        </div>
+
+        {/* Selector de calendario activo */}
+        <div className="mt-4 rounded-xl border border-white/8 bg-[#0A0A0A] p-3">
+          <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-[#C9A84C]">
+            📂 Calendario donde se crean los shoots
+          </p>
+          {loadingCals ? (
+            <p className="text-xs text-[#9A9080]">Cargando tus calendarios...</p>
+          ) : calendars.length === 0 ? (
+            <p className="text-xs text-[#9A9080]">
+              No se han podido cargar los calendarios.
+            </p>
+          ) : (
+            <>
+              <select
+                value={calendarId || 'primary'}
+                onChange={(e) => handleSelectCalendar(e.target.value)}
+                disabled={pending}
+                className="w-full rounded-lg border border-white/10 bg-[#131313] px-3 py-2.5 text-sm text-[#F5F0E8] outline-none focus:border-[#C9A84C]/60 disabled:opacity-50"
+              >
+                {calendars.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.summary}{c.primary ? ' (principal)' : ''}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-2 text-[11px] leading-relaxed text-[#9A9080]">
+                Solo se sincroniza con este calendario. Si tienes uno separado para CBI (ej: <em>CBI JELLE FOTOS</em>),
+                elígelo aquí y tu calendario privado no se tocará.
+              </p>
+              {savedFlash && (
+                <p className="mt-2 inline-block rounded-full bg-[#2ECC9A]/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[#2ECC9A]">
+                  ✓ Guardado
+                </p>
+              )}
+              {activeCalendarSummary && !savedFlash && (
+                <p className="mt-2 text-[10px] text-[#9A9080]">
+                  Activo: <strong className="text-[#F5F0E8]">{activeCalendarSummary}</strong>
+                </p>
+              )}
+            </>
+          )}
         </div>
       </div>
     )

@@ -116,6 +116,52 @@ export async function getCalendarClient(userId: string): Promise<calendar_v3.Cal
   return google.calendar({ version: 'v3', auth })
 }
 
+// Devuelve el calendar_id que el usuario eligió como activo (default 'primary')
+async function getActiveCalendarId(userId: string): Promise<string> {
+  const admin = createAdminClient()
+  const { data } = await admin
+    .from('google_calendar_connections')
+    .select('calendar_id')
+    .eq('user_id', userId)
+    .maybeSingle()
+  return (data?.calendar_id as string | undefined) || 'primary'
+}
+
+// Lista todos los calendarios del usuario conectado (para que elija dónde escribir).
+// Solo devuelve los que tienen permiso de escritura (writer/owner).
+export async function listCalendarsForUser(userId: string): Promise<
+  Array<{ id: string; summary: string; primary: boolean; backgroundColor?: string | null }>
+> {
+  const cal = await getCalendarClient(userId)
+  if (!cal) return []
+  try {
+    const { data } = await cal.calendarList.list({ maxResults: 50, showHidden: false })
+    return (data.items ?? [])
+      .filter((c) => c.id && (c.accessRole === 'owner' || c.accessRole === 'writer'))
+      .map((c) => ({
+        id: c.id as string,
+        summary: c.summaryOverride || c.summary || c.id || 'Calendar',
+        primary: !!c.primary,
+        backgroundColor: c.backgroundColor ?? null,
+      }))
+  } catch (err) {
+    console.error('[google-calendar] listCalendarsForUser failed:', err)
+    return []
+  }
+}
+
+export async function setActiveCalendarId(userId: string, calendarId: string): Promise<boolean> {
+  const admin = createAdminClient()
+  const { error } = await admin
+    .from('google_calendar_connections')
+    .update({ calendar_id: calendarId, updated_at: new Date().toISOString() })
+    .eq('user_id', userId)
+  if (error) return false
+  // Limpiar caché de busy times — el calendario cambió, los antiguos no aplican
+  await admin.from('google_calendar_busy').delete().eq('user_id', userId)
+  return true
+}
+
 // ─── Sync de un shoot al Calendar del fotógrafo ───
 
 interface ShootForCal {
@@ -166,9 +212,10 @@ function buildEventBody(shoot: ShootForCal, status: 'confirmed' | 'tentative' = 
 export async function createShootEvent(photographerId: string, shoot: ShootForCal): Promise<string | null> {
   const cal = await getCalendarClient(photographerId)
   if (!cal) return null
+  const calendarId = await getActiveCalendarId(photographerId)
   try {
     const { data } = await cal.events.insert({
-      calendarId: 'primary',
+      calendarId,
       requestBody: buildEventBody(shoot),
     })
     return data.id ?? null
@@ -185,9 +232,10 @@ export async function updateShootEvent(
 ): Promise<boolean> {
   const cal = await getCalendarClient(photographerId)
   if (!cal) return false
+  const calendarId = await getActiveCalendarId(photographerId)
   try {
     await cal.events.update({
-      calendarId: 'primary',
+      calendarId,
       eventId,
       requestBody: buildEventBody(shoot),
     })
@@ -201,8 +249,9 @@ export async function updateShootEvent(
 export async function cancelShootEvent(photographerId: string, eventId: string): Promise<boolean> {
   const cal = await getCalendarClient(photographerId)
   if (!cal) return false
+  const calendarId = await getActiveCalendarId(photographerId)
   try {
-    await cal.events.delete({ calendarId: 'primary', eventId })
+    await cal.events.delete({ calendarId, eventId })
     return true
   } catch (err) {
     // 410 = ya borrado, lo damos por OK
@@ -223,13 +272,14 @@ export async function syncBusyTimes(
 ): Promise<{ synced: number } | { error: string }> {
   const cal = await getCalendarClient(photographerId)
   if (!cal) return { error: 'No conectado' }
+  const calendarId = await getActiveCalendarId(photographerId)
 
   const timeMin = new Date(fromDate + 'T00:00:00').toISOString()
   const timeMax = new Date(toDate + 'T23:59:59').toISOString()
 
   try {
     const { data } = await cal.events.list({
-      calendarId: 'primary',
+      calendarId,
       timeMin,
       timeMax,
       singleEvents: true,

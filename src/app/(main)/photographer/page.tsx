@@ -63,7 +63,7 @@ export default async function PhotographerPage({
   // Estado de la conexión a Google Calendar
   const { data: googleConn } = await admin
     .from('google_calendar_connections')
-    .select('google_email, connected_at')
+    .select('google_email, calendar_id, connected_at')
     .eq('user_id', user.id)
     .maybeSingle()
   const googleConfigured = isGoogleCalendarConfigured()
@@ -291,6 +291,7 @@ export default async function PhotographerPage({
         configured={googleConfigured}
         connected={googleConnected}
         email={googleConn?.google_email ?? null}
+        calendarId={googleConn?.calendar_id ?? null}
         connectedAt={googleConn?.connected_at ?? null}
         initialFlash={googleFlash}
         errorReason={params.reason ?? null}
