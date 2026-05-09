@@ -11,7 +11,9 @@ import { AgentPhotosGallery } from '@/features/dashboard/components/AgentPhotosG
 import { MotivationalBanner } from '@/features/dashboard/components/MotivationalBanner'
 import { TeamViewToggle } from '@/features/dashboard/components/TeamViewToggle'
 import { ChecklistReminder } from '@/features/dashboard/components/ChecklistReminder'
+import { PhotosDeliveredBanner } from '@/features/dashboard/components/PhotosDeliveredBanner'
 import { getTodaysChecklistDone } from '@/actions/daily-checklist'
+import { getDeliveredShootsForAgent } from '@/actions/photo-shoots'
 
 export default async function DashboardPage({
   searchParams,
@@ -36,7 +38,7 @@ export default async function DashboardPage({
   const params = await searchParams
   const teamView = canManage && params.view === 'team'
 
-  const [data, { data: agentPhotos }, { data: motivation }, checklistDone] = await Promise.all([
+  const [data, { data: agentPhotos }, { data: motivation }, checklistDone, deliveredShoots] = await Promise.all([
     getDashboardData(user.id, teamView),
     supabase
       .from('property_photos')
@@ -50,7 +52,25 @@ export default async function DashboardPage({
       .eq('user_id', user.id)
       .maybeSingle(),
     getTodaysChecklistDone(),
+    getDeliveredShootsForAgent(),
   ])
+
+  // Propiedades del agente para el banner de fotos entregadas (cualquier estado, recientes)
+  const { data: draftPropsRaw } = teamView
+    ? { data: [] }
+    : await admin
+        .from('properties')
+        .select('id, reference, zone, property_type, street_name')
+        .eq('agent_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(50)
+  const draftProperties = (draftPropsRaw || []) as Array<{
+    id: string
+    reference: string | null
+    zone: string | null
+    property_type: string | null
+    street_name: string | null
+  }>
 
   const firstName =
     profile?.first_name ||
@@ -65,6 +85,13 @@ export default async function DashboardPage({
       />
 
       {canManage && <TeamViewToggle teamView={teamView} />}
+
+      {!teamView && (
+        <PhotosDeliveredBanner
+          deliveries={deliveredShoots}
+          draftProperties={draftProperties}
+        />
+      )}
 
       <StatCards
         thisMonthRevenue={data.thisMonthRevenue}

@@ -5,7 +5,14 @@ import { PropertyForm } from '@/features/properties/components/PropertyForm'
 import { PropertyList } from '@/features/properties/components/PropertyList'
 
 interface PropertiesPageProps {
-  searchParams: Promise<{ edit?: string }>
+  searchParams: Promise<{
+    edit?: string
+    new?: string
+    drive_link?: string
+    reference?: string
+    address?: string
+    shoot_id?: string
+  }>
 }
 
 export default async function PropertiesPage({ searchParams }: PropertiesPageProps) {
@@ -94,6 +101,16 @@ export default async function PropertiesPage({ searchParams }: PropertiesPagePro
         storageBaseUrl={storageBaseUrl}
         initialProperty={editProp}
         agentOptions={isElevated ? agentOptions : null}
+        prefilledFromShoot={
+          params.new === '1'
+            ? {
+                drive_link: params.drive_link ?? null,
+                reference: params.reference ?? null,
+                address: params.address ?? null,
+                shoot_id: params.shoot_id ?? null,
+              }
+            : null
+        }
       />
 
       {properties && properties.length > 0 && (

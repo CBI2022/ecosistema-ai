@@ -21,12 +21,20 @@ interface AgentOption {
   email: string
 }
 
+interface PrefilledFromShoot {
+  drive_link: string | null
+  reference: string | null
+  address: string | null
+  shoot_id: string | null
+}
+
 interface PropertyFormProps {
   availablePhotos?: AgentPhoto[]
   storageBaseUrl?: string
   initialProperty?: Property | null
   agentOptions?: AgentOption[] | null
   defaultAgentId?: string | null
+  prefilledFromShoot?: PrefilledFromShoot | null
 }
 
 const ZONES = ['Altea', 'Albir', 'Calpe', 'Javea', 'Moraira', 'Benissa', 'Denia', 'Benidorm', 'La Nucia', 'Polop', 'Finestrat']
@@ -108,6 +116,7 @@ export function PropertyForm({
   initialProperty = null,
   agentOptions = null,
   defaultAgentId = null,
+  prefilledFromShoot = null,
 }: PropertyFormProps = {}) {
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
@@ -860,9 +869,39 @@ export function PropertyForm({
 
       {/* ═══ 8. Fotos (opcional) ═══ */}
       <section className={sectionClass}>
+        {/* Campo Carpeta de Drive (NUEVO) — la automation pesca las fotos de aquí al publicar a Sooprema */}
+        <div className="mb-5">
+          <label className={labelClass}>
+            🔗 Carpeta de Drive con fotos (opcional)
+          </label>
+          <input
+            type="url"
+            name="photos_drive_link"
+            defaultValue={
+              prefilledFromShoot?.drive_link ||
+              (initialProperty as { photos_drive_link?: string | null } | null)?.photos_drive_link ||
+              ''
+            }
+            placeholder="https://drive.google.com/drive/folders/..."
+            className={inputClass}
+          />
+          <p className="mt-2 text-[11px] text-[#9A9080]">
+            Si Jelle te ha enviado un link de Drive con las fotos, pégalo aquí. La automation las descargará y subirá a Sooprema.
+            Asegúrate de que la carpeta esté pública (Cualquiera con el enlace puede ver).
+          </p>
+          {prefilledFromShoot?.shoot_id && (
+            <input type="hidden" name="linked_shoot_id" value={prefilledFromShoot.shoot_id} />
+          )}
+          {prefilledFromShoot?.drive_link && (
+            <p className="mt-1 text-[11px] text-[#C9A84C]">
+              ✓ Link de Drive precargado desde la sesión de fotos de Jelle.
+            </p>
+          )}
+        </div>
+
         <div className="mb-4 flex items-center justify-between gap-3">
           <div>
-            <h2 className={sectionTitle}>📸 Fotos (opcional)</h2>
+            <h2 className={sectionTitle}>📸 Fotos del SaaS (opcional)</h2>
             <p className={sectionSubtitle}>
               {availablePhotos.length} disponibles · {selectedPhotoIds.size} seleccionadas. Las fotos NO son obligatorias para subir.
             </p>

@@ -191,6 +191,9 @@ export async function saveProperty(formData: FormData, publish = false) {
     latitude: num(formData, 'latitude'),
     longitude: num(formData, 'longitude'),
 
+    // Carpeta pública de Drive con las fotos (la automation las descargará al publicar)
+    photos_drive_link: str(formData, 'photos_drive_link'),
+
     // Descripción base (notas crudas del agente — NO se sube a Sooprema)
     description_base: str(formData, 'description_base'),
     description_source_lang: str(formData, 'description_source_lang') || 'es',
@@ -453,6 +456,21 @@ export async function saveProperty(formData: FormData, publish = false) {
         }))
       )
     }
+  }
+
+  // Si viene de un photo_shoot, vincular el shoot a esta propiedad
+  const linkedShootId = str(formData, 'linked_shoot_id')
+  if (linkedShootId && result?.id) {
+    await adminClient
+      .from('photo_shoots')
+      .update({
+        linked_property_id: result.id,
+        linked_at: new Date().toISOString(),
+        status: 'linked',
+      })
+      .eq('id', linkedShootId)
+      .eq('agent_id', agentId)
+    revalidatePath('/dashboard')
   }
 
   revalidatePath('/properties')

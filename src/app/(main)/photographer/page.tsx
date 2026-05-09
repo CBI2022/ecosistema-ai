@@ -6,6 +6,8 @@ import { PendingShootsList } from '@/features/photographer/components/PendingSho
 import { PhotographerBlocksManager } from '@/features/photographer/components/PhotographerBlocksManager'
 import { UpcomingShootsActions } from '@/features/photographer/components/UpcomingShootsActions'
 import { GoogleCalendarCard } from '@/features/photographer/components/GoogleCalendarCard'
+import { PendingDeliveriesList } from '@/features/photographer/components/PendingDeliveriesList'
+import { getPendingDeliveriesForPhotographer } from '@/actions/photo-shoots'
 import { isGoogleCalendarConfigured, syncBusyTimes } from '@/lib/google-calendar'
 
 interface ShootRow {
@@ -142,6 +144,9 @@ export default async function PhotographerPage({
       agent_phone: ag?.phone ?? null,
     }
   })
+
+  // Sesiones pendientes de entregar fotos (Jelle ya las hizo, falta pegar link Drive)
+  const pendingDeliveries = await getPendingDeliveriesForPhotographer()
 
   // Bloqueos del fotógrafo — desde hoy
   const { data: blocksRaw } = await admin
@@ -400,10 +405,25 @@ export default async function PhotographerPage({
       {/* 3. Próximos confirmados (con marcar completado) */}
       <UpcomingShootsActions shoots={upcomingShoots} />
 
-      {/* 4. Bloquear días */}
+      {/* 4. Pendientes de entregar fotos al agente */}
+      <section className="rounded-2xl border border-[#C9A84C]/15 bg-[#0A0A0A] p-5">
+        <div className="mb-3 flex items-center justify-between">
+          <div>
+            <h2 className="flex items-center gap-2 text-base font-bold text-[#F5F0E8]">
+              📤 Entregar fotos al agente
+            </h2>
+            <p className="mt-1 text-[11px] text-[#9A9080]">
+              Sube las fotos a una carpeta de Drive como siempre, pega aquí el link público y el agente recibe aviso.
+            </p>
+          </div>
+        </div>
+        <PendingDeliveriesList deliveries={pendingDeliveries} />
+      </section>
+
+      {/* 5. Bloquear días */}
       <PhotographerBlocksManager blocks={blocks} />
 
-      {/* 5. Sets de fotos subidos */}
+      {/* 6. Sets de fotos subidos */}
       {photoSets.length > 0 && <PhotoSetsManager sets={photoSets as never} />}
     </div>
   )

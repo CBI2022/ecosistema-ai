@@ -77,6 +77,7 @@ export function BookShootingCalendar({ onClose }: BookShootingCalendarProps) {
 
   // Form fields
   const [address, setAddress] = useState('')
+  const [locationLink, setLocationLink] = useState('')
   const [notes, setNotes] = useState('')
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
@@ -170,6 +171,7 @@ export function BookShootingCalendar({ onClose }: BookShootingCalendarProps) {
     fd.append('shoot_date', selectedDate)
     fd.append('shoot_time', selectedTime)
     fd.append('notes', notes)
+    if (locationLink) fd.append('location_link', locationLink)
     if (extraordinary) fd.append('is_extraordinary', 'true')
     const res = await bookShoot(fd)
     setLoading(false)
@@ -406,13 +408,28 @@ export function BookShootingCalendar({ onClose }: BookShootingCalendarProps) {
                       </div>
                       <div>
                         <label className="mb-1.5 block text-[9px] font-bold uppercase tracking-[0.12em] text-[#9A9080]">
-                          {extraordinaryMode ? 'Motivo de la excepción *' : 'Notas (opcional)'}
+                          🗺️ Link de Google Maps (opcional)
+                        </label>
+                        <input
+                          type="url"
+                          value={locationLink}
+                          onChange={(e) => setLocationLink(e.target.value)}
+                          placeholder="https://maps.google.com/..."
+                          className="w-full rounded-lg border border-white/10 bg-[#1C1C1C] px-3 py-2 text-sm text-[#F5F0E8] outline-none focus:border-[#C9A84C]/60 placeholder-[#9A9080]"
+                        />
+                        <p className="mt-1 text-[10px] text-[#6A6070]">
+                          Ayuda a Jelle a encontrar la casa exacta. Pégalo desde la app de Google Maps → Compartir → Copiar enlace.
+                        </p>
+                      </div>
+                      <div>
+                        <label className="mb-1.5 block text-[9px] font-bold uppercase tracking-[0.12em] text-[#9A9080]">
+                          {extraordinaryMode ? 'Motivo de la excepción *' : 'Notas para Jelle (opcional)'}
                         </label>
                         <textarea
                           rows={2}
                           value={notes}
                           onChange={(e) => setNotes(e.target.value)}
-                          placeholder={extraordinaryMode ? 'Villa de 12M€, propietario solo puede ese día...' : 'Acceso, instrucciones...'}
+                          placeholder={extraordinaryMode ? 'Villa de 12M€, propietario solo puede ese día...' : 'Acceso, código portal, mejor luz tarde, etc.'}
                           className="w-full rounded-lg border border-white/10 bg-[#1C1C1C] px-3 py-2 text-sm text-[#F5F0E8] outline-none focus:border-[#C9A84C]/60 placeholder-[#9A9080]"
                         />
                       </div>
