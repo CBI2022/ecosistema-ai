@@ -18,12 +18,9 @@ export function AgentPhotosGallery({ photos }: { photos: Photo[] }) {
 
   return (
     <div className="mb-5 rounded-2xl border border-white/8 bg-[#131313] p-5">
-      <div className="mb-4 flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-[10px] border border-white/10 bg-white/5 text-xl">🖼️</div>
-        <div>
-          <p className="text-sm font-bold text-[#F5F0E8]">My Property Photos</p>
-          <p className="text-[11px] text-[#9A9080]">Uploaded by Jelle · {photos.length} photo{photos.length !== 1 ? 's' : ''}</p>
-        </div>
+      <div className="mb-4">
+        <p className="text-sm font-bold text-[#F5F0E8]">My Property Photos</p>
+        <p className="text-[11px] text-[#9A9080]">Uploaded by Jelle · {photos.length} photo{photos.length !== 1 ? 's' : ''}</p>
       </div>
 
       <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6 sm:gap-1.5">
@@ -39,8 +36,8 @@ export function AgentPhotosGallery({ photos }: { photos: Photo[] }) {
               className="h-full w-full object-cover transition group-hover:scale-105 group-hover:opacity-90"
             />
             {photo.is_drone && (
-              <span className="absolute right-1 top-1 rounded bg-[#8B7CF6]/80 px-1 py-0.5 text-[8px] font-bold text-white">
-                🚁
+              <span className="absolute right-1 top-1 rounded bg-black/70 px-1 py-0.5 text-[8px] font-bold text-white">
+                drone
               </span>
             )}
           </button>

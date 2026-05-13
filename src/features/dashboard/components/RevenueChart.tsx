@@ -215,12 +215,12 @@ export function RevenueChart({
     'rounded-lg border border-white/10 bg-[#1C1C1C] px-3 py-2 text-sm text-[#F5F0E8] outline-none transition focus:border-[#C9A84C]/60 placeholder-[#9A9080]'
 
   return (
-    <div className="mb-5 rounded-2xl border border-[#C9A84C]/12 bg-[#131313] p-5" style={{ borderTop: '1px solid #C9A84C' }}>
+    <div className="mb-5 rounded-2xl border border-white/8 bg-[#131313] p-5">
       {/* Header */}
       <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#C9A84C]">
-            💰 {t('revenueGrowth')}
+          <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#9A9080]">
+            {t('revenueGrowth')}
           </p>
           <p className="mt-0.5 text-[11px] text-[#9A9080]">
             {t('revenueSubtitle')}
@@ -247,16 +247,16 @@ export function RevenueChart({
       {/* Annual Goal — Banner grande si está vacío, cards si ya tiene valor */}
       {annualGoal === 0 ? (
         <div
-          className="mb-5 rounded-2xl border-2 border-dashed border-[#C9A84C]/50 bg-gradient-to-br from-[#C9A84C]/10 via-[#1a1510] to-[#C9A84C]/5 p-6 text-center"
+          className="mb-5 rounded-2xl border border-dashed border-white/15 bg-[#0F0F0F] p-6 text-center"
         >
           {editingGoal ? (
             <div className="mx-auto max-w-md">
-              <p className="mb-3 text-xs font-bold uppercase tracking-[0.15em] text-[#C9A84C]">
+              <p className="mb-3 text-xs font-bold uppercase tracking-[0.15em] text-[#9A9080]">
                 {t('defineGoalQuestion')}
               </p>
               <div className="flex gap-2">
                 <div className="relative flex-1">
-                  <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-xl font-bold text-[#C9A84C]">€</span>
+                  <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-xl font-bold text-[#9A9080]">€</span>
                   <input
                     type="number"
                     autoFocus
@@ -264,7 +264,7 @@ export function RevenueChart({
                     onChange={(e) => setGoalDraft(e.target.value)}
                     onKeyDown={(e) => { if (e.key === 'Enter') handleSaveGoal() }}
                     placeholder="200000"
-                    className="w-full rounded-xl border border-[#C9A84C]/40 bg-[#0A0A0A] py-3 pl-10 pr-4 text-xl font-bold text-[#F5F0E8] outline-none focus:border-[#C9A84C]"
+                    className="w-full rounded-xl border border-white/10 bg-[#0A0A0A] py-3 pl-10 pr-4 text-xl font-bold text-[#F5F0E8] outline-none focus:border-[#C9A84C]/60"
                   />
                 </div>
                 <button
@@ -291,10 +291,9 @@ export function RevenueChart({
           ) : (
             <button
               onClick={() => { setGoalDraft(''); setEditingGoal(true) }}
-              className="group inline-flex flex-col items-center gap-2 transition hover:scale-[1.02]"
+              className="group inline-flex flex-col items-center gap-2 transition"
             >
-              <span className="text-5xl">🎯</span>
-              <p className="font-['Maharlika',serif] text-2xl font-bold text-[#C9A84C]">
+              <p className="font-['Maharlika',serif] text-xl font-bold text-[#F5F0E8]">
                 {t('defineGoalTitle')}
               </p>
               <p className="text-sm text-[#9A9080]">
@@ -309,9 +308,9 @@ export function RevenueChart({
       ) : (
       <div className="mb-5 grid gap-3 sm:grid-cols-4">
         {/* Objetivo anual */}
-        <div className="rounded-xl border border-[#C9A84C]/30 bg-gradient-to-br from-[#C9A84C]/10 to-[#0A0A0A] p-3.5">
+        <div className="rounded-xl border border-white/8 bg-[#0A0A0A] p-3.5">
           <div className="mb-1 flex items-center justify-between gap-2">
-            <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-[#C9A84C]">🎯 {t('annualGoal')}</p>
+            <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-[#9A9080]">{t('annualGoal')}</p>
             {!editingGoal && (
               <button
                 onClick={() => { setGoalDraft(String(annualGoal || '')); setEditingGoal(true) }}
@@ -357,7 +356,7 @@ export function RevenueChart({
               )}
             </>
           ) : (
-            <p className="font-['Maharlika',serif] text-2xl font-bold text-[#C9A84C]">
+            <p className="font-['Maharlika',serif] text-2xl font-bold text-[#F5F0E8]">
               {fmtEur(annualGoal)}
             </p>
           )}
@@ -365,7 +364,7 @@ export function RevenueChart({
 
         {/* Media mensual necesaria */}
         <div className="rounded-xl border border-white/8 bg-[#0A0A0A] p-3.5">
-          <p className="mb-1 text-[9px] font-bold uppercase tracking-[0.12em] text-[#9A9080]">📊 {t('monthlyAvg')}</p>
+          <p className="mb-1 text-[9px] font-bold uppercase tracking-[0.12em] text-[#9A9080]">{t('monthlyAvg')}</p>
           <p className="font-['Maharlika',serif] text-2xl font-bold text-[#F5F0E8]">
             {annualGoal > 0 ? fmtEur(monthlyGoalLine) : '—'}
           </p>
@@ -374,7 +373,7 @@ export function RevenueChart({
 
         {/* Lo que necesitas de aquí a fin de año */}
         <div className="rounded-xl border border-white/8 bg-[#0A0A0A] p-3.5">
-          <p className="mb-1 text-[9px] font-bold uppercase tracking-[0.12em] text-[#9A9080]">⏳ {t('remainingPerMonth')}</p>
+          <p className="mb-1 text-[9px] font-bold uppercase tracking-[0.12em] text-[#9A9080]">{t('remainingPerMonth')}</p>
           <p className="font-['Maharlika',serif] text-2xl font-bold text-[#F5F0E8]">
             {annualGoal > 0 && monthsLeft > 0 ? fmtEur(requiredPerMonth) : annualGoal > 0 ? '✓' : '—'}
           </p>
@@ -383,15 +382,15 @@ export function RevenueChart({
           </p>
         </div>
 
-        {/* Tracking */}
+        {/* Tracking — color funcional (on-pace verde, below-pace rojo) */}
         <div
           className="rounded-xl border p-3.5"
           style={{
             borderColor: annualGoal === 0 ? 'rgba(255,255,255,0.08)' : onPace ? 'rgba(46,204,154,0.35)' : 'rgba(239,68,68,0.35)',
-            background: annualGoal === 0 ? '#0A0A0A' : onPace ? 'rgba(46,204,154,0.05)' : 'rgba(239,68,68,0.05)',
+            background: '#0A0A0A',
           }}
         >
-          <p className="mb-1 text-[9px] font-bold uppercase tracking-[0.12em] text-[#9A9080]">📈 {t('tracking')}</p>
+          <p className="mb-1 text-[9px] font-bold uppercase tracking-[0.12em] text-[#9A9080]">{t('tracking')}</p>
           <p className="font-['Maharlika',serif] text-2xl font-bold" style={{ color: onPace ? '#2ECC9A' : '#EF4444' }}>
             {onPace ? t('onPace') : t('belowPace')}
           </p>
@@ -433,7 +432,7 @@ export function RevenueChart({
                   strokeWidth={2}
                   strokeOpacity={0.9}
                   label={{
-                    value: `🎯 ${fmtEur(monthlyGoalLine)}/mes`,
+                    value: `${fmtEur(monthlyGoalLine)}/mes`,
                     position: 'insideTopLeft',
                     fill: '#C9A84C',
                     fontSize: 10,
@@ -500,7 +499,7 @@ export function RevenueChart({
         <div className="mt-5 border-t border-white/6 pt-4">
           <div className="mb-3 flex items-center justify-between">
             <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-[#9A9080]">
-              📋 Ventas registradas ({sortedSales.length})
+              Ventas registradas ({sortedSales.length})
             </p>
             {saleError && <span className="text-[10px] text-red-400">{saleError}</span>}
           </div>

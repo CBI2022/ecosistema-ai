@@ -35,11 +35,10 @@ function HomeForm({
   return (
     <form
       onSubmit={(e) => { e.preventDefault(); onSave(new FormData(e.currentTarget)) }}
-      className="space-y-4 rounded-2xl border border-[#C9A84C]/20 bg-[#131313] p-5"
-      style={{ borderTop: '1px solid #C9A84C' }}
+      className="space-y-4 rounded-2xl border border-white/8 bg-[#131313] p-5"
     >
-      <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-[#C9A84C]">
-        {initial ? '✏️ Editar Exclusive Home' : '➕ Nueva Exclusive Home'}
+      <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-[#9A9080]">
+        {initial ? 'Editar Exclusive Home' : 'Nueva Exclusive Home'}
       </p>
 
       {/* Cover image */}
@@ -47,14 +46,13 @@ function HomeForm({
         <label className={labelClass}>Cover Image</label>
         <div
           onClick={() => fileRef.current?.click()}
-          className="relative cursor-pointer overflow-hidden rounded-xl border-2 border-dashed border-[#C9A84C]/30 bg-[#0A0A0A] transition hover:border-[#C9A84C]/60"
+          className="relative cursor-pointer overflow-hidden rounded-xl border border-dashed border-white/15 bg-[#0A0A0A] transition hover:border-white/30"
           style={{ height: 140 }}
         >
           {preview ? (
             <img src={preview} alt="" className="h-full w-full object-cover opacity-80" />
           ) : (
             <div className="flex h-full items-center justify-center flex-col gap-2">
-              <span className="text-3xl opacity-30">🏡</span>
               <p className="text-xs text-[#9A9080]">Click para subir imagen</p>
             </div>
           )}
@@ -154,22 +152,16 @@ export function ExclusiveHomesManager({ homes: initial, canManage }: ExclusiveHo
   }
 
   return (
-    <div
-      className="mb-5 rounded-2xl border border-[#C9A84C]/25 bg-gradient-to-br from-[#0A0A0A] to-[#1A1A1A] p-5"
-      style={{ borderTop: '1px solid #C9A84C' }}
-    >
+    <div className="mb-5 rounded-2xl border border-white/8 bg-[#131313] p-5">
       <div className="mb-5 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-[10px] border border-[#C9A84C]/20 bg-[#C9A84C]/12 text-xl">💎</div>
-          <div>
-            <p className="text-sm font-bold text-[#F5F0E8]">Exclusive Homes</p>
-            <p className="text-[11px] text-[#9A9080]/70">Off-market · Private listings · Handle with discretion</p>
-          </div>
+        <div>
+          <p className="text-sm font-bold text-[#F5F0E8]">Exclusive Homes</p>
+          <p className="text-[11px] text-[#9A9080]/70">Off-market · Private listings · Handle with discretion</p>
         </div>
         {canManage && !showForm && (
           <button
             onClick={() => setShowForm(true)}
-            className="rounded-lg border border-[#C9A84C]/30 bg-[#C9A84C]/10 px-3 py-1.5 text-xs font-bold text-[#C9A84C] transition hover:bg-[#C9A84C]/20"
+            className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-bold text-[#F5F0E8] transition hover:bg-white/10"
           >
             ＋ Añadir
           </button>
@@ -197,7 +189,7 @@ export function ExclusiveHomesManager({ homes: initial, canManage }: ExclusiveHo
             ) : (
               <div
                 key={home.id}
-                className="group overflow-hidden rounded-[14px] border border-[#C9A84C]/20 bg-[#1C1C1C] transition-all hover:border-[#C9A84C]/40"
+                className="group overflow-hidden rounded-[14px] border border-white/8 bg-[#1C1C1C] transition-all hover:border-white/15"
               >
                 <div className="flex gap-4 p-4">
                   {/* Thumbnail */}
@@ -205,16 +197,15 @@ export function ExclusiveHomesManager({ homes: initial, canManage }: ExclusiveHo
                     {home.cover_image ? (
                       <img src={home.cover_image} alt={home.title} className="h-full w-full object-cover" />
                     ) : (
-                      <div className="flex h-full items-center justify-center text-2xl opacity-20">🏡</div>
+                      <div className="flex h-full items-center justify-center text-xs text-[#9A9080]/40">—</div>
                     )}
-                    <span className="absolute left-1 top-1 rounded bg-[#C9A84C] px-1 py-0.5 text-[7px] font-black uppercase tracking-wider text-black">💎</span>
                   </div>
                   {/* Info */}
                   <div className="min-w-0 flex-1">
                     <p className="font-semibold text-[#F5F0E8] truncate">{home.title}</p>
-                    {home.location && <p className="text-xs text-[#9A9080]">📍 {home.location}</p>}
+                    {home.location && <p className="text-xs text-[#9A9080]">{home.location}</p>}
                     <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-[#9A9080]">
-                      {home.price && <span className="font-bold text-[#C9A84C]">{fmt(home.price)}</span>}
+                      {home.price && <span className="font-bold text-[#F5F0E8]">{fmt(home.price)}</span>}
                       {home.bedrooms && <span>{home.bedrooms} bed</span>}
                       {home.bathrooms && <span>{home.bathrooms} bath</span>}
                       {home.area_m2 && <span>{home.area_m2}m²</span>}

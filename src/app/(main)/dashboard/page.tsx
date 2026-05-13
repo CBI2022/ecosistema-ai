@@ -8,12 +8,12 @@ import { TodaysChecklist } from '@/features/dashboard/components/TodaysChecklist
 import { PhotoShootsSection } from '@/features/dashboard/components/PhotoShootsSection'
 import { ExclusiveHomesManager } from '@/features/dashboard/components/ExclusiveHomesManager'
 import { AgentPhotosGallery } from '@/features/dashboard/components/AgentPhotosGallery'
-import { MotivationalBanner } from '@/features/dashboard/components/MotivationalBanner'
 import { TeamViewToggle } from '@/features/dashboard/components/TeamViewToggle'
 import { ChecklistReminder } from '@/features/dashboard/components/ChecklistReminder'
 import { PhotosDeliveredBanner } from '@/features/dashboard/components/PhotosDeliveredBanner'
 import { getTodaysChecklistDone } from '@/actions/daily-checklist'
 import { getDeliveredShootsForAgent } from '@/actions/photo-shoots'
+import { FubDashboardSection } from '@/features/fub/components/FubDashboardSection'
 
 export default async function DashboardPage({
   searchParams,
@@ -38,7 +38,7 @@ export default async function DashboardPage({
   const params = await searchParams
   const teamView = canManage && params.view === 'team'
 
-  const [data, { data: agentPhotos }, { data: motivation }, checklistDone, deliveredShoots] = await Promise.all([
+  const [data, { data: agentPhotos }, checklistDone, deliveredShoots] = await Promise.all([
     getDashboardData(user.id, teamView),
     supabase
       .from('property_photos')
@@ -46,11 +46,6 @@ export default async function DashboardPage({
       .eq('agent_id', user.id)
       .order('created_at', { ascending: false })
       .limit(24),
-    admin
-      .from('user_motivation')
-      .select('motto, why')
-      .eq('user_id', user.id)
-      .maybeSingle(),
     getTodaysChecklistDone(),
     getDeliveredShootsForAgent(),
   ])
@@ -72,18 +67,8 @@ export default async function DashboardPage({
     street_name: string | null
   }>
 
-  const firstName =
-    profile?.first_name ||
-    (profile?.full_name?.split(' ')[0] ?? null)
-
   return (
     <div>
-      <MotivationalBanner
-        firstName={firstName}
-        motto={motivation?.motto ?? null}
-        why={motivation?.why ?? null}
-      />
-
       {canManage && <TeamViewToggle teamView={teamView} />}
 
       {!teamView && (
@@ -119,6 +104,11 @@ export default async function DashboardPage({
           <TodaysChecklist goals={data.goals} initialDone={checklistDone} />
           <ExclusiveHomesManager homes={data.exclusiveHomes} canManage={canManage} />
         </div>
+      </div>
+
+      {/* Follow Up Boss CRM — pipeline, actividad, hot list, stalled, tareas */}
+      <div className="mt-6">
+        <FubDashboardSection />
       </div>
 
       <ChecklistReminder />

@@ -75,22 +75,19 @@ export function TodaysChecklist({ goals, initialDone = [] }: TodaysChecklistProp
   const total = TASKS.length
 
   return (
-    <div
-      className="mb-5 rounded-2xl border border-[#C9A84C]/12 bg-[#131313] p-5"
-      style={{ borderTop: '1px solid #C9A84C' }}
-    >
+    <div className="mb-5 rounded-2xl border border-white/8 bg-[#131313] p-5">
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-[#C9A84C]">
-            ✅ {t('todaysChecklist')}
+          <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-[#9A9080]">
+            {t('todaysChecklist')}
           </p>
-          <span className="rounded-full bg-[#C9A84C] px-2 py-0.5 text-[10px] font-bold text-black">
+          <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-bold text-[#F5F0E8]">
             {done}/{total}
           </span>
         </div>
         <Link
           href="/kpi"
-          className="text-[11px] font-semibold text-[#9A9080] transition hover:text-[#C9A84C]"
+          className="text-[11px] font-semibold text-[#9A9080] transition hover:text-[#F5F0E8]"
         >
           {t('fullPlan')} →
         </Link>
@@ -105,8 +102,8 @@ export function TodaysChecklist({ goals, initialDone = [] }: TodaysChecklistProp
               onClick={() => toggle(task.id)}
               className={`flex min-h-[48px] cursor-pointer items-center gap-3 rounded-[10px] border px-3.5 py-3 text-left transition-all ${
                 isDone
-                  ? 'border-[#2ECC9A]/25 bg-[#2ECC9A]/8'
-                  : 'border-[#C9A84C]/20 bg-[#C9A84C]/5 hover:bg-[#C9A84C]/8'
+                  ? 'border-[#2ECC9A]/25 bg-[#2ECC9A]/5'
+                  : 'border-white/8 bg-[#0F0F0F] hover:bg-white/5'
               }`}
             >
               {/* Checkbox */}
@@ -114,7 +111,7 @@ export function TodaysChecklist({ goals, initialDone = [] }: TodaysChecklistProp
                 className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition-all ${
                   isDone
                     ? 'border-[#2ECC9A] bg-[#2ECC9A]'
-                    : 'border-[#C9A84C]/60'
+                    : 'border-white/20'
                 }`}
               >
                 {isDone && (
@@ -133,7 +130,7 @@ export function TodaysChecklist({ goals, initialDone = [] }: TodaysChecklistProp
               </span>
 
               <span
-                className={`text-[10px] font-bold ${isDone ? 'text-[#2ECC9A]' : 'text-[#C9A84C]'}`}
+                className={`text-[10px] font-bold ${isDone ? 'text-[#2ECC9A]' : 'text-[#9A9080]'}`}
               >
                 {isDone ? t('done') : t('todo')}
               </span>

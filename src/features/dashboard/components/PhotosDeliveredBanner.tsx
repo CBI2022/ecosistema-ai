@@ -72,10 +72,9 @@ export function PhotosDeliveredBanner({ deliveries, draftProperties }: Props) {
   }
 
   return (
-    <div className="mb-5 rounded-2xl border border-[#C9A84C]/40 bg-gradient-to-r from-[#C9A84C]/10 to-[#C9A84C]/4 p-4">
+    <div className="mb-5 rounded-2xl border border-[#C9A84C]/30 bg-[#131313] p-4">
       <div className="mb-3 flex items-center gap-2">
-        <span className="text-xl">📸</span>
-        <h3 className="text-sm font-bold text-[#C9A84C]">
+        <h3 className="text-sm font-bold text-[#F5F0E8]">
           {deliveries.length === 1
             ? 'Tienes 1 set de fotos pendiente de Jelle'
             : `Tienes ${deliveries.length} sets de fotos pendientes de Jelle`}

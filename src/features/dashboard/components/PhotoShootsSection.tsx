@@ -72,30 +72,24 @@ export function PhotoShootsSection({ shoots }: PhotoShootsSectionProps) {
   ).slice(0, 3)
 
   return (
-    <div className="mb-5 rounded-2xl border border-[#C9A84C]/12 bg-[#131313] p-4 sm:p-5">
+    <div className="mb-5 rounded-2xl border border-white/8 bg-[#131313] p-4 sm:p-5">
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-[10px] border border-[#C9A84C]/20 bg-[#C9A84C]/8 text-xl">
-            📸
-          </div>
-          <div>
-            <p className="text-sm font-bold text-[#F5F0E8]">Sesiones fotográficas</p>
-            <p className="text-[11px] text-[#9A9080]">
-              Tus shoots con <strong>Jelle</strong>
-            </p>
-          </div>
+        <div>
+          <p className="text-sm font-bold text-[#F5F0E8]">Sesiones fotográficas</p>
+          <p className="text-[11px] text-[#9A9080]">
+            Tus shoots con <strong>Jelle</strong>
+          </p>
         </div>
         <button
           onClick={() => setShowBooking(true)}
-          className="flex items-center gap-2 rounded-lg border border-[#C9A84C]/25 bg-[#C9A84C]/10 px-4 py-2.5 text-xs font-semibold text-[#C9A84C] transition hover:bg-[#C9A84C]/15"
+          className="rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-xs font-semibold text-[#F5F0E8] transition hover:bg-white/10"
         >
-          📅 Book Shooting
+          Book Shooting
         </button>
       </div>
 
       {shoots.length === 0 ? (
         <div className="py-8 text-center">
-          <div className="mx-auto mb-3 text-4xl opacity-40">📷</div>
           <p className="text-sm font-semibold text-[#9A9080]">
             Aún no has reservado ningún shoot
           </p>
