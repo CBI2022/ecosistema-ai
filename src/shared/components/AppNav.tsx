@@ -25,6 +25,7 @@ type IconName =
   | 'more'
   | 'shield'
   | 'brain'
+  | 'crm'
 
 interface NavTab {
   href: string
@@ -184,6 +185,14 @@ function Icon({ name, className = 'h-5 w-5' }: { name: IconName; className?: str
           <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2Z" />
         </svg>
       )
+    case 'crm':
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+          <path d="M3 12a9 9 0 1 0 9-9" />
+          <path d="M12 3v9l6 3" />
+          <circle cx="18" cy="6" r="2" />
+        </svg>
+      )
   }
 }
 
@@ -228,6 +237,7 @@ export function AppNav({ role }: AppNavProps) {
     { href: '/admin', label: t('team'), icon: 'users' },
     { href: '/tasks', label: t('tasks'), icon: 'check' },
     { href: '/kpi', label: t('kpi'), icon: 'chart' },
+    { href: '/admin/fub', label: 'CRM (FUB)', icon: 'crm' },
     { href: '/admin/sooprema', label: 'Sooprema', icon: 'upload' },
     { href: '/social', label: t('social'), icon: 'share' },
     { href: '/admin/knowledge', label: t('knowledge'), icon: 'brain' },

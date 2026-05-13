@@ -1,21 +1,9 @@
 import type { PipelineColumn } from '@/actions/fub-stats'
+import { STAGE_COLORS } from '../theme'
 
 interface Props {
   columns: PipelineColumn[]
   compact?: boolean
-}
-
-const STAGE_COLORS: Record<string, string> = {
-  Lead: '#9CA3AF',
-  'A - Hot 1-3 Months': '#EF4444',
-  'B - Warm 3-6 Months': '#F59E0B',
-  'C - Cold 6+ Months': '#3B82F6',
-  Viewings: '#A855F7',
-  Pending: '#06B6D4',
-  Closed: '#2ECC9A',
-  Sphere: '#737373',
-  Unresponsive: '#525252',
-  Trash: '#404040',
 }
 
 function timeAgo(iso: string | null): string {
@@ -33,52 +21,54 @@ function timeAgo(iso: string | null): string {
 export function PipelineKanban({ columns, compact = false }: Props) {
   if (!columns.length) {
     return (
-      <div className="rounded-2xl border border-neutral-200 bg-white p-6 text-center text-sm text-neutral-500">
+      <div className="rounded-2xl border border-[#C9A84C]/20 bg-[#0F0F0F] p-6 text-center text-sm text-[#9A9080]">
         Sin stages configurados. Aplicar el seed de Follow Up Boss.
       </div>
     )
   }
 
+  const total = columns.reduce((sum, c) => sum + c.count, 0)
+
   return (
-    <div className="rounded-2xl border border-neutral-200 bg-white p-5">
-      <div className="mb-4 flex items-baseline justify-between">
-        <h3 className="text-sm font-semibold text-neutral-900">Pipeline</h3>
-        <span className="text-[10px] uppercase tracking-wider text-neutral-400">
-          {columns.reduce((sum, c) => sum + c.count, 0)} leads activos
+    <section className="rounded-2xl border border-[#C9A84C]/20 bg-[#0F0F0F] p-5">
+      <header className="mb-4 flex items-baseline justify-between">
+        <h3 className="text-sm font-semibold text-[#F5F0E8]">Pipeline</h3>
+        <span className="text-[10px] uppercase tracking-[0.18em] text-[#9A9080]">
+          {total} leads activos
         </span>
-      </div>
+      </header>
       <div className="-mx-1 flex gap-3 overflow-x-auto pb-2">
         {columns.map((col) => {
-          const color = STAGE_COLORS[col.stage_name] || '#9CA3AF'
+          const color = STAGE_COLORS[col.stage_name] || '#9A9080'
           return (
             <div
               key={col.stage_id}
-              className={`flex-shrink-0 ${compact ? 'w-56' : 'w-64'} rounded-xl border border-neutral-100 bg-neutral-50/40`}
+              className={`flex-shrink-0 ${compact ? 'w-56' : 'w-64'} rounded-xl border border-white/8 bg-white/3`}
             >
-              <div className="border-b border-neutral-100 px-3 py-2">
+              <div className="border-b border-white/8 px-3 py-2">
                 <div className="flex items-center gap-2">
                   <span
                     className="inline-block h-2 w-2 rounded-full"
-                    style={{ backgroundColor: color }}
+                    style={{ backgroundColor: color, boxShadow: `0 0 8px ${color}` }}
                   />
-                  <span className="text-xs font-medium text-neutral-700">{col.stage_name}</span>
-                  <span className="ml-auto rounded-full bg-neutral-200 px-1.5 py-0.5 text-[10px] font-semibold text-neutral-700">
+                  <span className="text-xs font-medium text-[#F5F0E8]">{col.stage_name}</span>
+                  <span className="ml-auto rounded-full bg-white/8 px-1.5 py-0.5 text-[10px] font-semibold text-[#F5F0E8]">
                     {col.count}
                   </span>
                 </div>
               </div>
               <div className="max-h-[420px] space-y-1.5 overflow-y-auto p-2">
                 {col.people.length === 0 && (
-                  <div className="py-6 text-center text-[11px] text-neutral-400">vacío</div>
+                  <div className="py-6 text-center text-[11px] text-[#9A9080]/70">vacío</div>
                 )}
                 {col.people.map((p) => (
                   <a
                     key={p.id}
                     href={`/leads?personId=${p.id}`}
-                    className="block rounded-lg border border-neutral-100 bg-white p-2 hover:border-neutral-300 hover:shadow-sm transition"
+                    className="block rounded-lg border border-white/6 bg-white/3 p-2 transition hover:border-[#C9A84C]/40 hover:bg-white/6"
                   >
-                    <div className="text-xs font-medium text-neutral-900 truncate">{p.name}</div>
-                    <div className="mt-0.5 flex items-center justify-between gap-1 text-[10px] text-neutral-500">
+                    <div className="truncate text-xs font-medium text-[#F5F0E8]">{p.name}</div>
+                    <div className="mt-0.5 flex items-center justify-between gap-1 text-[10px] text-[#9A9080]">
                       <span className="truncate">{p.source_canonical || p.email || '—'}</span>
                       <span className="flex-shrink-0 font-mono">{timeAgo(p.last_activity_at)}</span>
                     </div>
@@ -89,6 +79,6 @@ export function PipelineKanban({ columns, compact = false }: Props) {
           )
         })}
       </div>
-    </div>
+    </section>
   )
 }

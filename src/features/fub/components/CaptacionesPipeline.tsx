@@ -13,13 +13,13 @@ function fmtEur(n: number): string {
   return `€${n}`
 }
 
-const STAGE_COLORS: Record<string, string> = {
-  'Start Stage': '#9CA3AF',
-  'Listing Agreement Signed': '#3B82F6',
-  Listed: '#A855F7',
-  Offer: '#F59E0B',
-  Pending: '#06B6D4',
-  Closed: '#2ECC9A',
+const STAGE_COLORS_SELLERS: Record<string, string> = {
+  'Start Stage': '#9A9080',
+  'Listing Agreement Signed': '#6FA8A3',
+  Listed: '#9888B8',
+  Offer: '#D4A056',
+  Pending: '#C9A84C',
+  Closed: '#7FB069',
 }
 
 export function CaptacionesPipeline({ columns }: Props) {
@@ -27,43 +27,48 @@ export function CaptacionesPipeline({ columns }: Props) {
   const totalValue = columns.reduce((s, c) => s + c.total_value_eur, 0)
 
   return (
-    <div className="rounded-2xl border border-neutral-200 bg-white p-5">
-      <div className="mb-4 flex items-baseline justify-between">
+    <section className="rounded-2xl border border-[#C9A84C]/20 bg-[#0F0F0F] p-5">
+      <header className="mb-4 flex items-baseline justify-between">
         <div>
-          <h3 className="text-sm font-semibold text-neutral-900">Captaciones Pipeline</h3>
-          <div className="text-[10px] text-neutral-500 mt-0.5">Pipeline Sellers · Follow Up Boss</div>
+          <h3 className="text-sm font-semibold text-[#F5F0E8]">Captaciones Pipeline</h3>
+          <div className="mt-0.5 text-[10px] text-[#9A9080]">Pipeline Sellers · Follow Up Boss</div>
         </div>
         <div className="text-right">
-          <div className="text-lg font-bold text-neutral-900">{fmtEur(totalValue)}</div>
-          <div className="text-[10px] uppercase tracking-wider text-neutral-400">
+          <div className="text-lg font-bold text-[#C9A84C]">{fmtEur(totalValue)}</div>
+          <div className="text-[10px] uppercase tracking-[0.18em] text-[#9A9080]">
             {totalCount} captaciones
           </div>
         </div>
-      </div>
+      </header>
       {columns.length === 0 ? (
-        <div className="py-6 text-center text-sm text-neutral-500">
+        <div className="py-6 text-center text-sm text-[#9A9080]">
           Sin deals en pipeline Sellers
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-6">
           {columns.map((c) => {
-            const color = STAGE_COLORS[c.stage_name] || '#9CA3AF'
+            const color = STAGE_COLORS_SELLERS[c.stage_name] || '#9A9080'
             return (
-              <div key={c.stage_id ?? c.stage_name} className="rounded-xl border border-neutral-100 bg-neutral-50/40 p-3">
+              <div
+                key={c.stage_id ?? c.stage_name}
+                className="rounded-xl border border-white/8 bg-white/4 p-3 transition hover:border-[#C9A84C]/30"
+              >
                 <div className="flex items-center gap-1.5">
                   <span
                     className="inline-block h-2 w-2 rounded-full"
-                    style={{ backgroundColor: color }}
+                    style={{ backgroundColor: color, boxShadow: `0 0 6px ${color}` }}
                   />
-                  <span className="text-[10px] uppercase tracking-wider text-neutral-600 truncate">{c.stage_name}</span>
+                  <span className="truncate text-[10px] uppercase tracking-[0.14em] text-[#9A9080]">
+                    {c.stage_name}
+                  </span>
                 </div>
-                <div className="mt-2 text-2xl font-bold text-neutral-900">{c.count}</div>
-                <div className="text-[10px] text-neutral-500">{fmtEur(c.total_value_eur)}</div>
+                <div className="mt-2 text-2xl font-bold text-[#F5F0E8]">{c.count}</div>
+                <div className="text-[10px] text-[#9A9080]">{fmtEur(c.total_value_eur)}</div>
               </div>
             )
           })}
         </div>
       )}
-    </div>
+    </section>
   )
 }

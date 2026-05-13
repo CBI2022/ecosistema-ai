@@ -38,11 +38,11 @@ export default async function LeadsPage({
   const goalsData = 'error' in goalsRes ? null : goalsRes.goals
 
   return (
-    <div className="p-4 lg:p-6 space-y-5">
+    <div className="space-y-5 p-4 lg:p-6">
       <header className="flex items-baseline justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-neutral-900">Leads</h1>
-          <p className="text-sm text-neutral-500 mt-0.5">Tu pipeline completo en Follow Up Boss</p>
+          <h1 className="text-2xl font-bold text-[#F5F0E8]">Leads</h1>
+          <p className="mt-0.5 text-sm text-[#9A9080]">Tu pipeline completo en Follow Up Boss</p>
         </div>
       </header>
 

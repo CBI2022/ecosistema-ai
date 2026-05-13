@@ -23,18 +23,18 @@ function timeAgo(iso: string | null): string {
 
 export function HotList({ people }: Props) {
   return (
-    <div className="rounded-2xl border border-red-200 bg-gradient-to-br from-red-50/50 to-orange-50/50 p-5">
-      <div className="mb-3 flex items-baseline justify-between">
-        <h3 className="flex items-center gap-2 text-sm font-semibold text-neutral-900">
+    <section className="rounded-2xl border border-[#C84B45]/30 bg-gradient-to-br from-[#1A0F0E] to-[#0F0F0F] p-5">
+      <header className="mb-3 flex items-baseline justify-between">
+        <h3 className="flex items-center gap-2 text-sm font-semibold text-[#F5F0E8]">
           <span className="text-base">🔥</span>
           Hot List
         </h3>
-        <span className="text-[10px] uppercase tracking-wider text-red-700">
+        <span className="text-[10px] uppercase tracking-[0.18em] text-[#E8907A]">
           {people.length} urgentes
         </span>
-      </div>
+      </header>
       {people.length === 0 ? (
-        <div className="py-6 text-center text-sm text-neutral-500">
+        <div className="py-6 text-center text-sm text-[#9A9080]">
           Sin leads calientes ahora. Buena oportunidad para prospectar.
         </div>
       ) : (
@@ -43,13 +43,13 @@ export function HotList({ people }: Props) {
             <li key={p.id}>
               <a
                 href={`/leads?personId=${p.id}`}
-                className="flex items-center gap-3 rounded-xl border border-white/60 bg-white p-3 hover:border-red-200 hover:shadow-sm transition"
+                className="flex items-center gap-3 rounded-xl border border-white/8 bg-white/4 p-3 transition hover:border-[#C84B45]/40 hover:bg-white/6"
               >
                 <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm font-semibold text-neutral-900">{p.name}</div>
-                  <div className="mt-0.5 truncate text-xs text-neutral-500">
+                  <div className="truncate text-sm font-semibold text-[#F5F0E8]">{p.name}</div>
+                  <div className="mt-0.5 truncate text-xs text-[#9A9080]">
                     {p.source_canonical && (
-                      <span className="mr-1.5 inline-block rounded bg-neutral-100 px-1.5 py-0.5 text-[10px] font-medium text-neutral-700">
+                      <span className="mr-1.5 inline-block rounded bg-white/6 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider text-[#D0C8B8]">
                         {p.source_canonical}
                       </span>
                     )}
@@ -57,13 +57,15 @@ export function HotList({ people }: Props) {
                   </div>
                 </div>
                 <div className="flex-shrink-0 text-right">
-                  <div className="text-[10px] uppercase tracking-wider text-red-600">{timeAgo(p.last_activity_at)}</div>
+                  <div className="text-[10px] uppercase tracking-[0.14em] text-[#E8907A]">
+                    {timeAgo(p.last_activity_at)}
+                  </div>
                 </div>
               </a>
             </li>
           ))}
         </ul>
       )}
-    </div>
+    </section>
   )
 }

@@ -63,94 +63,75 @@ export function FubAdminPanel({ health, webhookLog, mappings, profiles }: Props)
   return (
     <div className="space-y-4">
       {/* Health */}
-      <div className="rounded-2xl border border-neutral-200 bg-white p-5">
-        <h3 className="mb-3 text-sm font-semibold text-neutral-900">Health</h3>
+      <section className="rounded-2xl border border-[#C9A84C]/20 bg-[#0F0F0F] p-5">
+        <h3 className="mb-3 text-sm font-semibold text-[#F5F0E8]">Health</h3>
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-6">
           {health?.counts &&
             Object.entries(health.counts).map(([k, v]) => (
-              <div key={k} className="rounded-lg border border-neutral-100 bg-neutral-50/40 p-3">
-                <div className="text-[10px] uppercase tracking-wider text-neutral-500 truncate">{k.replace(/_/g, ' ')}</div>
-                <div className="mt-1 text-xl font-bold text-neutral-900">{v.toLocaleString()}</div>
+              <div
+                key={k}
+                className="rounded-xl border border-white/8 bg-white/4 p-3 transition hover:border-[#C9A84C]/30"
+              >
+                <div className="truncate text-[10px] uppercase tracking-[0.14em] text-[#9A9080]">
+                  {k.replace(/_/g, ' ')}
+                </div>
+                <div className="mt-1 text-xl font-bold text-[#F5F0E8]">{v.toLocaleString()}</div>
               </div>
             ))}
         </div>
         {health?.last_webhook && (
-          <div className="mt-3 rounded-lg border border-emerald-100 bg-emerald-50/40 p-3 text-xs text-neutral-700">
-            <span className="font-medium">Último webhook:</span> {health.last_webhook.event_type}{' '}
-            <span className="text-neutral-500">
+          <div className="mt-3 rounded-lg border border-[#7FB069]/20 bg-[#7FB069]/8 p-3 text-xs text-[#D0C8B8]">
+            <span className="font-medium text-[#F5F0E8]">Último webhook:</span>{' '}
+            {health.last_webhook.event_type}{' '}
+            <span className="text-[#9A9080]">
               · {health.last_webhook.received_at ? new Date(health.last_webhook.received_at).toLocaleString('es-ES') : '—'}
             </span>{' '}
             ·{' '}
             <span
               className={`font-medium ${
-                health.last_webhook.status === 'processed' ? 'text-emerald-700' : 'text-amber-700'
+                health.last_webhook.status === 'processed' ? 'text-[#7FB069]' : 'text-[#D4A056]'
               }`}
             >
               {health.last_webhook.status}
             </span>
           </div>
         )}
-      </div>
+      </section>
 
       {/* Actions */}
-      <div className="rounded-2xl border border-neutral-200 bg-white p-5">
-        <h3 className="mb-3 text-sm font-semibold text-neutral-900">Acciones</h3>
+      <section className="rounded-2xl border border-[#C9A84C]/20 bg-[#0F0F0F] p-5">
+        <h3 className="mb-3 text-sm font-semibold text-[#F5F0E8]">Acciones</h3>
         <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            disabled={isPending}
-            onClick={() => run('Resync 90d', () => syncFubFromZero({ sinceDays: 90 }))}
-            className="rounded-md bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
-          >
+          <PrimaryAction onClick={() => run('Resync 90d', () => syncFubFromZero({ sinceDays: 90 }))} disabled={isPending}>
             ⚡ Resync forzado (90d)
-          </button>
-          <button
-            type="button"
-            disabled={isPending}
-            onClick={() => run('Resync 365d', () => syncFubFromZero({ sinceDays: 365 }))}
-            className="rounded-md bg-blue-500 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-600 disabled:opacity-50"
-          >
+          </PrimaryAction>
+          <SecondaryAction onClick={() => run('Resync 365d', () => syncFubFromZero({ sinceDays: 365 }))} disabled={isPending}>
             Resync 12 meses
-          </button>
-          <button
-            type="button"
-            disabled={isPending}
-            onClick={() => run('Subscribe webhooks', () => subscribeFubWebhooks())}
-            className="rounded-md bg-emerald-600 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
-          >
+          </SecondaryAction>
+          <SuccessAction onClick={() => run('Subscribe webhooks', () => subscribeFubWebhooks())} disabled={isPending}>
             ✅ Subscribe webhooks
-          </button>
-          <button
-            type="button"
-            disabled={isPending}
-            onClick={() => run('Unsubscribe webhooks', () => unsubscribeFubWebhooks())}
-            className="rounded-md bg-neutral-200 px-3 py-2 text-xs font-semibold text-neutral-700 hover:bg-neutral-300 disabled:opacity-50"
-          >
+          </SuccessAction>
+          <SecondaryAction onClick={() => run('Unsubscribe webhooks', () => unsubscribeFubWebhooks())} disabled={isPending}>
             Unsubscribe webhooks
-          </button>
-          <button
-            type="button"
-            disabled={isPending}
-            onClick={() => run('Link profiles', () => linkProfilesToFub())}
-            className="rounded-md bg-purple-600 px-3 py-2 text-xs font-semibold text-white hover:bg-purple-700 disabled:opacity-50"
-          >
+          </SecondaryAction>
+          <GoldAction onClick={() => run('Link profiles', () => linkProfilesToFub())} disabled={isPending}>
             🔗 Link profiles ↔ FUB
-          </button>
+          </GoldAction>
         </div>
         {message && (
-          <div className="mt-3 rounded-md bg-neutral-100 p-2 text-[11px] font-mono text-neutral-700 break-all">
+          <div className="mt-3 rounded-md border border-white/8 bg-white/4 p-2 font-mono text-[11px] text-[#D0C8B8] break-all">
             {message}
           </div>
         )}
-      </div>
+      </section>
 
-      {/* User mapping editor */}
-      <div className="rounded-2xl border border-neutral-200 bg-white p-5">
-        <h3 className="mb-3 text-sm font-semibold text-neutral-900">User Mapping</h3>
+      {/* User mapping */}
+      <section className="rounded-2xl border border-[#C9A84C]/20 bg-[#0F0F0F] p-5">
+        <h3 className="mb-3 text-sm font-semibold text-[#F5F0E8]">User Mapping</h3>
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
-            <thead className="border-b border-neutral-100">
-              <tr className="text-left text-[10px] uppercase tracking-wider text-neutral-500">
+            <thead className="border-b border-white/8">
+              <tr className="text-left text-[10px] uppercase tracking-[0.14em] text-[#9A9080]">
                 <th className="pb-2 pr-3 font-medium">FUB ID</th>
                 <th className="pb-2 pr-3 font-medium">Email FUB</th>
                 <th className="pb-2 pr-3 font-medium">CBI Profile</th>
@@ -163,17 +144,17 @@ export function FubAdminPanel({ health, webhookLog, mappings, profiles }: Props)
               {mappings.map((m) => {
                 const profile = profiles.find((p) => p.id === m.cbi_user_id)
                 return (
-                  <tr key={m.fub_user_id} className="border-b border-neutral-50 last:border-0">
-                    <td className="py-2 pr-3 font-mono text-neutral-500">{m.fub_user_id}</td>
-                    <td className="py-2 pr-3 truncate">{m.fub_email}</td>
+                  <tr key={m.fub_user_id} className="border-b border-white/5 last:border-0">
+                    <td className="py-2 pr-3 font-mono text-[#9A9080]">{m.fub_user_id}</td>
+                    <td className="truncate py-2 pr-3 text-[#D0C8B8]">{m.fub_email}</td>
                     <td className="py-2 pr-3">
                       {profile ? (
-                        <span className="text-emerald-700">{profile.full_name || profile.email}</span>
+                        <span className="text-[#7FB069]">{profile.full_name || profile.email}</span>
                       ) : (
-                        <span className="text-amber-600">— sin link</span>
+                        <span className="text-[#D4A056]">— sin link</span>
                       )}
                     </td>
-                    <td className="py-2 pr-3 text-neutral-700">{m.fub_role}</td>
+                    <td className="py-2 pr-3 text-[#D0C8B8]">{m.fub_role}</td>
                     <td className="py-2 pr-3">
                       <ToggleAdmin fubUserId={m.fub_user_id} value={m.is_admin} />
                     </td>
@@ -186,20 +167,20 @@ export function FubAdminPanel({ health, webhookLog, mappings, profiles }: Props)
             </tbody>
           </table>
         </div>
-      </div>
+      </section>
 
       {/* Webhook log */}
-      <div className="rounded-2xl border border-neutral-200 bg-white p-5">
-        <h3 className="mb-3 text-sm font-semibold text-neutral-900">
-          Webhook Log <span className="text-[10px] text-neutral-500">últimos {webhookLog.length}</span>
+      <section className="rounded-2xl border border-[#C9A84C]/20 bg-[#0F0F0F] p-5">
+        <h3 className="mb-3 text-sm font-semibold text-[#F5F0E8]">
+          Webhook Log <span className="text-[10px] font-normal text-[#9A9080]">últimos {webhookLog.length}</span>
         </h3>
         {webhookLog.length === 0 ? (
-          <div className="py-4 text-center text-xs text-neutral-500">Sin webhooks aún</div>
+          <div className="py-4 text-center text-xs text-[#9A9080]">Sin webhooks aún</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
-              <thead className="border-b border-neutral-100">
-                <tr className="text-left text-[10px] uppercase tracking-wider text-neutral-500">
+              <thead className="border-b border-white/8">
+                <tr className="text-left text-[10px] uppercase tracking-[0.14em] text-[#9A9080]">
                   <th className="pb-2 pr-3 font-medium">Evento</th>
                   <th className="pb-2 pr-3 font-medium">IDs</th>
                   <th className="pb-2 pr-3 font-medium">Recibido</th>
@@ -209,40 +190,91 @@ export function FubAdminPanel({ health, webhookLog, mappings, profiles }: Props)
               </thead>
               <tbody>
                 {webhookLog.map((w) => (
-                  <tr key={w.id} className="border-b border-neutral-50 last:border-0">
-                    <td className="py-1.5 pr-3 font-mono">{w.event_type}</td>
-                    <td className="py-1.5 pr-3 font-mono text-neutral-500">
+                  <tr key={w.id} className="border-b border-white/5 last:border-0">
+                    <td className="py-1.5 pr-3 font-mono text-[#D0C8B8]">{w.event_type}</td>
+                    <td className="py-1.5 pr-3 font-mono text-[#9A9080]">
                       {(w.resource_ids || []).slice(0, 3).join(',')}
                       {(w.resource_ids || []).length > 3 ? '…' : ''}
                     </td>
-                    <td className="py-1.5 pr-3 text-neutral-500">
+                    <td className="py-1.5 pr-3 text-[#9A9080]">
                       {w.received_at ? new Date(w.received_at).toLocaleString('es-ES') : '—'}
                     </td>
                     <td className="py-1.5 pr-3">
-                      <span
-                        className={
-                          w.status === 'processed'
-                            ? 'rounded bg-emerald-100 px-1.5 py-0.5 text-emerald-700'
-                            : w.status === 'error'
-                            ? 'rounded bg-red-100 px-1.5 py-0.5 text-red-700'
-                            : w.status === 'pending'
-                            ? 'rounded bg-amber-100 px-1.5 py-0.5 text-amber-700'
-                            : 'rounded bg-neutral-100 px-1.5 py-0.5 text-neutral-600'
-                        }
-                      >
-                        {w.status}
-                      </span>
+                      <StatusBadge status={w.status} />
                     </td>
-                    <td className="py-1.5 pr-3 truncate text-red-600 max-w-xs">{w.error_message || ''}</td>
+                    <td className="max-w-xs truncate py-1.5 pr-3 text-[#E8907A]">
+                      {w.error_message || ''}
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         )}
-      </div>
+      </section>
     </div>
   )
+}
+
+function PrimaryAction({ children, onClick, disabled }: { children: React.ReactNode; onClick: () => void; disabled?: boolean }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className="rounded-md bg-[#C9A84C] px-3 py-2 text-xs font-semibold text-black transition hover:bg-[#E8C868] disabled:opacity-50 shadow-[0_2px_14px_rgba(201,168,76,0.35)]"
+    >
+      {children}
+    </button>
+  )
+}
+function SecondaryAction({ children, onClick, disabled }: { children: React.ReactNode; onClick: () => void; disabled?: boolean }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className="rounded-md border border-white/12 bg-white/6 px-3 py-2 text-xs font-semibold text-[#D0C8B8] transition hover:border-[#C9A84C]/30 hover:bg-white/10 disabled:opacity-50"
+    >
+      {children}
+    </button>
+  )
+}
+function SuccessAction({ children, onClick, disabled }: { children: React.ReactNode; onClick: () => void; disabled?: boolean }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className="rounded-md border border-[#7FB069]/40 bg-[#7FB069]/15 px-3 py-2 text-xs font-semibold text-[#7FB069] transition hover:bg-[#7FB069]/25 disabled:opacity-50"
+    >
+      {children}
+    </button>
+  )
+}
+function GoldAction({ children, onClick, disabled }: { children: React.ReactNode; onClick: () => void; disabled?: boolean }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className="rounded-md border border-[#C9A84C]/40 bg-[#C9A84C]/15 px-3 py-2 text-xs font-semibold text-[#C9A84C] transition hover:bg-[#C9A84C]/25 disabled:opacity-50"
+    >
+      {children}
+    </button>
+  )
+}
+
+function StatusBadge({ status }: { status: string }) {
+  const cls =
+    status === 'processed'
+      ? 'bg-[#7FB069]/20 text-[#7FB069]'
+      : status === 'error'
+        ? 'bg-[#C84B45]/20 text-[#E8907A]'
+        : status === 'pending'
+          ? 'bg-[#D4A056]/20 text-[#D4A056]'
+          : 'bg-white/8 text-[#9A9080]'
+  return <span className={`rounded px-1.5 py-0.5 ${cls}`}>{status}</span>
 }
 
 function ToggleAdmin({ fubUserId, value }: { fubUserId: number; value: boolean }) {
@@ -257,11 +289,13 @@ function ToggleAdmin({ fubUserId, value }: { fubUserId: number; value: boolean }
           const next = !v
           setV(next)
           const r = await updateFubUserMapping({ fub_user_id: fubUserId, is_admin: next })
-          if ('error' in r) setV(value) // revert
+          if ('error' in r) setV(value)
         })
       }
-      className={`rounded px-2 py-0.5 text-[10px] font-semibold ${
-        v ? 'bg-purple-100 text-purple-700' : 'bg-neutral-100 text-neutral-500'
+      className={`rounded px-2 py-0.5 text-[10px] font-semibold transition ${
+        v
+          ? 'bg-[#C9A84C]/20 text-[#C9A84C] hover:bg-[#C9A84C]/30'
+          : 'bg-white/6 text-[#9A9080] hover:bg-white/10'
       }`}
     >
       {v ? 'admin' : 'no'}
@@ -284,8 +318,10 @@ function ToggleActive({ fubUserId, value }: { fubUserId: number; value: boolean 
           if ('error' in r) setV(value)
         })
       }
-      className={`rounded px-2 py-0.5 text-[10px] font-semibold ${
-        v ? 'bg-emerald-100 text-emerald-700' : 'bg-neutral-100 text-neutral-500'
+      className={`rounded px-2 py-0.5 text-[10px] font-semibold transition ${
+        v
+          ? 'bg-[#7FB069]/20 text-[#7FB069] hover:bg-[#7FB069]/30'
+          : 'bg-white/6 text-[#9A9080] hover:bg-white/10'
       }`}
     >
       {v ? 'on' : 'off'}

@@ -48,15 +48,16 @@ export async function FubDashboardSection() {
 
   if (noData) {
     return (
-      <div className="rounded-2xl border border-dashed border-neutral-300 bg-neutral-50/50 p-8 text-center">
+      <div className="rounded-2xl border border-dashed border-[#C9A84C]/30 bg-[#0F0F0F] p-8 text-center">
         <div className="mx-auto max-w-md">
-          <div className="text-3xl mb-2">🔗</div>
-          <h3 className="text-sm font-semibold text-neutral-900 mb-1">
+          <div className="mb-2 text-3xl">🔗</div>
+          <h3 className="mb-1 text-sm font-semibold text-[#F5F0E8]">
             Follow Up Boss no está sincronizado todavía
           </h3>
-          <p className="text-xs text-neutral-500">
-            Pídele a un admin que abra <code className="rounded bg-neutral-100 px-1.5 py-0.5">/admin/fub</code>{' '}
-            y pulse <em>Resync forzado</em>.
+          <p className="text-xs text-[#9A9080]">
+            Pídele a un admin que abra{' '}
+            <code className="rounded bg-white/6 px-1.5 py-0.5 text-[#C9A84C]">/admin/fub</code> y pulse{' '}
+            <em>Resync forzado</em>.
           </p>
         </div>
       </div>

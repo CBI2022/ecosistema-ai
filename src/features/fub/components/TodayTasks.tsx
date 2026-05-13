@@ -32,22 +32,22 @@ export function TodayTasks({ tasks }: Props) {
   const today = tasks.filter((t) => !t.is_overdue)
 
   return (
-    <div className="rounded-2xl border border-neutral-200 bg-white p-5">
-      <div className="mb-4 flex items-baseline justify-between">
-        <h3 className="text-sm font-semibold text-neutral-900">Tareas de hoy</h3>
-        <span className="text-[10px] uppercase tracking-wider text-neutral-400">
+    <section className="rounded-2xl border border-[#C9A84C]/20 bg-[#0F0F0F] p-5">
+      <header className="mb-4 flex items-baseline justify-between">
+        <h3 className="text-sm font-semibold text-[#F5F0E8]">Tareas de hoy</h3>
+        <span className="text-[10px] uppercase tracking-[0.18em] text-[#9A9080]">
           {tasks.length} pendientes
         </span>
-      </div>
+      </header>
       {tasks.length === 0 ? (
-        <div className="py-8 text-center text-sm text-neutral-500">
+        <div className="py-8 text-center text-sm text-[#9A9080]">
           🎉 Sin tareas pendientes hoy.
         </div>
       ) : (
         <>
           {overdue.length > 0 && (
             <div className="mb-4">
-              <div className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-red-600">
+              <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#E8907A]">
                 Vencidas ({overdue.length})
               </div>
               <ul className="space-y-1.5">
@@ -59,7 +59,7 @@ export function TodayTasks({ tasks }: Props) {
           )}
           {today.length > 0 && (
             <div>
-              <div className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-neutral-500">
+              <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#9A9080]">
                 Hoy ({today.length})
               </div>
               <ul className="space-y-1.5">
@@ -71,7 +71,7 @@ export function TodayTasks({ tasks }: Props) {
           )}
         </>
       )}
-    </div>
+    </section>
   )
 }
 
@@ -83,27 +83,31 @@ function TaskItem({
   variant: 'overdue' | 'today'
 }) {
   const icon = TYPE_ICON[task.type || 'default'] || TYPE_ICON.default
-  const borderColor = variant === 'overdue' ? 'border-red-200 bg-red-50/50' : 'border-neutral-100 bg-neutral-50/40'
+  const overdue = variant === 'overdue'
 
   return (
     <li>
       <a
         href={task.person_id ? `/leads?personId=${task.person_id}` : '#'}
-        className={`flex items-start gap-2 rounded-lg border ${borderColor} px-3 py-2 transition hover:border-neutral-300`}
+        className={`flex items-start gap-2 rounded-lg border px-3 py-2 transition ${
+          overdue
+            ? 'border-[#C84B45]/30 bg-[#1A0F0E] hover:border-[#C84B45]/60'
+            : 'border-white/8 bg-white/4 hover:border-[#C9A84C]/30 hover:bg-white/6'
+        }`}
       >
         <span className="text-base">{icon}</span>
         <div className="min-w-0 flex-1">
-          <div className="truncate text-sm text-neutral-900">
+          <div className="truncate text-sm text-[#F5F0E8]">
             {task.description || task.type || 'Tarea'}
           </div>
           {task.person_name && (
-            <div className="truncate text-[11px] text-neutral-500">{task.person_name}</div>
+            <div className="truncate text-[11px] text-[#9A9080]">{task.person_name}</div>
           )}
         </div>
         {task.due_at && (
           <span
             className={`flex-shrink-0 font-mono text-[10px] ${
-              variant === 'overdue' ? 'text-red-600 font-semibold' : 'text-neutral-500'
+              overdue ? 'font-semibold text-[#E8907A]' : 'text-[#9A9080]'
             }`}
           >
             {fmtTime(task.due_at)}

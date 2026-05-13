@@ -62,11 +62,13 @@ export default async function AdminFubPage() {
     .select('id, email, full_name')
 
   return (
-    <div className="p-4 lg:p-6 space-y-5">
+    <div className="space-y-5 p-4 lg:p-6">
       <header className="flex items-baseline justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-neutral-900">Follow Up Boss · Admin</h1>
-          <p className="text-sm text-neutral-500 mt-0.5">
+          <h1 className="text-2xl font-bold text-[#F5F0E8]">
+            Follow Up Boss <span className="text-[#C9A84C]">·</span> Admin
+          </h1>
+          <p className="mt-0.5 text-sm text-[#9A9080]">
             Métricas agregadas y operativa de la integración CRM.
           </p>
         </div>
@@ -107,23 +109,28 @@ export default async function AdminFubPage() {
       <CaptacionesPipeline columns={'error' in captaciones ? [] : captaciones.columns} />
 
       {/* Stage transitions */}
-      <div className="rounded-2xl border border-neutral-200 bg-white p-5">
-        <div className="mb-4 flex items-baseline justify-between">
-          <h3 className="text-sm font-semibold text-neutral-900">Tiempo medio en cada stage</h3>
-          <span className="text-[10px] uppercase tracking-wider text-neutral-400">últimos 12 meses</span>
-        </div>
+      <section className="rounded-2xl border border-[#C9A84C]/20 bg-[#0F0F0F] p-5">
+        <header className="mb-4 flex items-baseline justify-between">
+          <h3 className="text-sm font-semibold text-[#F5F0E8]">Tiempo medio en cada stage</h3>
+          <span className="text-[10px] uppercase tracking-[0.18em] text-[#9A9080]">últimos 12 meses</span>
+        </header>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
           {('error' in transitions ? [] : transitions.rows).map((r) => (
-            <div key={r.stage_id} className="rounded-lg border border-neutral-100 bg-neutral-50/40 p-3">
-              <div className="text-[10px] uppercase tracking-wider text-neutral-500 truncate">{r.stage_name}</div>
-              <div className="mt-1 text-xl font-bold text-neutral-900">
+            <div
+              key={r.stage_id}
+              className="rounded-lg border border-white/8 bg-white/4 p-3 transition hover:border-[#C9A84C]/30"
+            >
+              <div className="truncate text-[10px] uppercase tracking-[0.14em] text-[#9A9080]">
+                {r.stage_name}
+              </div>
+              <div className="mt-1 text-xl font-bold text-[#F5F0E8]">
                 {r.avg_days !== null ? `${r.avg_days}d` : '—'}
               </div>
-              <div className="text-[10px] text-neutral-400">{r.sample_size} muestras</div>
+              <div className="text-[10px] text-[#9A9080]">{r.sample_size} muestras</div>
             </div>
           ))}
         </div>
-      </div>
+      </section>
     </div>
   )
 }
