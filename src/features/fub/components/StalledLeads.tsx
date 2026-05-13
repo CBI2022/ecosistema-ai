@@ -1,0 +1,68 @@
+interface Props {
+  threshold_days: number
+  people: Array<{
+    id: number
+    name: string
+    email: string | null
+    phone: string | null
+    source_canonical: string | null
+    last_activity_at: string | null
+    stage_id: number | null
+  }>
+}
+
+function daysAgo(iso: string | null): string {
+  if (!iso) return 'nunca'
+  const days = Math.floor((Date.now() - new Date(iso).getTime()) / (1000 * 3600 * 24))
+  return `${days}d sin contacto`
+}
+
+export function StalledLeads({ threshold_days, people }: Props) {
+  return (
+    <div className="rounded-2xl border border-amber-200 bg-amber-50/30 p-5">
+      <div className="mb-3 flex items-baseline justify-between">
+        <h3 className="flex items-center gap-2 text-sm font-semibold text-neutral-900">
+          <span className="text-base">⏱️</span>
+          Stalled — recuperar
+        </h3>
+        <span className="text-[10px] uppercase tracking-wider text-amber-700">
+          ≥ {threshold_days} días
+        </span>
+      </div>
+      {people.length === 0 ? (
+        <div className="py-6 text-center text-sm text-neutral-500">
+          Sin leads abandonados. Excelente seguimiento.
+        </div>
+      ) : (
+        <ul className="space-y-1.5">
+          {people.slice(0, 8).map((p) => (
+            <li key={p.id}>
+              <a
+                href={`/leads?personId=${p.id}`}
+                className="flex items-center justify-between gap-2 rounded-lg border border-amber-100 bg-white px-3 py-2 hover:border-amber-300 transition"
+              >
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-sm font-medium text-neutral-900">{p.name}</div>
+                  <div className="truncate text-[11px] text-neutral-500">
+                    {p.source_canonical || p.email || p.phone || '—'}
+                  </div>
+                </div>
+                <div className="flex-shrink-0 text-right text-[10px] font-medium text-amber-700">
+                  {daysAgo(p.last_activity_at)}
+                </div>
+              </a>
+            </li>
+          ))}
+          {people.length > 8 && (
+            <li className="pt-1 text-center text-[11px] text-neutral-500">
+              +{people.length - 8} más en{' '}
+              <a href="/leads?filter=stalled" className="font-medium text-amber-700 hover:underline">
+                /leads
+              </a>
+            </li>
+          )}
+        </ul>
+      )}
+    </div>
+  )
+}

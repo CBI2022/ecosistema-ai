@@ -20,6 +20,14 @@ export type AuditAction =
   | 'task.create'
   | 'task.update'
   | 'task.delete'
+  | 'fub.syncFromZero.start'
+  | 'fub.syncFromZero.done'
+  | 'fub.webhooks.subscribe'
+  | 'fub.webhooks.unsubscribe'
+  | 'fub.webhook.received'
+  | 'fub.linkProfiles'
+  | 'fub.updateMapping'
+  | 'fub.reconcile'
 
 interface AuditEntry {
   actor_id: string | null
