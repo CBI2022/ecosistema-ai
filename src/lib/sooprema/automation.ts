@@ -165,6 +165,54 @@ export async function runSoopremaAutomation(
       log(`⚠ No se pudo capturar el external_id de la URL: ${page.url()}`)
     }
 
+    // ═════════ VENTANA 2 · UBICACIÓN (best-effort) ═════════
+    // La SPA de Sooprema renderiza el step de ubicación con retraso. Esperamos
+    // el campo, usamos el buscador de direcciones (geocoder) que rellena
+    // calle + CP + población con sus IDs, y completamos número/planta/puerta.
+    // NO bloquea: si algo falla, el borrador sigue creado.
+    if (soopremaExternalId && fields.location) {
+      try {
+        const loc = fields.location
+        await page.waitForSelector('[name="address"]', { state: 'visible', timeout: 45000 })
+        log('📍 Rellenando ubicación...')
+
+        // 1) Geocoder: rellena calle + CP + población de golpe (como hace Chloe)
+        if (loc.full) {
+          const geo = page.getByPlaceholder(/Introduce una ubicaci/i).first()
+          if (await geo.count() > 0) {
+            await geo.click()
+            await geo.fill(loc.full)
+            await page.waitForTimeout(2500)
+            await page.keyboard.press('ArrowDown')
+            await page.waitForTimeout(400)
+            await page.keyboard.press('Enter')
+            await page.waitForTimeout(2000)
+          }
+        }
+
+        // 2) Completar/forzar los campos concretos (por si el geocoder no separó)
+        const setField = async (name: string, value: string) => {
+          if (!value) return
+          try {
+            const el = page.locator(`[name="${name}"]`).first()
+            const current = await el.inputValue().catch(() => '')
+            if (!current) { await el.fill(value) }
+          } catch {}
+        }
+        await setField('address', loc.street)
+        await setField('address_number', loc.number)
+        await setField('floorNumber', loc.floor)
+        await setField('door', loc.door)
+        await setField('postal_code', loc.postal_code)
+
+        const addrVal = await page.locator('[name="address"]').first().inputValue().catch(() => '')
+        log(`  ✓ Ubicación: calle="${addrVal}" nº="${loc.number}" CP="${loc.postal_code}"`)
+        stepsCompleted = 4
+      } catch (err) {
+        log(`⚠ Ubicación (no bloquea): ${(err as Error).message.slice(0, 120)}`)
+      }
+    }
+
     // ═════════ FOTOS desde link de Google Drive (best-effort) ═════════
     // Si la propiedad tiene un link público de Drive, descargamos las fotos y
     // tratamos de subirlas al uploader de Sooprema. NO BLOQUEA: si falla, el

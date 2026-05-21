@@ -150,6 +150,17 @@ export interface SoopremaFieldMap {
     email?: string | null
     nif?: string | null
   }
+  /** Ubicación (Ventana 2 de Sooprema) */
+  location: {
+    /** Dirección completa para el buscador (geocoder) de Sooprema */
+    full: string
+    street: string
+    number: string
+    floor: string
+    door: string
+    postal_code: string
+    city: string
+  }
   /** Portales */
   portals: { sooprema: boolean; idealista: boolean; imoluc: boolean }
   /** Fotos a subir (URLs públicas) */
@@ -302,6 +313,23 @@ export function mapPropertyToSooprema({ property: p, owner, soopremaAgentId, pho
           nif: owner.nif,
         }
       : undefined,
+    location: (() => {
+      const pAny = p as unknown as Record<string, unknown>
+      const street = asString(p.street_name)
+      const number = asString(p.street_number)
+      const city = asString(p.city)
+      const cp = asString(p.postal_code)
+      const full = [[street, number].filter(Boolean).join(' '), city, cp].filter(Boolean).join(', ')
+      return {
+        full,
+        street,
+        number,
+        floor: asString(pAny.apartment_floor as string | null),
+        door: asString(pAny.apartment_door as string | null),
+        postal_code: cp,
+        city,
+      }
+    })(),
     portals: {
       sooprema: p.publish_sooprema ?? true,
       idealista: p.publish_idealista ?? false,
