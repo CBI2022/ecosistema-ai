@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
 import { signout } from '@/actions/auth'
 import { uploadAvatar } from '@/actions/profile'
 import { NotificationsBell } from '@/features/notifications/components/NotificationsBell'
@@ -17,6 +17,8 @@ interface AppHeaderProps {
 
 export function AppHeader({ profile, notifCount = 0 }: AppHeaderProps) {
   const t = useTranslations('header')
+  const locale = useLocale()
+  const dateLocale = locale === 'es' ? 'es-ES' : locale === 'nl' ? 'nl-NL' : 'en-GB'
   const ROLE_LABELS: Record<string, string> = {
     admin: t('roleAdmin'),
     agent: t('roleAgent'),
@@ -32,7 +34,7 @@ export function AppHeader({ profile, notifCount = 0 }: AppHeaderProps) {
     ? profile.full_name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
     : profile.email.slice(0, 2).toUpperCase()
 
-  const today = new Date().toLocaleDateString('en-GB', {
+  const today = new Date().toLocaleDateString(dateLocale, {
     weekday: 'short', day: 'numeric', month: 'short', year: 'numeric',
   })
 

@@ -1955,5 +1955,14 @@
       "saving": "Saving...",
       "completeProfile": "✓ Complete profile"
     }
+  },
+  "viewAs": {
+    "label": "View",
+    "admin": "Admin",
+    "agent": "Agent",
+    "secretary": "Secretary",
+    "photographer": "Photographer",
+    "dc": "Sales Director",
+    "backToAdmin": "Back to Admin"
   }
 }

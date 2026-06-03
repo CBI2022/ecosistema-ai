@@ -1955,5 +1955,14 @@
       "saving": "Guardando...",
       "completeProfile": "✓ Completar perfil"
     }
+  },
+  "viewAs": {
+    "label": "Vista",
+    "admin": "Administrador",
+    "agent": "Agente",
+    "secretary": "Secretaria",
+    "photographer": "Fotógrafo",
+    "dc": "Director comercial",
+    "backToAdmin": "Volver a Admin"
   }
 }
