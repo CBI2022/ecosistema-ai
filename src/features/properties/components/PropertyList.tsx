@@ -16,16 +16,29 @@ interface PropertyListProps {
   listTitle?: string
 }
 
-function StatusBadge({ status }: { status: Property['suprema_status'] }) {
-  const map: Record<string, { label: string; cls: string }> = {
-    pending: { label: 'Draft', cls: 'bg-white/10 text-[#9A9080]' },
-    publishing: { label: 'Publishing...', cls: 'bg-yellow-500/15 text-yellow-400' },
-    review: { label: 'En revisión', cls: 'bg-[#C9A84C]/20 text-[#C9A84C]' },
-    published: { label: 'Published', cls: 'bg-[#2ECC9A]/15 text-[#2ECC9A]' },
-    error: { label: 'Error', cls: 'bg-red-500/15 text-red-400' },
+// Estado que ve el AGENTE, según el flujo real (review_status):
+//  submitted = enviada a la oficina  ·  published = ya subida a Sooprema
+//  sin enviar todavía = borrador
+function StatusBadge({ p }: { p: Property }) {
+  let label = 'Borrador'
+  let cls = 'bg-white/10 text-[#9A9080]'
+  if (p.review_status === 'submitted') {
+    label = 'Enviada a la oficina'
+    cls = 'bg-[#C9A84C]/20 text-[#C9A84C]'
+  } else if (p.review_status === 'published') {
+    label = 'Publicada'
+    cls = 'bg-[#2ECC9A]/15 text-[#2ECC9A]'
   }
-  const s = map[status ?? 'pending'] ?? map.pending
-  return <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide ${s.cls}`}>{s.label}</span>
+  return <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide ${cls}`}>{label}</span>
+}
+
+function fmtShort(d: string | null): string {
+  if (!d) return ''
+  try {
+    return new Date(d).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })
+  } catch {
+    return ''
+  }
 }
 
 export function PropertyList({ properties, agentsMap = null, listTitle = 'My Properties' }: PropertyListProps) {
@@ -77,10 +90,16 @@ export function PropertyList({ properties, agentsMap = null, listTitle = 'My Pro
                   <span className="ml-1.5 text-[#8B7CF6]">· {agent.full_name || agent.email}</span>
                 )}
               </p>
+              {p.review_status === 'submitted' && p.submitted_at && (
+                <p className="mt-1 text-[11px] text-[#7A7263]">Enviada el {fmtShort(p.submitted_at)} · pendiente en la oficina</p>
+              )}
+              {p.review_status === 'published' && p.published_to_suprema_at && (
+                <p className="mt-1 text-[11px] text-[#2ECC9A]/80">Publicada el {fmtShort(p.published_to_suprema_at)}</p>
+              )}
             </div>
 
             <div className="flex items-center gap-2">
-              <StatusBadge status={p.suprema_status} />
+              <StatusBadge p={p} />
 
               <button
                 type="button"

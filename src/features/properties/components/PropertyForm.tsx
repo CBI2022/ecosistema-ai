@@ -4,7 +4,6 @@ import { useState, useTransition, useEffect, useMemo } from 'react'
 import { saveProperty, submitProperty } from '@/actions/properties'
 import { OwnerPicker } from './OwnerPicker'
 import { AddressPicker } from './AddressPicker'
-import { TitleAndDescriptionEditor } from './TitleAndDescriptionEditor'
 import { EquipmentTab } from './EquipmentTab'
 import { FeaturesTab } from './FeaturesTab'
 import {
@@ -84,7 +83,7 @@ const TABS: { id: TabId; label: string }[] = [
   { id: 'equipment', label: '🛠️ Equipment' },
   { id: 'features', label: '✨ Features' },
   { id: 'location', label: '📍 Ubicación y propietario' },
-  { id: 'texts', label: '✏️ Textos y fotos' },
+  { id: 'texts', label: '📸 Fotos' },
   { id: 'costs', label: '💶 Gastos y portales' },
 ]
 
@@ -140,10 +139,6 @@ export function PropertyForm({
     return { commission, ownerReceives }
   }, [salePrice, commissionPct])
 
-  // Título y descripción — uncontrolled para fiabilidad (FormData los recoge directo)
-  const initialTitle = initialProperty?.title_headline ?? ''
-  const initialDescription =
-    initialProperty?.description_es || initialProperty?.description_en || getStr('description_de') || ''
 
   // Owner
   const [ownerId, setOwnerId] = useState<string | null>(initialProperty?.owner_id ?? null)
@@ -212,8 +207,8 @@ export function PropertyForm({
   }
 
   /**
-   * Enviar propiedad a la oficina: valida título y descripción antes.
-   * NO dispara el robot Sooprema — le llega a la oficina (Chloe) para subirla a mano.
+   * Enviar propiedad a la oficina. NO dispara el robot Sooprema — le llega a
+   * la oficina (Chloe) para subirla a mano a Sooprema.
    */
   function handleSubmit() {
     setError(null)
@@ -221,22 +216,6 @@ export function PropertyForm({
 
     const fd = buildFormData('hidden')
     if (!fd) return
-
-    const titleVal = String(fd.get('title_headline') || '').trim()
-    const descVal = String(fd.get('description_es') || '').trim()
-
-    if (!titleVal) {
-      setError('Falta el título de la propiedad. Si no lo incluyes, la oficina no tendrá ese dato.')
-      setActiveTab('texts')
-      document.getElementById('section-title')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-      return
-    }
-    if (!descVal) {
-      setError('Falta la descripción de la propiedad. Escribe al menos un párrafo en cualquier idioma.')
-      setActiveTab('texts')
-      document.getElementById('section-title')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-      return
-    }
 
     startTransition(async () => {
       const res = await submitProperty(fd)
@@ -763,76 +742,6 @@ export function PropertyForm({
       {/* PESTAÑA 5 — TEXTOS Y FOTOS                                     */}
       {/* ════════════════════════════════════════════════════════════ */}
       <div className={`space-y-5 ${hide('texts')}`}>
-        {/* Título + Descripción (CBI lo refina y traduce a 7 idiomas) */}
-        <section id="section-title" className={sectionClass}>
-          <h2 className={sectionTitle}>✏️ Título y descripción</h2>
-          <p className={sectionSubtitle}>
-            CBI genera y traduce con su IA propia los textos profesionales en 7 idiomas. Lo que aquí veas Pro es lo que se sube a Sooprema.
-          </p>
-
-          <TitleAndDescriptionEditor
-            initial={{
-              description_base: initialProperty?.description_base ?? null,
-              description_source_lang: initialProperty?.description_source_lang ?? 'es',
-              title_es: initialProperty?.title_es ?? null,
-              title_en: initialProperty?.title_en ?? null,
-              title_de: initialProperty?.title_de ?? null,
-              title_fr: initialProperty?.title_fr ?? null,
-              title_nl: initialProperty?.title_nl ?? null,
-              title_ru: initialProperty?.title_ru ?? null,
-              title_pl: initialProperty?.title_pl ?? null,
-              description_es: initialProperty?.description_es ?? null,
-              description_en: initialProperty?.description_en ?? null,
-              description_de: initialProperty?.description_de ?? null,
-              description_fr: initialProperty?.description_fr ?? null,
-              description_nl: initialProperty?.description_nl ?? null,
-              description_ru: initialProperty?.description_ru ?? null,
-              description_pl: initialProperty?.description_pl ?? null,
-              legacy_title: initialTitle,
-              legacy_description: initialDescription,
-            }}
-            getContext={() => {
-              const form = document.getElementById('propForm') as HTMLFormElement | null
-              const fd = form ? new FormData(form) : null
-              const num = (k: string): number | null => {
-                const v = fd?.get(k)
-                if (v === null || v === undefined || v === '') return null
-                const n = Number(v)
-                return isNaN(n) ? null : n
-              }
-              const str = (k: string): string | null => {
-                const v = fd?.get(k)
-                if (v === null || v === undefined || v === '') return null
-                return String(v)
-              }
-              const bool = (k: string): boolean => {
-                const v = fd?.get(k)
-                return v === 'on' || v === 'true' || v === '1'
-              }
-              return {
-                property_type: str('property_type'),
-                zone: str('zone'),
-                bedrooms: num('bedrooms'),
-                bathrooms: num('bathrooms'),
-                build_area_m2: num('build_area_m2'),
-                plot_area_m2: num('plot_area_m2'),
-                terrace_area_m2: num('terrace_area_m2'),
-                garden_area_m2: num('garden_area_m2'),
-                price: num('price'),
-                views: str('views'),
-                has_pool: bool('has_pool'),
-                has_garage: bool('has_garage'),
-                has_garden: bool('has_garden'),
-                has_terrace: bool('has_terrace'),
-                has_ac: bool('has_ac'),
-                has_sea_view: bool('has_sea_view'),
-                year_built: num('year_built'),
-                year_reformed: num('year_reformed'),
-              }
-            }}
-          />
-        </section>
-
         {/* Fotos (opcional) */}
         <section className={sectionClass}>
           {/* Campo Carpeta de Drive — la automation pesca las fotos de aquí al publicar a Sooprema */}
