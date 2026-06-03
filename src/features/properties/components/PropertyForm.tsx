@@ -76,24 +76,20 @@ function NumberSelect({
   )
 }
 
-type TabId = 'general' | 'equipment' | 'features' | 'location' | 'texts' | 'costs'
+type TabId = 'general' | 'equipment' | 'features' | 'location' | 'costs'
 
 const TABS: { id: TabId; label: string }[] = [
   { id: 'general', label: '🏠 Información general' },
   { id: 'equipment', label: '🛠️ Equipment' },
   { id: 'features', label: '✨ Features' },
   { id: 'location', label: '📍 Ubicación y propietario' },
-  { id: 'texts', label: '📸 Fotos' },
   { id: 'costs', label: '💶 Gastos y portales' },
 ]
 
 export function PropertyForm({
-  availablePhotos = [],
-  storageBaseUrl = '',
   initialProperty = null,
   agentOptions = null,
   defaultAgentId = null,
-  prefilledFromShoot = null,
 }: PropertyFormProps = {}) {
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
@@ -143,8 +139,6 @@ export function PropertyForm({
   // Owner
   const [ownerId, setOwnerId] = useState<string | null>(initialProperty?.owner_id ?? null)
 
-  // Fotos
-  const [selectedPhotoIds, setSelectedPhotoIds] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     if (isEditing) {
@@ -183,8 +177,6 @@ export function PropertyForm({
     }
 
     if (ownerId) fd.set('owner_id', ownerId)
-
-    fd.set('selected_photo_ids', JSON.stringify([...selectedPhotoIds]))
 
     return fd
   }
@@ -738,114 +730,6 @@ export function PropertyForm({
         </section>
       </div>
 
-      {/* ════════════════════════════════════════════════════════════ */}
-      {/* PESTAÑA 5 — TEXTOS Y FOTOS                                     */}
-      {/* ════════════════════════════════════════════════════════════ */}
-      <div className={`space-y-5 ${hide('texts')}`}>
-        {/* Fotos (opcional) */}
-        <section className={sectionClass}>
-          {/* Campo Carpeta de Drive — la automation pesca las fotos de aquí al publicar a Sooprema */}
-          <div className="mb-5">
-            <label className={labelClass}>
-              🔗 Carpeta de Drive con fotos (opcional)
-            </label>
-            <input
-              type="url"
-              name="photos_drive_link"
-              defaultValue={
-                prefilledFromShoot?.drive_link ||
-                (initialProperty as { photos_drive_link?: string | null } | null)?.photos_drive_link ||
-                ''
-              }
-              placeholder="https://drive.google.com/drive/folders/..."
-              className={inputClass}
-            />
-            <p className="mt-2 text-[11px] text-[#9A9080]">
-              Si Jelle te ha enviado un link de Drive con las fotos, pégalo aquí. La automation las descargará y subirá a Sooprema.
-              Asegúrate de que la carpeta esté pública (Cualquiera con el enlace puede ver).
-            </p>
-            {prefilledFromShoot?.shoot_id && (
-              <input type="hidden" name="linked_shoot_id" value={prefilledFromShoot.shoot_id} />
-            )}
-            {prefilledFromShoot?.drive_link && (
-              <p className="mt-1 text-[11px] text-[#C9A84C]">
-                ✓ Link de Drive precargado desde la sesión de fotos de Jelle.
-              </p>
-            )}
-          </div>
-
-          <div className="mb-4 flex items-center justify-between gap-3">
-            <div>
-              <h2 className={sectionTitle}>📸 Fotos del SaaS (opcional)</h2>
-              <p className={sectionSubtitle}>
-                {availablePhotos.length} disponibles · {selectedPhotoIds.size} seleccionadas. Las fotos NO son obligatorias para subir.
-              </p>
-            </div>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => setSelectedPhotoIds(new Set(availablePhotos.map((p) => p.id)))}
-                disabled={availablePhotos.length === 0}
-                className="rounded-md border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-semibold text-[#9A9080] disabled:opacity-40"
-              >
-                Todas
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedPhotoIds(new Set())}
-                disabled={selectedPhotoIds.size === 0}
-                className="rounded-md border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-semibold text-[#9A9080] disabled:opacity-40"
-              >
-                Limpiar
-              </button>
-            </div>
-          </div>
-
-          {availablePhotos.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-white/10 bg-[#0A0A0A] p-8 text-center">
-              <p className="text-sm text-[#9A9080]">Sin fotos disponibles. Cuando el fotógrafo suba fotos aparecerán aquí.</p>
-            </div>
-          ) : (
-            <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-4">
-              {availablePhotos.map((photo) => {
-                const selected = selectedPhotoIds.has(photo.id)
-                const imgUrl = `${storageBaseUrl}/storage/v1/object/public/property-photos/${photo.storage_path}`
-                return (
-                  <button
-                    key={photo.id}
-                    type="button"
-                    onClick={() =>
-                      setSelectedPhotoIds((prev) => {
-                        const next = new Set(prev)
-                        if (next.has(photo.id)) next.delete(photo.id)
-                        else next.add(photo.id)
-                        return next
-                      })
-                    }
-                    className={`group relative aspect-square overflow-hidden rounded-lg border-2 transition ${
-                      selected ? 'border-[#C9A84C] ring-2 ring-[#C9A84C]/30' : 'border-white/8 hover:border-white/20'
-                    }`}
-                  >
-                    <img src={imgUrl} alt="" className="h-full w-full object-cover" />
-                    {photo.is_drone && (
-                      <span className="absolute left-1.5 top-1.5 rounded-full bg-black/70 px-1.5 py-0.5 text-[9px] font-bold text-[#C9A84C]">
-                        🚁 DRONE
-                      </span>
-                    )}
-                    {selected && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-[#C9A84C]/30">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#C9A84C] text-sm font-bold text-black">
-                          ✓
-                        </div>
-                      </div>
-                    )}
-                  </button>
-                )
-              })}
-            </div>
-          )}
-        </section>
-      </div>
 
       {/* ════════════════════════════════════════════════════════════ */}
       {/* PESTAÑA 6 — GASTOS Y PORTALES                                  */}

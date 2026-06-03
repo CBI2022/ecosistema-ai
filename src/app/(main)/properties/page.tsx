@@ -87,12 +87,12 @@ export default async function PropertiesPage({ searchParams }: PropertiesPagePro
     <div className="space-y-8">
       <div>
         <h1 className="text-xl font-bold text-[#F5F0E8]">
-          {editProp ? 'Editar propiedad' : 'New Property Listing'}
+          {editProp ? 'Editar propiedad' : 'Subir propiedad'}
         </h1>
         <p className="mt-1 text-sm text-[#9A9080]">
           {editProp
-            ? 'Modifica los datos y guarda o vuelve a publicar'
-            : 'Rellena los datos, genera una descripción con IA y publica en Sooprema'}
+            ? 'Modifica los datos y vuelve a enviar a la oficina'
+            : 'Rellena los datos y envía la propiedad a la oficina'}
         </p>
       </div>
 
