@@ -276,6 +276,19 @@ execute_sql, apply_migration, list_tables, get_advisors
 - SIEMPRE habilitar RLS en tablas Supabase
 - NUNCA exponer secrets en codigo
 
+### 🌍 i18n OBLIGATORIO (regla innegociable)
+
+**TODO texto visible al usuario DEBE ser traducible. PROHIBIDO escribir texto a mano (hardcoded) en la UI.**
+
+La plataforma soporta 3 idiomas: **inglés, español, neerlandés** (`src/i18n/messages/{en,es,nl}.json`, selector con cookie `cbi-locale`). Cuando el usuario cambia el idioma, **absolutamente todo** debe cambiar — ni una palabra puede quedar en otro idioma.
+
+Por cada texto nuevo:
+1. Añadir la clave a los **3** archivos `en.json`, `es.json`, `nl.json` (con su traducción real en cada idioma).
+2. Usar `useTranslations('namespace')` (client) o `getTranslations('namespace')` (server) — NUNCA un string literal en JSX, placeholders, labels, toasts, botones, opciones de select, mensajes de error, etc.
+3. Namespace por feature (ej. `properties`, `inbox`, `nav`, `roadmaps`).
+
+Esto es **por defecto**: cualquier componente nuevo nace traducible. No esperar a que Marco lo pida.
+
 ---
 
 ## Comandos npm
