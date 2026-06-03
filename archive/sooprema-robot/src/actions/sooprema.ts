@@ -10,9 +10,11 @@ import { audit } from '@/lib/audit'
 import { sendEmail } from '@/lib/email/resend'
 import { soopremaDoneEmail, soopremaErrorEmail } from '@/lib/email/templates'
 import { getSiteUrl } from '@/lib/site-url'
+import { SOOPREMA_AUTOMATION_ENABLED, SOOPREMA_DISABLED_MESSAGE } from '@/lib/sooprema/kill-switch'
 import type { Property } from '@/types/database'
 
 export async function retrySoopremaJob(jobId: string) {
+  if (!SOOPREMA_AUTOMATION_ENABLED) return { error: SOOPREMA_DISABLED_MESSAGE }
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Not authenticated' }
@@ -72,6 +74,7 @@ export async function cancelSoopremaJob(jobId: string) {
  * usar `processSoopremaJob` directamente desde un route handler.
  */
 export async function runSoopremaJob(jobId: string) {
+  if (!SOOPREMA_AUTOMATION_ENABLED) return { error: SOOPREMA_DISABLED_MESSAGE }
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Not authenticated' }
@@ -105,6 +108,9 @@ export async function runSoopremaJob(jobId: string) {
  * route handler interno) acaba llamando aquí. NO exponer públicamente.
  */
 export async function processSoopremaJob(jobId: string) {
+  // ⛔ KILL-SWITCH: chokepoint común de TODA ejecución del robot.
+  if (!SOOPREMA_AUTOMATION_ENABLED) return { error: SOOPREMA_DISABLED_MESSAGE }
+
   const admin = createAdminClient()
 
   const { data: job } = await admin

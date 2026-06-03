@@ -4,7 +4,6 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { audit } from '@/lib/audit'
-import { getSiteUrl } from '@/lib/site-url'
 
 const ZONE_PREFIXES: Record<string, string> = {
   Altea: 'A',
@@ -417,85 +416,9 @@ export async function saveProperty(formData: FormData, publish = false) {
     }
   } catch { /* non-blocking */ }
 
-  if (publish) {
-    // Validar que la propiedad tenga los campos obligatorios de Sooprema
-    // (year_built NO es obligatorio: Chloe confirmó que no siempre se conoce)
-    const missing: string[] = []
-    if (!propertyData.price) missing.push('Precio')
-    if (!propertyData.bedrooms) missing.push('Dormitorios')
-    if (!propertyData.bathrooms) missing.push('Baños')
-    if (!propertyData.build_area_m2) missing.push('m² construidos')
-    if (!propertyData.plot_area_m2 && propertyData.property_type === 'villa') missing.push('m² parcela')
-    if (!propertyData.description_es && !propertyData.description_en) missing.push('Descripción')
-    if (!propertyData.location && !propertyData.zone) missing.push('Ubicación o Zona')
-
-    if (missing.length > 0) {
-      await writeClient
-        .from('properties')
-        .update({ suprema_status: null })
-        .eq('id', result.id)
-      return {
-        error: `Faltan campos obligatorios para publicar en Sooprema: ${missing.join(', ')}. La propiedad se guardó pero no se publicará hasta que rellenes estos datos.`,
-        propertyId: result.id,
-      }
-    }
-
-    const { data: jobInserted } = await adminClient
-      .from('suprema_jobs')
-      .insert({
-        property_id: result.id,
-        agent_id: agentId,
-        status: 'queued',
-      })
-      .select('id')
-      .single()
-    await writeClient
-      .from('properties')
-      .update({ suprema_status: 'publishing' })
-      .eq('id', result.id)
-
-    // Disparar la automation INMEDIATAMENTE (fire-and-forget).
-    // Sin esto el job se queda 'queued' eternamente porque el cron está deshabilitado en plan Hobby.
-    if (jobInserted?.id) {
-      const token = process.env.SOOPREMA_INTERNAL_TOKEN || process.env.SUPABASE_SERVICE_ROLE_KEY || ''
-      const url = `${getSiteUrl()}/api/sooprema/run/${jobInserted.id}`
-      // No esperamos respuesta: la action de createProperty devuelve rápido.
-      // El endpoint /api/sooprema/run/[jobId] tiene maxDuration 60s para dejar correr Playwright.
-      fetch(url, {
-        method: 'POST',
-        headers: { 'x-sooprema-token': token },
-        cache: 'no-store',
-      }).catch((err) => {
-        console.error('[sooprema] failed to trigger job', jobInserted.id, err)
-      })
-    }
-
-    await adminClient.from('notifications').insert({
-      type: 'suprema_started',
-      title: '🚀 Publicando en Sooprema',
-      message: `La propiedad ${reference} se está publicando. Te avisaremos cuando termine.`,
-      target_user_id: agentId,
-      is_read: false,
-    })
-
-    // Notificar a todas las secretarias para que puedan ejecutar el job si el agente no lo hace
-    const { data: secretaries } = await adminClient
-      .from('profiles')
-      .select('id')
-      .eq('role', 'secretary')
-
-    if (secretaries && secretaries.length > 0) {
-      await adminClient.from('notifications').insert(
-        secretaries.map((s) => ({
-          type: 'suprema_started',
-          title: '📋 Nueva propiedad pendiente de publicar',
-          message: `${reference} está en cola. Entra a /admin/sooprema para ejecutar la publicación.`,
-          target_user_id: s.id,
-          is_read: false,
-        }))
-      )
-    }
-  }
+  // NOTA: la automatización-robot de Sooprema se retiró por completo de la app
+  // (archivada en /archive/sooprema-robot, desconectada). El flujo real es
+  // submitProperty (envío a la oficina). saveProperty solo guarda; nunca publica.
 
   // Si viene de un photo_shoot, vincular el shoot a esta propiedad
   const linkedShootId = str(formData, 'linked_shoot_id')

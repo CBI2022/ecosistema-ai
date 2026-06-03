@@ -6,6 +6,7 @@
 import type { Browser, Page } from 'playwright-core'
 import type { SoopremaFieldMap } from './mapper'
 import { listFolderPhotos, downloadPhotoBytes } from '@/lib/google-drive/fetch-public-folder'
+import { SOOPREMA_AUTOMATION_ENABLED, SOOPREMA_DISABLED_MESSAGE } from './kill-switch'
 
 const LOGIN_URL = process.env.SOOPREMA_URL || 'https://costablancainvestments.com/crm/login'
 const USERNAME = process.env.SOOPREMA_USERNAME || ''
@@ -57,6 +58,12 @@ export async function runSoopremaAutomation(
     logs.push(`[${stamp}] ${msg}`)
     // eslint-disable-next-line no-console
     console.log(`[sooprema] ${msg}`)
+  }
+
+  // ⛔ KILL-SWITCH: chokepoint más profundo. Si la automatización está
+  // desactivada, Playwright NUNCA arranca, vengas de donde vengas.
+  if (!SOOPREMA_AUTOMATION_ENABLED) {
+    return { success: false, logs, error: SOOPREMA_DISABLED_MESSAGE }
   }
 
   if (!USERNAME || !PASSWORD) {

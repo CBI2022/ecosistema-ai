@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { processSoopremaJob } from '@/actions/sooprema'
+import { SOOPREMA_AUTOMATION_ENABLED, SOOPREMA_DISABLED_MESSAGE } from '@/lib/sooprema/kill-switch'
 
 // Endpoint interno que ejecuta un job de Sooprema. Lo llama
 // `properties.ts` después de crear el job, sin esperar respuesta.
@@ -26,6 +27,10 @@ export async function POST(
   req: NextRequest,
   ctx: { params: Promise<{ jobId: string }> },
 ) {
+  // ⛔ KILL-SWITCH: aunque alguien llame al endpoint directamente, no corre nada.
+  if (!SOOPREMA_AUTOMATION_ENABLED) {
+    return NextResponse.json({ error: SOOPREMA_DISABLED_MESSAGE }, { status: 410 })
+  }
   if (!isAuthorized(req)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }

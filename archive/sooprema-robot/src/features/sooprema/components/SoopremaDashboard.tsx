@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { runSoopremaJob, retrySoopremaJob, cancelSoopremaJob } from '@/actions/sooprema'
+import { SOOPREMA_AUTOMATION_ENABLED } from '@/lib/sooprema/kill-switch'
 
 type JobStatus = 'queued' | 'running' | 'done' | 'error'
 
@@ -94,6 +95,22 @@ export function SoopremaDashboard({ jobs: initialJobs }: SoopremaDashboardProps)
 
   return (
     <div className="space-y-5">
+      {!SOOPREMA_AUTOMATION_ENABLED && (
+        <div className="rounded-2xl border border-red-500/30 bg-red-500/[0.06] p-4">
+          <div className="flex items-start gap-3">
+            <span className="text-lg">⛔</span>
+            <div>
+              <h3 className="text-sm font-bold text-red-300">Automatización de Sooprema desactivada</h3>
+              <p className="mt-1 text-[13px] leading-relaxed text-[#C0B8A8]">
+                El robot de publicación automática está <strong>apagado a propósito</strong>. Ningún botón de esta
+                pantalla lo lanza. Las propiedades se gestionan a mano desde <strong>Propiedades recibidas</strong>.
+                Este historial se conserva solo como registro.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Stats bar */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {(['queued', 'running', 'done', 'error'] as const).map((s) => {

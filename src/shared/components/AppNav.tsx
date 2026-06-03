@@ -266,7 +266,6 @@ export function AppNav({ role }: AppNavProps) {
     { href: '/tasks', label: t('tasks'), icon: 'check' },
     { href: '/kpi', label: t('kpi'), icon: 'chart' },
     { href: '/admin/fub', label: 'CRM (FUB)', icon: 'crm' },
-    { href: '/admin/sooprema', label: 'Sooprema', icon: 'upload' },
     { href: '/social', label: t('social'), icon: 'share' },
     { href: '/admin/knowledge', label: t('knowledge'), icon: 'brain' },
   ]
@@ -356,7 +355,7 @@ export function AppNav({ role }: AppNavProps) {
     if (href === '/dashboard') return pathname === '/dashboard'
     if (href === '/photographer') return pathname === '/photographer'
     // '/admin' (Equipo) es exacto: si no, se marcaría activo en /admin/roadmaps,
-    // /admin/fub, /admin/sooprema, /admin/knowledge (todas empiezan por /admin).
+    // /admin/fub, /admin/knowledge (todas empiezan por /admin).
     if (href === '/admin') return pathname === '/admin'
     return pathname.startsWith(href)
   }
