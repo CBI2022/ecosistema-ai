@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
+import { getTranslations } from 'next-intl/server'
 import {
   getActivityLeaderboard,
   getConversionFunnel,
@@ -18,6 +19,7 @@ import { CaptacionesPipeline } from '@/features/fub/components/CaptacionesPipeli
 import { FubAdminPanel } from '@/features/fub/components/FubAdminPanel'
 
 export default async function AdminFubPage() {
+  const t = await getTranslations('shell.adminFub')
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
@@ -66,10 +68,10 @@ export default async function AdminFubPage() {
       <header className="flex items-baseline justify-between">
         <div>
           <h1 className="text-2xl font-bold text-[#F5F0E8]">
-            Follow Up Boss <span className="text-[#C9A84C]">·</span> Admin
+            Follow Up Boss <span className="text-[#C9A84C]">·</span> {t('adminLabel')}
           </h1>
           <p className="mt-0.5 text-sm text-[#9A9080]">
-            Métricas agregadas y operativa de la integración CRM.
+            {t('subtitle')}
           </p>
         </div>
       </header>
@@ -111,8 +113,8 @@ export default async function AdminFubPage() {
       {/* Stage transitions */}
       <section className="rounded-2xl border border-[#C9A84C]/20 bg-[#0F0F0F] p-5">
         <header className="mb-4 flex items-baseline justify-between">
-          <h3 className="text-sm font-semibold text-[#F5F0E8]">Tiempo medio en cada stage</h3>
-          <span className="text-[10px] uppercase tracking-[0.18em] text-[#9A9080]">últimos 12 meses</span>
+          <h3 className="text-sm font-semibold text-[#F5F0E8]">{t('avgTimePerStage')}</h3>
+          <span className="text-[10px] uppercase tracking-[0.18em] text-[#9A9080]">{t('last12Months')}</span>
         </header>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
           {('error' in transitions ? [] : transitions.rows).map((r) => (
@@ -126,7 +128,7 @@ export default async function AdminFubPage() {
               <div className="mt-1 text-xl font-bold text-[#F5F0E8]">
                 {r.avg_days !== null ? `${r.avg_days}d` : '—'}
               </div>
-              <div className="text-[10px] text-[#9A9080]">{r.sample_size} muestras</div>
+              <div className="text-[10px] text-[#9A9080]">{t('samples', { count: r.sample_size })}</div>
             </div>
           ))}
         </div>

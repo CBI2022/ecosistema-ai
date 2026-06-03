@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
+import { useTranslations } from 'next-intl'
 import { uploadPhotos } from '@/actions/photographer'
 
 interface Agent { id: string; full_name: string | null }
@@ -13,6 +14,7 @@ interface PhotographerUploadProps {
 }
 
 export function PhotographerUpload({ agents, shoots, photographerId }: PhotographerUploadProps) {
+  const t = useTranslations('photographer.upload')
   const [selectedAgent, setSelectedAgent] = useState('')
   const [reference, setReference] = useState('')
   const [selectedShoot, setSelectedShoot] = useState('')
@@ -41,7 +43,7 @@ export function PhotographerUpload({ agents, shoots, photographerId }: Photograp
 
   async function handleUpload() {
     if (!selectedAgent || !reference || files.length === 0) {
-      setError('Selecciona agente, referencia y al menos una foto')
+      setError(t('errorMissingFields'))
       return
     }
     setError(null)
@@ -75,10 +77,10 @@ export function PhotographerUpload({ agents, shoots, photographerId }: Photograp
     return (
       <div className="rounded-2xl border border-[#2ECC9A]/20 bg-[#131313] p-8 text-center">
         <div className="mb-4 text-5xl">✅</div>
-        <h2 className="text-lg font-bold text-[#2ECC9A]">Photos uploaded!</h2>
-        <p className="mt-1 text-sm text-[#9A9080]">The agent can now see them in their dashboard</p>
+        <h2 className="text-lg font-bold text-[#2ECC9A]">{t('successTitle')}</h2>
+        <p className="mt-1 text-sm text-[#9A9080]">{t('successDesc')}</p>
         <button onClick={() => setSuccess(false)} className="mt-5 rounded-xl bg-[#C9A84C] px-6 py-2.5 text-sm font-bold text-black transition hover:bg-[#E8C96A]">
-          Upload More
+          {t('uploadMore')}
         </button>
       </div>
     )
@@ -88,25 +90,25 @@ export function PhotographerUpload({ agents, shoots, photographerId }: Photograp
     <div className="space-y-5">
       <div className="rounded-2xl border border-[#C9A84C]/12 bg-[#131313] p-5" style={{ borderTop: '1px solid #C9A84C' }}>
         <p className="mb-5 text-[9px] font-bold uppercase tracking-[0.18em] text-[#C9A84C]">
-          📸 Detalles del shoot
+          📸 {t('shootDetails')}
         </p>
         <div className="space-y-4">
           <div>
-            <label className={labelClass}>Agente destinatario *</label>
+            <label className={labelClass}>{t('targetAgent')}</label>
             <select className={inputClass} value={selectedAgent} onChange={(e) => setSelectedAgent(e.target.value)}>
-              <option value="">Seleccionar agente...</option>
+              <option value="">{t('selectAgent')}</option>
               {agents.map((a) => <option key={a.id} value={a.id}>{a.full_name}</option>)}
             </select>
           </div>
           <div>
-            <label className={labelClass}>Referencia de propiedad *</label>
-            <input type="text" className={inputClass} placeholder="A001, M023..." value={reference} onChange={(e) => setReference(e.target.value)} />
+            <label className={labelClass}>{t('propertyReference')}</label>
+            <input type="text" className={inputClass} placeholder={t('referencePlaceholder')} value={reference} onChange={(e) => setReference(e.target.value)} />
           </div>
           {shoots.length > 0 && (
             <div>
-              <label className={labelClass}>Asociar a un shoot (opcional)</label>
+              <label className={labelClass}>{t('associateShoot')}</label>
               <select className={inputClass} value={selectedShoot} onChange={(e) => setSelectedShoot(e.target.value)}>
-                <option value="">Sin shoot específico</option>
+                <option value="">{t('noSpecificShoot')}</option>
                 {shoots.map((s) => <option key={s.id} value={s.id}>{s.property_address || s.property_reference || s.id}</option>)}
               </select>
             </div>
@@ -122,8 +124,8 @@ export function PhotographerUpload({ agents, shoots, photographerId }: Photograp
         className="cursor-pointer rounded-2xl border-2 border-dashed border-[#C9A84C]/30 bg-[#131313] p-10 text-center transition hover:border-[#C9A84C]/60 hover:bg-[#C9A84C]/5"
       >
         <div className="mx-auto mb-3 text-4xl opacity-50">📁</div>
-        <p className="text-sm font-semibold text-[#F5F0E8]">Drop photos here or click to browse</p>
-        <p className="mt-1 text-xs text-[#9A9080]">JPG, PNG, WEBP accepted</p>
+        <p className="text-sm font-semibold text-[#F5F0E8]">{t('dropzoneTitle')}</p>
+        <p className="mt-1 text-xs text-[#9A9080]">{t('dropzoneFormats')}</p>
         <input ref={fileRef} type="file" accept="image/*" multiple className="hidden" onChange={(e) => handleFiles(e.target.files)} />
       </div>
 
@@ -131,7 +133,7 @@ export function PhotographerUpload({ agents, shoots, photographerId }: Photograp
       {previews.length > 0 && (
         <div>
           <p className="mb-3 text-[9px] font-bold uppercase tracking-[0.12em] text-[#9A9080]">
-            {previews.length} photo{previews.length !== 1 ? 's' : ''} selected
+            {t('photosSelected', { count: previews.length })}
           </p>
           <div className="grid grid-cols-4 gap-2 sm:grid-cols-6">
             {previews.map((src, idx) => (
@@ -156,7 +158,7 @@ export function PhotographerUpload({ agents, shoots, photographerId }: Photograp
         disabled={loading || files.length === 0}
         className="w-full rounded-xl bg-[#C9A84C] py-3.5 text-sm font-bold text-black transition hover:bg-[#E8C96A] disabled:opacity-50"
       >
-        {loading ? `Uploading ${files.length} photos...` : `📤 Upload ${files.length || ''} Photos`}
+        {loading ? t('uploading', { count: files.length }) : `📤 ${t('uploadButton', { count: files.length })}`}
       </button>
     </div>
   )

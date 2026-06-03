@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
+import { getTranslations } from 'next-intl/server'
 import { ROADMAPS } from '@/features/roadmaps/data/roadmaps'
 import { RoadmapDetail } from '@/features/roadmaps/components/RoadmapsView'
 
@@ -34,6 +35,8 @@ export default async function PublicRoadmapPage({
   const rm = ROADMAPS.find((r) => r.id === id)
   if (!rm) notFound()
 
+  const t = await getTranslations('shell.publicRoadmap')
+
   return (
     <div className="min-h-screen bg-[#0A0A0A]">
       {/* Barra superior con marca */}
@@ -44,7 +47,7 @@ export default async function PublicRoadmapPage({
             <span className="hidden text-[11px] uppercase tracking-[0.2em] text-[#7A7263] sm:inline">RoadMap</span>
           </div>
           <span className="rounded-full border border-[#C9A84C]/20 px-2.5 py-1 text-[10px] font-medium text-[#9A9080]">
-            Enlace compartido
+            {t('sharedLink')}
           </span>
         </div>
       </header>
@@ -54,7 +57,7 @@ export default async function PublicRoadmapPage({
       </main>
 
       <footer className="border-t border-white/[0.06] py-8 text-center">
-        <p className="text-[11px] text-[#5A5345]">Costa Blanca Investments · Plan de acción interno</p>
+        <p className="text-[11px] text-[#5A5345]">{t('footer')}</p>
       </footer>
     </div>
   )

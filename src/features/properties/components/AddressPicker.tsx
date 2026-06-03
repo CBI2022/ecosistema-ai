@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { useTranslations } from 'next-intl'
 
 interface NominatimResult {
   place_id: number
@@ -35,6 +36,7 @@ interface AddressPickerProps {
 }
 
 export function AddressPicker({ initialQuery = '', initialLat = null, initialLng = null, onSelect }: AddressPickerProps) {
+  const t = useTranslations('properties')
   const [query, setQuery] = useState(initialQuery)
   const [results, setResults] = useState<NominatimResult[]>([])
   const [loading, setLoading] = useState(false)
@@ -110,7 +112,7 @@ export function AddressPicker({ initialQuery = '', initialLat = null, initialLng
     <div className="space-y-3">
       <div className="relative">
         <label className="block text-[9px] font-bold uppercase tracking-[0.12em] text-[#9A9080] mb-1.5">
-          🔍 Buscar dirección oficial (España) *
+          🔍 {t('address.searchLabel')} *
         </label>
         <input
           type="text"
@@ -120,11 +122,11 @@ export function AddressPicker({ initialQuery = '', initialLat = null, initialLng
             setConfirmedSelection(false)
             setSelectedDisplay('')
           }}
-          placeholder="Ej. Carrer Barro 7, Altea"
+          placeholder={t('address.searchPlaceholder')}
           className="w-full rounded-lg border border-white/10 bg-[#1C1C1C] px-3.5 py-2.5 text-sm text-[#F5F0E8] outline-none focus:border-[#C9A84C]/60 placeholder-[#9A9080]"
         />
         {loading && (
-          <p className="absolute right-3 top-9 text-[10px] text-[#9A9080]">Buscando…</p>
+          <p className="absolute right-3 top-9 text-[10px] text-[#9A9080]">{t('address.searching')}</p>
         )}
         {results.length > 0 && (
           <div className="absolute z-20 mt-1 w-full overflow-hidden rounded-lg border border-[#C9A84C]/30 bg-[#0F0F0F] shadow-xl">
@@ -144,13 +146,13 @@ export function AddressPicker({ initialQuery = '', initialLat = null, initialLng
 
       {!confirmedSelection && query.length >= 4 && results.length === 0 && !loading && (
         <p className="rounded-lg border border-yellow-500/30 bg-yellow-500/10 px-4 py-2.5 text-[11px] text-yellow-400">
-          ⚠️ Esta dirección no se ha encontrado en el mapa oficial. Si no se puede seleccionar, <strong>Idealista rechazará la propiedad</strong>. Prueba variantes (ej. &quot;Calle&quot; vs &quot;Carrer&quot;).
+          ⚠️ {t.rich('address.notFoundWarning', { strong: (chunks) => <strong>{chunks}</strong> })}
         </p>
       )}
 
       {confirmedSelection && (
         <p className="rounded-lg border border-[#2ECC9A]/30 bg-[#2ECC9A]/10 px-4 py-2 text-[11px] text-[#2ECC9A]">
-          ✓ Dirección validada: {selectedDisplay}
+          ✓ {t('address.validated', { address: selectedDisplay })}
         </p>
       )}
 
@@ -160,7 +162,7 @@ export function AddressPicker({ initialQuery = '', initialLat = null, initialLng
             src={mapSrc}
             className="block h-72 w-full"
             loading="lazy"
-            title="Ubicación en el mapa"
+            title={t('address.mapTitle')}
           />
           <div className="flex items-center justify-between border-t border-white/8 bg-[#0A0A0A] px-3 py-2 text-[10px] text-[#9A9080]">
             <span>📍 {coords.lat.toFixed(5)}, {coords.lng.toFixed(5)}</span>
@@ -170,7 +172,7 @@ export function AddressPicker({ initialQuery = '', initialLat = null, initialLng
               rel="noopener noreferrer"
               className="text-[#C9A84C] hover:text-[#E8C96A]"
             >
-              Ver mapa grande →
+              {t('address.viewLargeMap')} →
             </a>
           </div>
         </div>

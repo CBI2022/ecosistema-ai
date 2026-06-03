@@ -1,3 +1,4 @@
+import { getTranslations } from 'next-intl/server'
 import type { Database } from '@/types/database'
 
 type ExclusiveHome = Database['public']['Tables']['exclusive_homes']['Row']
@@ -12,7 +13,8 @@ function fmt(n: number) {
   return `€${n}`
 }
 
-export function ExclusiveHomes({ homes }: ExclusiveHomesProps) {
+export async function ExclusiveHomes({ homes }: ExclusiveHomesProps) {
+  const t = await getTranslations('dashboard.exclusiveHomesSection')
   return (
     <div
       className="mb-5 rounded-2xl border border-[#C9A84C]/25 bg-gradient-to-br from-[#0A0A0A] to-[#1A1A1A] p-5"
@@ -24,16 +26,16 @@ export function ExclusiveHomes({ homes }: ExclusiveHomesProps) {
           💎
         </div>
         <div>
-          <p className="text-sm font-bold text-[#F5F0E8]">Exclusive Homes</p>
+          <p className="text-sm font-bold text-[#F5F0E8]">{t('title')}</p>
           <p className="text-[11px] text-[#9A9080]/70">
-            Off-market · Private listings · Handle with discretion
+            {t('subtitle')}
           </p>
         </div>
       </div>
 
       {homes.length === 0 ? (
         <div className="py-8 text-center text-sm text-[#9A9080]/50">
-          No exclusive homes added yet.
+          {t('empty')}
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -59,7 +61,7 @@ export function ExclusiveHomes({ homes }: ExclusiveHomesProps) {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
                 {/* Badge */}
                 <div className="absolute left-3 top-3 rounded bg-gradient-to-r from-[#C9A84C] to-[#E8C96A] px-2 py-1 text-[8px] font-black uppercase tracking-[0.18em] text-black">
-                  💎 Exclusive
+                  💎 {t('badge')}
                 </div>
                 {/* Title */}
                 <div className="absolute bottom-3 left-3 right-3">
@@ -82,8 +84,8 @@ export function ExclusiveHomes({ homes }: ExclusiveHomesProps) {
                   )}
                   <p className="text-[11px] text-[#9A9080]">
                     {[
-                      home.bedrooms && `${home.bedrooms} bed`,
-                      home.bathrooms && `${home.bathrooms} bath`,
+                      home.bedrooms && t('bed', { n: home.bedrooms }),
+                      home.bathrooms && t('bath', { n: home.bathrooms }),
                       home.area_m2 && `${home.area_m2}m²`,
                     ]
                       .filter(Boolean)
@@ -91,7 +93,7 @@ export function ExclusiveHomes({ homes }: ExclusiveHomesProps) {
                   </p>
                 </div>
                 <span className="text-xs font-bold text-[#C9A84C] opacity-0 transition group-hover:opacity-100">
-                  View →
+                  {t('view')} →
                 </span>
               </div>
             </div>

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { useTranslations } from 'next-intl'
 import { blockDay, unblockDay } from '@/actions/photo-shoots'
 import { TIME_SLOTS } from '@/features/photographer/lib/shoot-rules'
 
@@ -21,6 +22,7 @@ function formatES(dateIso: string) {
 }
 
 export function PhotographerBlocksManager({ blocks }: Props) {
+  const t = useTranslations('photographer.blocks')
   const [open, setOpen] = useState(false)
   const [pending, startTransition] = useTransition()
   const [date, setDate] = useState('')
@@ -31,7 +33,7 @@ export function PhotographerBlocksManager({ blocks }: Props) {
   function handleAdd() {
     setError(null)
     if (!date) {
-      setError('Selecciona una fecha')
+      setError(t('errorSelectDate'))
       return
     }
     startTransition(async () => {
@@ -60,14 +62,14 @@ export function PhotographerBlocksManager({ blocks }: Props) {
         <div className="flex items-center gap-2">
           <span className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-500/15 text-base">🛑</span>
           <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-blue-400">
-            Días bloqueados ({blocks.length})
+            {t('title', { count: blocks.length })}
           </p>
         </div>
         <button
           onClick={() => setOpen((v) => !v)}
           className="rounded-lg border border-blue-400/40 bg-blue-500/10 px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-blue-400 transition active:scale-95 hover:bg-blue-500/20"
         >
-          {open ? '✕ Cerrar' : '+ Bloquear'}
+          {open ? `✕ ${t('close')}` : `+ ${t('block')}`}
         </button>
       </div>
 
@@ -75,7 +77,7 @@ export function PhotographerBlocksManager({ blocks }: Props) {
         <div className="mb-4 space-y-3 rounded-xl border border-blue-400/20 bg-[#0A0A0A] p-4">
           <div>
             <label className="mb-1.5 block text-[9px] font-bold uppercase tracking-wider text-[#9A9080]">
-              Fecha
+              {t('dateLabel')}
             </label>
             <input
               type="date"
@@ -86,7 +88,7 @@ export function PhotographerBlocksManager({ blocks }: Props) {
           </div>
           <div>
             <label className="mb-1.5 block text-[9px] font-bold uppercase tracking-wider text-[#9A9080]">
-              Hora (o todo el día)
+              {t('timeLabel')}
             </label>
             <div className="grid grid-cols-3 gap-1.5">
               <button
@@ -98,7 +100,7 @@ export function PhotographerBlocksManager({ blocks }: Props) {
                     : 'border-white/10 bg-[#131313] text-[#9A9080] hover:border-blue-400/40'
                 }`}
               >
-                Todo el día
+                {t('allDay')}
               </button>
               {TIME_SLOTS.map((t) => (
                 <button
@@ -118,13 +120,13 @@ export function PhotographerBlocksManager({ blocks }: Props) {
           </div>
           <div>
             <label className="mb-1.5 block text-[9px] font-bold uppercase tracking-wider text-[#9A9080]">
-              Motivo (opcional)
+              {t('reasonLabel')}
             </label>
             <input
               type="text"
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              placeholder="Vacaciones, cita médica, etc."
+              placeholder={t('reasonPlaceholder')}
               className="w-full rounded-lg border border-white/10 bg-[#131313] px-3 py-2 text-sm text-[#F5F0E8] outline-none focus:border-blue-400/60 placeholder-[#6A6070]"
             />
           </div>
@@ -138,14 +140,14 @@ export function PhotographerBlocksManager({ blocks }: Props) {
             onClick={handleAdd}
             className="w-full rounded-lg bg-blue-500 px-3 py-2.5 text-xs font-bold uppercase tracking-wide text-white transition active:scale-95 hover:bg-blue-600 disabled:opacity-50"
           >
-            {pending ? 'Guardando...' : 'Bloquear'}
+            {pending ? t('saving') : t('block')}
           </button>
         </div>
       )}
 
       {sorted.length === 0 ? (
         <p className="text-xs text-[#9A9080]/60">
-          No tienes días bloqueados. Los bloqueos impiden que los agentes te reserven sesiones esos huecos.
+          {t('empty')}
         </p>
       ) : (
         <div className="space-y-2">
@@ -157,7 +159,7 @@ export function PhotographerBlocksManager({ blocks }: Props) {
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-semibold text-[#F5F0E8]">
                   {formatES(b.block_date)}
-                  {b.block_time ? <span className="text-blue-400"> · {b.block_time.slice(0, 5)}</span> : <span className="text-blue-400"> · todo el día</span>}
+                  {b.block_time ? <span className="text-blue-400"> · {b.block_time.slice(0, 5)}</span> : <span className="text-blue-400"> · {t('allDayShort')}</span>}
                 </p>
                 {b.reason && <p className="text-xs text-[#9A9080]">{b.reason}</p>}
               </div>
@@ -166,7 +168,7 @@ export function PhotographerBlocksManager({ blocks }: Props) {
                 onClick={() => handleRemove(b.id)}
                 className="text-xs font-semibold text-red-400 transition hover:text-red-300 disabled:opacity-50"
               >
-                Quitar
+                {t('remove')}
               </button>
             </div>
           ))}

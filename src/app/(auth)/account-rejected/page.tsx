@@ -1,6 +1,8 @@
 import Link from 'next/link'
+import { getTranslations } from 'next-intl/server'
 
-export default function AccountRejectedPage() {
+export default async function AccountRejectedPage() {
+  const t = await getTranslations('auth')
   return (
     <div className="py-4 text-center">
       {/* Icono */}
@@ -21,11 +23,10 @@ export default function AccountRejectedPage() {
       </div>
 
       <h1 className="mb-2 text-xl font-bold text-[#F5F0E8]">
-        Solicitud rechazada
+        {t('accountRejected')}
       </h1>
       <p className="text-sm text-[#F5F0E8]/50">
-        Tu solicitud de acceso no fue aprobada. Contacta con la administración
-        de CBI si crees que es un error.
+        {t('accountRejectedContact')}
       </p>
 
       <div className="mt-8 border-t border-white/8 pt-6">
@@ -33,7 +34,7 @@ export default function AccountRejectedPage() {
           href="/login"
           className="text-sm text-[#C9A84C]/70 transition hover:text-[#C9A84C]"
         >
-          ← Volver al inicio de sesión
+          {t('backToSignIn')}
         </Link>
       </div>
     </div>

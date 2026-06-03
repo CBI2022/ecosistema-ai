@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import type { Clip, SocialAccount, PlatformMetrics, VideoSource, SocialPlatform } from '@/types/database'
 
 interface Props {
@@ -29,6 +30,7 @@ function fmt(n: number) {
 }
 
 export function OverviewTab({ metrics, clips, accounts, recentVideos }: Props) {
+  const t = useTranslations('social')
   const [selected, setSelected] = useState<'all' | SocialPlatform>('all')
 
   const platforms: SocialPlatform[] = ['instagram', 'youtube', 'tiktok']
@@ -60,11 +62,11 @@ export function OverviewTab({ metrics, clips, accounts, recentVideos }: Props) {
       : latestByPlatform.get(selected) ?? { followers: 0, views: 0, likes: 0, comments: 0, shares: 0 }
 
   const stats = [
-    { label: 'Seguidores', value: fmt(displayMetrics.followers), emoji: '👥', color: '#C9A84C' },
-    { label: 'Views últimos 7d', value: fmt(displayMetrics.views), emoji: '👁', color: '#2ECC9A' },
-    { label: 'Likes', value: fmt(displayMetrics.likes), emoji: '❤️', color: '#E1306C' },
-    { label: 'Comentarios', value: fmt(displayMetrics.comments), emoji: '💬', color: '#8B5CF6' },
-    { label: 'Compartidos', value: fmt(displayMetrics.shares), emoji: '🔁', color: '#06B6D4' },
+    { label: t('overview.followers'), value: fmt(displayMetrics.followers), emoji: '👥', color: '#C9A84C' },
+    { label: t('overview.views7d'), value: fmt(displayMetrics.views), emoji: '👁', color: '#2ECC9A' },
+    { label: t('overview.likes'), value: fmt(displayMetrics.likes), emoji: '❤️', color: '#E1306C' },
+    { label: t('overview.comments'), value: fmt(displayMetrics.comments), emoji: '💬', color: '#8B5CF6' },
+    { label: t('overview.shares'), value: fmt(displayMetrics.shares), emoji: '🔁', color: '#06B6D4' },
   ]
 
   const topClips = clips.filter((c) => c.virality_score !== null).slice(0, 3)
@@ -80,7 +82,7 @@ export function OverviewTab({ metrics, clips, accounts, recentVideos }: Props) {
             selected === 'all' ? 'bg-[#C9A84C] text-black' : 'border border-white/10 bg-white/5 text-[#9A9080] hover:text-[#F5F0E8]'
           }`}
         >
-          🌐 Todas
+          🌐 {t('overview.all')}
         </button>
         {platforms.map((p) => {
           const active = selected === p
@@ -97,7 +99,7 @@ export function OverviewTab({ metrics, clips, accounts, recentVideos }: Props) {
               }}
             >
               {PLATFORM_LABELS[p]}
-              {!connected && <span className="text-[9px] opacity-60">(no conectada)</span>}
+              {!connected && <span className="text-[9px] opacity-60">{t('overview.notConnected')}</span>}
             </button>
           )
         })}
@@ -126,10 +128,10 @@ export function OverviewTab({ metrics, clips, accounts, recentVideos }: Props) {
         {/* Top clips */}
         <div className="rounded-2xl border border-white/8 bg-[#131313] p-5">
           <p className="mb-4 text-[10px] font-bold uppercase tracking-[0.18em] text-[#C9A84C]">
-            🔥 Top clips por viralidad
+            🔥 {t('overview.topClips')}
           </p>
           {topClips.length === 0 ? (
-            <p className="py-6 text-center text-sm text-[#9A9080]/60">No hay clips disponibles</p>
+            <p className="py-6 text-center text-sm text-[#9A9080]/60">{t('overview.noClips')}</p>
           ) : (
             <div className="space-y-3">
               {topClips.map((clip, idx) => (
@@ -141,7 +143,7 @@ export function OverviewTab({ metrics, clips, accounts, recentVideos }: Props) {
                     <img src={clip.thumbnail_url} alt="" className="h-14 w-10 rounded-md object-cover" />
                   )}
                   <div className="flex-1 min-w-0">
-                    <p className="truncate text-sm font-semibold text-[#F5F0E8]">{clip.title || 'Clip'}</p>
+                    <p className="truncate text-sm font-semibold text-[#F5F0E8]">{clip.title || t('overview.clipFallback')}</p>
                     <p className="text-[10px] text-[#9A9080]">
                       {clip.duration_seconds}s · Score {clip.virality_score?.toFixed(1)}
                     </p>
@@ -166,10 +168,10 @@ export function OverviewTab({ metrics, clips, accounts, recentVideos }: Props) {
         {/* Recent videos */}
         <div className="rounded-2xl border border-white/8 bg-[#131313] p-5">
           <p className="mb-4 text-[10px] font-bold uppercase tracking-[0.18em] text-[#C9A84C]">
-            📺 Vídeos fuente recientes
+            📺 {t('overview.recentVideos')}
           </p>
           {recentVideos.length === 0 ? (
-            <p className="py-6 text-center text-sm text-[#9A9080]/60">Sin vídeos todavía</p>
+            <p className="py-6 text-center text-sm text-[#9A9080]/60">{t('overview.noVideos')}</p>
           ) : (
             <div className="space-y-3">
               {recentVideos.slice(0, 5).map((v) => (
@@ -178,7 +180,7 @@ export function OverviewTab({ metrics, clips, accounts, recentVideos }: Props) {
                     <img src={v.thumbnail_url} alt="" className="h-14 w-24 rounded-md object-cover" />
                   )}
                   <div className="flex-1 min-w-0">
-                    <p className="truncate text-sm font-semibold text-[#F5F0E8]">{v.title || 'Sin título'}</p>
+                    <p className="truncate text-sm font-semibold text-[#F5F0E8]">{v.title || t('overview.untitled')}</p>
                     <p className="text-[10px] text-[#9A9080]">
                       {v.source} · {v.published_at ? new Date(v.published_at).toLocaleDateString('es-ES') : '—'}
                     </p>

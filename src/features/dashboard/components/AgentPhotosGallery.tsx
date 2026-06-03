@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 
 interface Photo {
   id: string
@@ -12,6 +13,7 @@ interface Photo {
 }
 
 export function AgentPhotosGallery({ photos }: { photos: Photo[] }) {
+  const t = useTranslations('dashboard.agentPhotos')
   const [lightbox, setLightbox] = useState<string | null>(null)
 
   if (photos.length === 0) return null
@@ -19,8 +21,8 @@ export function AgentPhotosGallery({ photos }: { photos: Photo[] }) {
   return (
     <div className="mb-5 rounded-2xl border border-white/8 bg-[#131313] p-5">
       <div className="mb-4">
-        <p className="text-sm font-bold text-[#F5F0E8]">My Property Photos</p>
-        <p className="text-[11px] text-[#9A9080]">Uploaded by Jelle · {photos.length} photo{photos.length !== 1 ? 's' : ''}</p>
+        <p className="text-sm font-bold text-[#F5F0E8]">{t('title')}</p>
+        <p className="text-[11px] text-[#9A9080]">{t('uploadedBy', { n: photos.length, plural: photos.length !== 1 ? 's' : '' })}</p>
       </div>
 
       <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6 sm:gap-1.5">
@@ -37,7 +39,7 @@ export function AgentPhotosGallery({ photos }: { photos: Photo[] }) {
             />
             {photo.is_drone && (
               <span className="absolute right-1 top-1 rounded bg-black/70 px-1 py-0.5 text-[8px] font-bold text-white">
-                drone
+                {t('drone')}
               </span>
             )}
           </button>

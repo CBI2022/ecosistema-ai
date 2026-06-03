@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { OverviewTab } from './OverviewTab'
 import { ClipsTab } from './ClipsTab'
 import { ScheduleTab } from './ScheduleTab'
@@ -35,7 +36,8 @@ export function SocialDashboard({
   metrics,
   recentVideos,
 }: SocialDashboardProps) {
-  const [tab, setTab] = useState<TabId>((TABS.find((t) => t.id === initialTab)?.id) || 'overview')
+  const t = useTranslations('social')
+  const [tab, setTab] = useState<TabId>((TABS.find((tb) => tb.id === initialTab)?.id) || 'overview')
 
   const hasNoData = clips.length === 0 && metrics.length === 0
 
@@ -43,25 +45,25 @@ export function SocialDashboard({
     <div className="space-y-5">
       {/* Tab bar */}
       <div className="flex flex-wrap gap-2 rounded-2xl border border-white/8 bg-[#131313] p-1.5">
-        {TABS.map((t) => {
+        {TABS.map((tab_) => {
           const count =
-            t.id === 'clips' ? clips.filter((c) => c.status === 'available').length :
-            t.id === 'schedule' ? scheduledPosts.filter((p) => p.status === 'queued' || p.status === 'publishing').length :
+            tab_.id === 'clips' ? clips.filter((c) => c.status === 'available').length :
+            tab_.id === 'schedule' ? scheduledPosts.filter((p) => p.status === 'queued' || p.status === 'publishing').length :
             null
           return (
             <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
+              key={tab_.id}
+              onClick={() => setTab(tab_.id)}
               className={`flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold transition ${
-                tab === t.id
+                tab === tab_.id
                   ? 'bg-[#C9A84C] text-black'
                   : 'text-[#9A9080] hover:text-[#F5F0E8]'
               }`}
             >
-              <span>{t.icon}</span>
-              <span>{t.label}</span>
+              <span>{tab_.icon}</span>
+              <span>{t(`tabs.${tab_.id}`)}</span>
               {count !== null && count > 0 && (
-                <span className={`rounded-full px-1.5 py-0.5 text-[9px] ${tab === t.id ? 'bg-black/20' : 'bg-white/10'}`}>
+                <span className={`rounded-full px-1.5 py-0.5 text-[9px] ${tab === tab_.id ? 'bg-black/20' : 'bg-white/10'}`}>
                   {count}
                 </span>
               )}
@@ -74,9 +76,9 @@ export function SocialDashboard({
       {hasNoData && (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#C9A84C]/20 bg-[#C9A84C]/5 p-4">
           <div>
-            <p className="text-sm font-bold text-[#F5F0E8]">Sin datos todavía</p>
+            <p className="text-sm font-bold text-[#F5F0E8]">{t('noData.title')}</p>
             <p className="text-xs text-[#9A9080]">
-              Cuando YouTube reciba un vídeo nuevo y Opus Clip procese los clips, aparecerán aquí. Mientras tanto puedes cargar datos de muestra.
+              {t('noData.description')}
             </p>
           </div>
           <SeedButton />

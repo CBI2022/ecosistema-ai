@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
@@ -9,6 +10,7 @@ import { createClient } from '@/lib/supabase/client'
 // llama directamente verifyOtp para establecer sesión, luego cambia password.
 
 export function ResetPasswordClient() {
+  const t = useTranslations('auth')
   const router = useRouter()
   const searchParams = useSearchParams()
   const tokenHash = searchParams.get('token_hash') ?? searchParams.get('token')
@@ -20,7 +22,7 @@ export function ResetPasswordClient() {
   useEffect(() => {
     if (!tokenHash) {
       setPhase('error')
-      setError('Enlace inválido. Solicita un nuevo email de reset.')
+      setError(t('linkInvalid'))
       return
     }
 
@@ -28,7 +30,7 @@ export function ResetPasswordClient() {
     supabase.auth.verifyOtp({ token_hash: tokenHash, type: 'recovery' }).then(({ error }) => {
       if (error) {
         setPhase('error')
-        setError(`El enlace ha caducado o ya se usó. Pide uno nuevo desde "He olvidado mi contraseña". (${error.message})`)
+        setError(t('linkExpiredWithMessage', { message: error.message }))
         return
       }
       setPhase('ready')
@@ -38,7 +40,7 @@ export function ResetPasswordClient() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (password.length < 6) {
-      setError('La contraseña debe tener al menos 6 caracteres')
+      setError(t('passwordMin6Error'))
       return
     }
 
@@ -63,7 +65,7 @@ export function ResetPasswordClient() {
     return (
       <div className="flex flex-col items-center gap-3 py-8">
         <span className="h-6 w-6 animate-spin rounded-full border-2 border-[#C9A84C]/30 border-t-[#C9A84C]" />
-        <p className="text-sm text-[#9A9080]">Verificando enlace…</p>
+        <p className="text-sm text-[#9A9080]">{t('verifyingLink')}</p>
       </div>
     )
   }
@@ -83,7 +85,7 @@ export function ResetPasswordClient() {
           htmlFor="password"
           className="block text-xs font-medium uppercase tracking-widest text-[#F5F0E8]/50"
         >
-          Nueva contraseña
+          {t('newPassword')}
         </label>
         <input
           id="password"
@@ -97,7 +99,7 @@ export function ResetPasswordClient() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm text-[#F5F0E8] placeholder-[#F5F0E8]/20 outline-none transition focus:border-[#C9A84C]/60 disabled:opacity-50"
-          placeholder="Mínimo 6 caracteres"
+          placeholder={t('passwordMin6')}
         />
       </div>
 
@@ -115,10 +117,10 @@ export function ResetPasswordClient() {
         {phase === 'saving' ? (
           <>
             <span className="h-4 w-4 animate-spin rounded-full border-2 border-black/30 border-t-black" />
-            Guardando…
+            {t('saving')}
           </>
         ) : (
-          'Guardar contraseña'
+          t('savePassword')
         )}
       </button>
     </form>

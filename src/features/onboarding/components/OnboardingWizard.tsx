@@ -1,10 +1,12 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import { useState, useRef } from 'react'
 import { saveOnboarding } from '@/actions/onboarding'
 import { uploadAvatar } from '@/actions/profile'
 
 export function OnboardingWizard({ previewMode = false }: { previewMode?: boolean } = {}) {
+  const t = useTranslations('training.onboarding')
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -32,7 +34,7 @@ export function OnboardingWizard({ previewMode = false }: { previewMode?: boolea
 
   async function handleFinish() {
     if (previewMode) {
-      setError('🎬 Modo preview — los datos NO se guardan. Es solo para revisar el flujo.')
+      setError(t('previewModeWarning'))
       return
     }
     setLoading(true)
@@ -88,7 +90,7 @@ export function OnboardingWizard({ previewMode = false }: { previewMode?: boolea
         <div className="space-y-5">
           <div className="mb-6 text-center">
             <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#C9A84C]">
-              Paso 1 de 3 — Información personal
+              {t('step1Title')}
             </p>
           </div>
 
@@ -104,11 +106,11 @@ export function OnboardingWizard({ previewMode = false }: { previewMode?: boolea
               ) : (
                 <div className="flex h-full flex-col items-center justify-center gap-1">
                   <span className="text-2xl opacity-40">👤</span>
-                  <span className="text-[9px] text-[#9A9080]">Foto</span>
+                  <span className="text-[9px] text-[#9A9080]">{t('photo')}</span>
                 </div>
               )}
               <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition group-hover:opacity-100">
-                <span className="text-xs text-white">Cambiar</span>
+                <span className="text-xs text-white">{t('change')}</span>
               </div>
             </button>
             <input
@@ -121,12 +123,12 @@ export function OnboardingWizard({ previewMode = false }: { previewMode?: boolea
                 if (f) { setAvatarFile(f); setAvatarPreview(URL.createObjectURL(f)) }
               }}
             />
-            <p className="text-[10px] text-[#9A9080]">Foto de perfil (opcional)</p>
+            <p className="text-[10px] text-[#9A9080]">{t('profilePhotoOptional')}</p>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className={labelClass}>Nombre *</label>
+              <label className={labelClass}>{t('firstNameLabel')}</label>
               <input
                 type="text"
                 className={inputClass}
@@ -137,7 +139,7 @@ export function OnboardingWizard({ previewMode = false }: { previewMode?: boolea
               />
             </div>
             <div>
-              <label className={labelClass}>Apellido *</label>
+              <label className={labelClass}>{t('lastNameLabel')}</label>
               <input
                 type="text"
                 className={inputClass}
@@ -150,7 +152,7 @@ export function OnboardingWizard({ previewMode = false }: { previewMode?: boolea
           </div>
 
           <div>
-            <label className={labelClass}>Teléfono / WhatsApp</label>
+            <label className={labelClass}>{t('phoneLabel')}</label>
             <input
               type="tel"
               className={inputClass}
@@ -163,7 +165,7 @@ export function OnboardingWizard({ previewMode = false }: { previewMode?: boolea
           <button
             onClick={() => {
               if (!previewMode && (!data.first_name || !data.last_name)) {
-                setError('Nombre y apellido son obligatorios')
+                setError(t('nameRequired'))
                 return
               }
               setError(null)
@@ -171,7 +173,7 @@ export function OnboardingWizard({ previewMode = false }: { previewMode?: boolea
             }}
             className="w-full rounded-xl bg-[#C9A84C] py-3.5 text-sm font-bold uppercase tracking-[0.06em] text-black transition hover:bg-[#E8C96A]"
           >
-            Siguiente — Objetivos →
+            {t('nextGoals')}
           </button>
         </div>
       )}
@@ -181,16 +183,16 @@ export function OnboardingWizard({ previewMode = false }: { previewMode?: boolea
         <div className="space-y-5">
           <div className="mb-6 text-center">
             <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#C9A84C]">
-              Paso 2 de 3 — Objetivos anuales
+              {t('step2Title')}
             </p>
             <p className="mt-1 text-xs text-[#9A9080]">
-              Tus metas impulsan tu plan diario y marcador
+              {t('step2Subtitle')}
             </p>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className={labelClass}>Ingresos mensuales (€)</label>
+              <label className={labelClass}>{t('monthlyIncomeLabel')}</label>
               <input
                 type="number"
                 className={inputClass}
@@ -200,7 +202,7 @@ export function OnboardingWizard({ previewMode = false }: { previewMode?: boolea
               />
             </div>
             <div>
-              <label className={labelClass}>Closings / mes</label>
+              <label className={labelClass}>{t('closingsPerMonth')}</label>
               <input
                 type="number"
                 className={inputClass}
@@ -212,7 +214,7 @@ export function OnboardingWizard({ previewMode = false }: { previewMode?: boolea
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className={labelClass}>Captaciones / mes</label>
+              <label className={labelClass}>{t('listingsPerMonth')}</label>
               <input
                 type="number"
                 className={inputClass}
@@ -222,7 +224,7 @@ export function OnboardingWizard({ previewMode = false }: { previewMode?: boolea
               />
             </div>
             <div>
-              <label className={labelClass}>Citas / semana</label>
+              <label className={labelClass}>{t('appointmentsPerWeek')}</label>
               <input
                 type="number"
                 className={inputClass}
@@ -236,7 +238,7 @@ export function OnboardingWizard({ previewMode = false }: { previewMode?: boolea
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className={labelClass}>Llamadas / día</label>
+              <label className={labelClass}>{t('callsPerDay')}</label>
               <input
                 type="number"
                 className={inputClass}
@@ -246,7 +248,7 @@ export function OnboardingWizard({ previewMode = false }: { previewMode?: boolea
               />
             </div>
             <div>
-              <label className={labelClass}>Follow-ups / día</label>
+              <label className={labelClass}>{t('followupsPerDay')}</label>
               <input
                 type="number"
                 className={inputClass}
@@ -259,12 +261,12 @@ export function OnboardingWizard({ previewMode = false }: { previewMode?: boolea
 
           <div className="rounded-xl border border-[#C9A84C]/20 bg-[#C9A84C]/5 p-4">
             <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-[#C9A84C]">
-              Referencia CBI
+              {t('cbiReference')}
             </p>
             <p className="mt-1.5 text-[11px] leading-relaxed text-[#9A9080]">
-              Los mejores agentes hacen <strong className="text-[#F5F0E8]">20+ llamadas/día</strong> y{' '}
-              <strong className="text-[#F5F0E8]">15+ follow-ups</strong>. Comisión media en CBI:{' '}
-              <strong className="text-[#F5F0E8]">~€20K por cierre</strong>.
+              {t.rich('cbiReferenceText', {
+                strong: (chunks) => <strong className="text-[#F5F0E8]">{chunks}</strong>,
+              })}
             </p>
           </div>
 
@@ -273,13 +275,13 @@ export function OnboardingWizard({ previewMode = false }: { previewMode?: boolea
               onClick={() => setStep(1)}
               className="rounded-xl border border-white/10 bg-white/5 px-5 py-3.5 text-sm font-medium text-[#9A9080] transition hover:border-white/20"
             >
-              ← Atrás
+              {t('back')}
             </button>
             <button
               onClick={() => setStep(3)}
               className="flex-1 rounded-xl bg-[#C9A84C] py-3.5 text-sm font-bold uppercase tracking-[0.06em] text-black transition hover:bg-[#E8C96A]"
             >
-              Siguiente — Motivación →
+              {t('nextMotivation')}
             </button>
           </div>
         </div>
@@ -290,43 +292,43 @@ export function OnboardingWizard({ previewMode = false }: { previewMode?: boolea
         <div className="space-y-5">
           <div className="mb-6 text-center">
             <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#C9A84C]">
-              Paso 3 de 3 — Tu motivación
+              {t('step3Title')}
             </p>
             <p className="mt-1 text-xs text-[#9A9080]">
-              Privado — solo tú lo ves
+              {t('step3Subtitle')}
             </p>
           </div>
 
           <div>
             <label className={labelClass}>
-              ¿Por qué estás aquí? ¿Qué quieres conseguir?
+              {t('whyLabel')}
             </label>
             <textarea
               rows={3}
               className={inputClass}
-              placeholder="Quiero ganar €10K/mes para comprar mi primera casa..."
+              placeholder={t('whyPlaceholder')}
               value={data.why}
               onChange={(e) => update('why', e.target.value)}
             />
           </div>
           <div>
             <label className={labelClass}>
-              ¿Cómo es tu vida ideal en 3 años?
+              {t('dreamLifeLabel')}
             </label>
             <textarea
               rows={3}
               className={inputClass}
-              placeholder="Viviendo en Moraira, cerrando 5 operaciones al mes..."
+              placeholder={t('dreamLifePlaceholder')}
               value={data.dream_life}
               onChange={(e) => update('dream_life', e.target.value)}
             />
           </div>
           <div>
-            <label className={labelClass}>Tu frase de poder</label>
+            <label className={labelClass}>{t('mottoLabel')}</label>
             <input
               type="text"
               className={inputClass}
-              placeholder="Cada no me acerca más a un sí."
+              placeholder={t('mottoPlaceholder')}
               value={data.motto}
               onChange={(e) => update('motto', e.target.value)}
             />
@@ -343,14 +345,14 @@ export function OnboardingWizard({ previewMode = false }: { previewMode?: boolea
               onClick={() => setStep(2)}
               className="rounded-xl border border-white/10 bg-white/5 px-5 py-3.5 text-sm font-medium text-[#9A9080] transition hover:border-white/20"
             >
-              ← Atrás
+              {t('back')}
             </button>
             <button
               onClick={handleFinish}
               disabled={loading}
               className="flex-1 rounded-xl bg-[#2ECC9A] py-3.5 text-sm font-bold uppercase tracking-[0.06em] text-black transition hover:bg-[#3DDAAA] disabled:opacity-50"
             >
-              {loading ? 'Guardando...' : '✓ Completar perfil'}
+              {loading ? t('saving') : t('completeProfile')}
             </button>
           </div>
         </div>

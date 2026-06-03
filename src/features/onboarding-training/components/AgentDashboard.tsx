@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 import { useCallback, useEffect, useRef, useState, useTransition } from 'react'
 import confetti from 'canvas-confetti'
 import {
@@ -24,18 +25,18 @@ import { DailyCheckIn } from './DailyCheckIn'
 import { TrainingSkeleton } from './TrainingSkeleton'
 
 const LEVELS = [
-  { min: 0,   icon: '🌱', title: 'Rookie',       color: '#6BAE94' },
-  { min: 25,  icon: '⭐', title: 'Rising Star',   color: '#D4A853' },
-  { min: 50,  icon: '🔥', title: 'Closer',        color: '#E07A3A' },
-  { min: 75,  icon: '💎', title: 'Elite Agent',   color: '#A07BE0' },
-  { min: 100, icon: '🏆', title: 'Legend',        color: '#FFD700' },
+  { min: 0,   icon: '🌱', key: 'rookie',     color: '#6BAE94' },
+  { min: 25,  icon: '⭐', key: 'risingStar', color: '#D4A853' },
+  { min: 50,  icon: '🔥', key: 'closer',     color: '#E07A3A' },
+  { min: 75,  icon: '💎', key: 'eliteAgent', color: '#A07BE0' },
+  { min: 100, icon: '🏆', key: 'legend',     color: '#FFD700' },
 ]
 
 const MILESTONES = [
-  { pct: 25, icon: '⭐', badge: 'Rising Star',   desc: 'Reached 25% of your 90-day journey!' },
-  { pct: 50, icon: '🔥', badge: 'Halfway Hero',  desc: "You're 50% through — keep pushing!" },
-  { pct: 75, icon: '💎', badge: 'Almost There',  desc: '75% done — the finish line is close!' },
-  { pct: 100,icon: '🏆', badge: 'Legend',        desc: 'You completed the 90-day program!' },
+  { pct: 25, icon: '⭐', key: 'risingStar' },
+  { pct: 50, icon: '🔥', key: 'halfwayHero' },
+  { pct: 75, icon: '💎', key: 'almostThere' },
+  { pct: 100,icon: '🏆', key: 'legendMilestone' },
 ]
 
 function getLevel(pct: number) {
@@ -67,6 +68,7 @@ type TrackerNums = Record<GoalKey, number>
 const ZERO: TrackerNums = { doors: 0, contacts: 0, appointments: 0, viewings: 0, offers: 0, listings: 0 }
 
 export function AgentDashboard({ userName }: { userName: string }) {
+  const t = useTranslations('training')
   const [loading, setLoading] = useState(true)
   const [committed, setCommitted] = useState(false)
   const [wi, setWi] = useState(0)
@@ -188,7 +190,7 @@ export function AgentDashboard({ userName }: { userName: string }) {
       if (newTotal >= goal && !prevGoalDoneRef.current[field]) {
         prevGoalDoneRef.current[field] = true
         fireGoalConfetti()
-        const labels: Record<GoalKey, string> = { doors: 'Doors Knocked', contacts: 'New Contacts', appointments: 'Appointments', viewings: 'Viewings', offers: 'Offers', listings: 'New Listings' }
+        const labels: Record<GoalKey, string> = { doors: t('goalDoors'), contacts: t('goalContacts'), appointments: t('goalAppointments'), viewings: t('goalViewings'), offers: t('goalOffers'), listings: t('goalListings') }
         setCelebration({ type: 'goal', label: labels[field] })
         setTimeout(() => setCelebration(null), 3000)
       }
@@ -220,8 +222,8 @@ export function AgentDashboard({ userName }: { userName: string }) {
         <div style={{ position: 'fixed', top: 20, left: '50%', transform: 'translateX(-50%)', zIndex: 9999, animation: 'celebrateIn 0.4s ease-out', background: 'linear-gradient(135deg, #1A1820 0%, #0D0C10 100%)', border: `2px solid ${ac}60`, borderRadius: 16, padding: '16px 28px', display: 'flex', alignItems: 'center', gap: 12, boxShadow: `0 8px 30px rgba(0,0,0,0.5), 0 0 20px ${ac}30` }}>
           <span style={{ fontSize: 28, animation: 'badgePop 0.5s ease-out' }}>{celebration.type === 'week' ? '🎉' : '🎯'}</span>
           <div>
-            <div style={{ fontSize: 14, fontWeight: 800, color: '#EEE5D5' }}>{celebration.type === 'week' ? `Week ${celebration.week} Complete!` : 'Goal Hit!'}</div>
-            <div style={{ fontSize: 11, color: ac }}>{celebration.type === 'week' ? 'All tasks done — amazing work!' : `${celebration.label} target reached!`}</div>
+            <div style={{ fontSize: 14, fontWeight: 800, color: '#EEE5D5' }}>{celebration.type === 'week' ? t('weekCompleteTitle', { week: celebration.week ?? 0 }) : t('goalHitTitle')}</div>
+            <div style={{ fontSize: 11, color: ac }}>{celebration.type === 'week' ? t('weekCompleteSubtitle') : t('goalReachedSubtitle', { label: celebration.label ?? '' })}</div>
           </div>
         </div>
       )}
@@ -230,10 +232,10 @@ export function AgentDashboard({ userName }: { userName: string }) {
         <div style={{ position: 'fixed', inset: 0, zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(9,8,10,0.85)', animation: 'celebrateIn 0.5s ease-out' }}>
           <div style={{ background: 'linear-gradient(135deg, #1A1820, #0D0C10)', border: `2px solid ${showMilestoneUnlock.pct === 100 ? '#FFD700' : '#D4A853'}60`, borderRadius: 24, padding: '40px 50px', textAlign: 'center', maxWidth: 340, animation: 'milestoneGlow 1.5s ease-in-out infinite' }}>
             <div style={{ fontSize: 60, marginBottom: 12, animation: 'badgePop 0.6s ease-out' }}>{showMilestoneUnlock.icon}</div>
-            <div style={{ fontSize: 10, letterSpacing: '0.3em', color: '#D4A853', textTransform: 'uppercase', marginBottom: 8 }}>Milestone Unlocked</div>
-            <div style={{ fontSize: 24, fontWeight: 800, color: '#EEE5D5', marginBottom: 8 }}>{showMilestoneUnlock.badge}</div>
-            <div style={{ fontSize: 13, color: '#8A8090', lineHeight: 1.6 }}>{showMilestoneUnlock.desc}</div>
-            <div style={{ marginTop: 16, fontSize: 11, color: '#3A3040' }}>{showMilestoneUnlock.pct}% complete</div>
+            <div style={{ fontSize: 10, letterSpacing: '0.3em', color: '#D4A853', textTransform: 'uppercase', marginBottom: 8 }}>{t('milestoneUnlocked')}</div>
+            <div style={{ fontSize: 24, fontWeight: 800, color: '#EEE5D5', marginBottom: 8 }}>{t(`milestone.${showMilestoneUnlock.key}.badge`)}</div>
+            <div style={{ fontSize: 13, color: '#8A8090', lineHeight: 1.6 }}>{t(`milestone.${showMilestoneUnlock.key}.desc`)}</div>
+            <div style={{ marginTop: 16, fontSize: 11, color: '#3A3040' }}>{t('percentComplete', { pct: showMilestoneUnlock.pct })}</div>
           </div>
         </div>
       )}
@@ -245,23 +247,23 @@ export function AgentDashboard({ userName }: { userName: string }) {
           href="/dashboard"
           className="t-back-link"
           style={{ background: '#1A1820', border: '1px solid #2A2430', color: '#D0C8B8', borderRadius: 10, padding: '8px 12px', fontSize: 12, fontWeight: 600, textDecoration: 'none', flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 6 }}
-          aria-label="Volver al Dashboard"
+          aria-label={t('backToDashboard')}
         >
           <span style={{ fontSize: 14, lineHeight: 1 }}>←</span>
-          <span>Dashboard</span>
+          <span>{t('dashboard')}</span>
         </Link>
         <div style={{ minWidth: 0, flex: 1, display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ fontSize: 18, width: 32, height: 32, borderRadius: 10, background: `${level.color}18`, border: `1.5px solid ${level.color}40`, display: 'flex', alignItems: 'center', justifyContent: 'center', animation: pct >= 100 ? 'levelPulse 2s ease-in-out infinite' : 'none', flexShrink: 0 }}>{level.icon}</div>
           <div style={{ minWidth: 0 }}>
             <div style={{ fontSize: 13, color: '#EEE5D5', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{userName}</div>
-            <div style={{ fontSize: 10, color: level.color, fontWeight: 600 }}>{level.title} · {pct}%</div>
+            <div style={{ fontSize: 10, color: level.color, fontWeight: 600 }}>{t(`level.${level.key}`)} · {pct}%</div>
           </div>
         </div>
         <button
           onClick={() => setShowCheckin(true)}
           style={{ flexShrink: 0, background: '#D4A853', color: '#09080A', border: 'none', borderRadius: 10, padding: '9px 14px', cursor: 'pointer', fontSize: 12, fontWeight: 700 }}
         >
-          ☀️ Check In
+          ☀️ {t('checkIn')}
         </button>
       </div>
 
@@ -277,7 +279,7 @@ export function AgentDashboard({ userName }: { userName: string }) {
           const wd = w.tasks.filter((_, ti) => done[`${i}-${ti}`]).length
           return (
             <button key={i} onClick={() => changeWeek(i)} style={{ background: 'transparent', border: 'none', borderBottom: `3px solid ${i === wi ? PHASE_COLORS[w.phase] : 'transparent'}`, padding: '10px 13px', cursor: 'pointer', color: i === wi ? PHASE_COLORS[w.phase] : '#2A2430', fontSize: 11, fontWeight: i === wi ? 700 : 400, whiteSpace: 'nowrap', transition: 'all 0.15s', flexShrink: 0 }}>
-              Wk {w.week}{wd === w.tasks.length && <span style={{ marginLeft: 3, color: '#6BAE94' }}>✓</span>}
+              {t('wkAbbr', { week: w.week })}{wd === w.tasks.length && <span style={{ marginLeft: 3, color: '#6BAE94' }}>✓</span>}
             </button>
           )
         })}
@@ -286,17 +288,17 @@ export function AgentDashboard({ userName }: { userName: string }) {
       <div key={wi} style={{ flex: 1, overflowY: 'auto', padding: '22px 16px', maxWidth: 600, width: '100%', margin: '0 auto', boxSizing: 'border-box' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
           <div style={{ fontSize: 10, letterSpacing: '0.22em', color: ac, textTransform: 'uppercase' }}>{PHASE_LABELS[week.phase]} · {week.days}</div>
-          <div style={{ fontSize: 12, color: '#3A3040' }}>Hey {userName} 👋</div>
+          <div style={{ fontSize: 12, color: '#3A3040' }}>{t('greeting', { name: userName })} 👋</div>
         </div>
 
         <div style={{ background: `${ac}12`, border: `1.5px solid ${ac}35`, borderRadius: 16, padding: '18px', marginBottom: 16 }}>
-          <div style={{ fontSize: 10, letterSpacing: '0.2em', color: ac, textTransform: 'uppercase', marginBottom: 6 }}>Your Priority This Week</div>
+          <div style={{ fontSize: 10, letterSpacing: '0.2em', color: ac, textTransform: 'uppercase', marginBottom: 6 }}>{t('yourPriorityThisWeek')}</div>
           <div style={{ fontSize: 17, color: '#EEE5D5', lineHeight: 1.4, fontWeight: 700 }}>{week.action}</div>
         </div>
 
         <div style={{ display: 'flex', borderBottom: '1px solid #1A1820', marginBottom: 14 }}>
-          {tabs.map(t => (
-            <button key={t} onClick={() => setTab(t as typeof tab)} style={{ background: 'transparent', border: 'none', borderBottom: `2px solid ${tab === t ? ac : 'transparent'}`, color: tab === t ? ac : '#3A3040', padding: '7px 14px', cursor: 'pointer', fontSize: 12, textTransform: 'capitalize', transition: 'all 0.15s', marginBottom: -1 }}>{t}</button>
+          {tabs.map(tabId => (
+            <button key={tabId} onClick={() => setTab(tabId as typeof tab)} style={{ background: 'transparent', border: 'none', borderBottom: `2px solid ${tab === tabId ? ac : 'transparent'}`, color: tab === tabId ? ac : '#3A3040', padding: '7px 14px', cursor: 'pointer', fontSize: 12, textTransform: 'capitalize', transition: 'all 0.15s', marginBottom: -1 }}>{t(`tab.${tabId}`)}</button>
           ))}
         </div>
 
@@ -317,7 +319,7 @@ export function AgentDashboard({ userName }: { userName: string }) {
             </div>
             <div style={{ background: '#0C0B0E', border: `1px solid ${ac}20`, borderRadius: 12, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 10, color: '#3A3040', letterSpacing: '0.18em', textTransform: 'uppercase', marginBottom: 4 }}>Week Target</div>
+                <div style={{ fontSize: 10, color: '#3A3040', letterSpacing: '0.18em', textTransform: 'uppercase', marginBottom: 4 }}>{t('weekTarget')}</div>
                 <div style={{ fontSize: 13, color: ac, lineHeight: 1.6 }}>{week.target}</div>
               </div>
               {allDone && <div style={{ fontSize: 22 }}>🎉</div>}
@@ -351,12 +353,12 @@ export function AgentDashboard({ userName }: { userName: string }) {
                       <iframe src={embedUrl} allowFullScreen style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 0 }} />
                     </div>
                   ) : (
-                    <a href={loomUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', marginTop: 10, background: ac, color: '#080807', padding: '10px 24px', borderRadius: 10, fontSize: 14, fontWeight: 700, textDecoration: 'none' }}>▶ Watch Now</a>
+                    <a href={loomUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', marginTop: 10, background: ac, color: '#080807', padding: '10px 24px', borderRadius: 10, fontSize: 14, fontWeight: 700, textDecoration: 'none' }}>▶ {t('watchNow')}</a>
                   )}
                 </div>
               )
             }) : (
-              <div style={{ textAlign: 'center', padding: '30px 0', color: '#3A3040', fontSize: 13 }}>No videos added for this week yet. Check back soon!</div>
+              <div style={{ textAlign: 'center', padding: '30px 0', color: '#3A3040', fontSize: 13 }}>{t('noVideosYet')}</div>
             )}
           </div>
         )}
@@ -369,10 +371,10 @@ export function AgentDashboard({ userName }: { userName: string }) {
         )}
 
         <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
-          {wi > 0 && <button onClick={() => changeWeek(wi - 1)} style={{ flex: 1, background: '#0D0C10', border: '1px solid #1A1820', color: '#3A3040', padding: '12px', borderRadius: 12, cursor: 'pointer', fontSize: 13 }}>← Wk {AGENT_WEEKS[wi - 1].week}</button>}
+          {wi > 0 && <button onClick={() => changeWeek(wi - 1)} style={{ flex: 1, background: '#0D0C10', border: '1px solid #1A1820', color: '#3A3040', padding: '12px', borderRadius: 12, cursor: 'pointer', fontSize: 13 }}>← {t('wkAbbr', { week: AGENT_WEEKS[wi - 1].week })}</button>}
           {wi < AGENT_WEEKS.length - 1 && (
             <button onClick={() => changeWeek(wi + 1)} style={{ flex: 2, background: ac, border: 'none', color: '#09080A', padding: '12px', borderRadius: 12, cursor: 'pointer', fontSize: 13, fontWeight: 800 }}>
-              {allDone ? `✓ Done — Wk ${AGENT_WEEKS[wi + 1].week} →` : `Week ${AGENT_WEEKS[wi + 1].week} →`}
+              {allDone ? t('doneNextWkAbbr', { week: AGENT_WEEKS[wi + 1].week }) : t('nextWeek', { week: AGENT_WEEKS[wi + 1].week })}
             </button>
           )}
         </div>
@@ -380,7 +382,7 @@ export function AgentDashboard({ userName }: { userName: string }) {
         {/* 90-Day Goal Tracker */}
         <div style={{ marginTop: 28, borderTop: '1px solid #1A1820', paddingTop: 20 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-            <div style={{ fontSize: 11, letterSpacing: '0.2em', color: ac, textTransform: 'uppercase', fontWeight: 700 }}>🎯 90-Day Goals</div>
+            <div style={{ fontSize: 11, letterSpacing: '0.2em', color: ac, textTransform: 'uppercase', fontWeight: 700 }}>🎯 {t('ninetyDayGoals')}</div>
             {(() => {
               const fields: GoalKey[] = ['doors', 'contacts', 'appointments', 'viewings', 'offers', 'listings']
               const overallPct = Math.round(fields.reduce((sum, k) => sum + Math.min(((totals[k] ?? 0) / GOALS_90D[k]) * 100, 100), 0) / fields.length)
@@ -400,12 +402,12 @@ export function AgentDashboard({ userName }: { userName: string }) {
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {([
-              { key: 'doors', label: 'Doors Knocked', icon: '🚪' },
-              { key: 'contacts', label: 'New Contacts', icon: '📇' },
-              { key: 'listings', label: 'New Listings', icon: '🏡' },
-              { key: 'appointments', label: 'Appointments', icon: '📅' },
-              { key: 'viewings', label: 'Viewings', icon: '🏠' },
-              { key: 'offers', label: 'Offers', icon: '📝' },
+              { key: 'doors', label: t('goalDoors'), icon: '🚪' },
+              { key: 'contacts', label: t('goalContacts'), icon: '📇' },
+              { key: 'listings', label: t('goalListings'), icon: '🏡' },
+              { key: 'appointments', label: t('goalAppointments'), icon: '📅' },
+              { key: 'viewings', label: t('goalViewings'), icon: '🏠' },
+              { key: 'offers', label: t('goalOffers'), icon: '📝' },
             ] as { key: GoalKey; label: string; icon: string }[]).map(f => {
               const total = totals[f.key] ?? 0
               const goal = GOALS_90D[f.key]

@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation'
+import { getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { PropertyInbox, type InboxItem } from '@/features/properties/components/PropertyInbox'
@@ -6,6 +7,7 @@ import { PropertyInbox, type InboxItem } from '@/features/properties/components/
 export const dynamic = 'force-dynamic'
 
 export default async function InboxPage() {
+  const t = await getTranslations('shell.inbox')
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
@@ -43,9 +45,9 @@ export default async function InboxPage() {
   return (
     <div className="pb-24 md:pb-8">
       <div className="mb-5">
-        <h1 className="text-xl font-bold text-[#F5F0E8]">Propiedades recibidas</h1>
+        <h1 className="text-xl font-bold text-[#F5F0E8]">{t('title')}</h1>
         <p className="mt-1 text-sm text-[#9A9080]">
-          Propiedades que los agentes han enviado para subir a Sooprema. Entra en cada una, copia los datos y márcala como subida.
+          {t('subtitle')}
         </p>
       </div>
       <PropertyInbox items={items} />

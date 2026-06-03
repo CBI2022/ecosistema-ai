@@ -94,11 +94,11 @@ export function RevenueChart({
     setGoalError(null)
     const n = Number(goalDraft.replace(/[^0-9.]/g, ''))
     if (isNaN(n) || n < 0) {
-      setGoalError('Introduce un número válido (ej: 150000)')
+      setGoalError(t('goalInvalid'))
       return
     }
     if (n === 0) {
-      setGoalError('El objetivo debe ser mayor que 0')
+      setGoalError(t('goalMustBePositive'))
       return
     }
     setGoalSaving(true)
@@ -114,7 +114,7 @@ export function RevenueChart({
       setGoalDraft(String(n))
     } catch (err) {
       setGoalSaving(false)
-      setGoalError((err as Error)?.message || 'Error al guardar')
+      setGoalError((err as Error)?.message || t('saveError'))
     }
   }
 
@@ -139,7 +139,7 @@ export function RevenueChart({
 
   function handleLog() {
     if (!amount || isNaN(Number(amount))) {
-      setError('Introduce un importe válido')
+      setError(t('invalidAmount'))
       return
     }
     setError(null)
@@ -181,7 +181,7 @@ export function RevenueChart({
     if (!editingSaleId) return
     const commission = Number(editDraft.commission)
     if (isNaN(commission) || commission <= 0) {
-      setSaleError('Importe inválido')
+      setSaleError(t('invalidAmountShort'))
       return
     }
     setSaleError(null)
@@ -200,7 +200,7 @@ export function RevenueChart({
   }
 
   async function handleDeleteSale(saleId: string) {
-    if (!window.confirm('¿Eliminar esta venta? No se puede recuperar.')) return
+    if (!window.confirm(t('confirmDeleteSale'))) return
     startTransition(async () => {
       const res = await deleteSale(saleId)
       if (res?.error) setSaleError(res.error)
@@ -315,7 +315,7 @@ export function RevenueChart({
               <button
                 onClick={() => { setGoalDraft(String(annualGoal || '')); setEditingGoal(true) }}
                 className="flex shrink-0 items-center gap-1 rounded-md bg-[#C9A84C] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-black hover:bg-[#E8C96A] active:scale-95"
-                aria-label="Editar objetivo anual"
+                aria-label={t('editAnnualGoal')}
               >
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M12 20h9" />
@@ -432,7 +432,7 @@ export function RevenueChart({
                   strokeWidth={2}
                   strokeOpacity={0.9}
                   label={{
-                    value: `${fmtEur(monthlyGoalLine)}/mes`,
+                    value: t('perMonthLabel', { amount: fmtEur(monthlyGoalLine) }),
                     position: 'insideTopLeft',
                     fill: '#C9A84C',
                     fontSize: 10,
@@ -441,11 +441,11 @@ export function RevenueChart({
                 />
               </>
             )}
-            <Bar dataKey="revenue" name="Monthly" fill="#2ECC9A" fillOpacity={0.7} radius={[4, 4, 0, 0]} />
+            <Bar dataKey="revenue" name={t('legendMonthly')} fill="#2ECC9A" fillOpacity={0.7} radius={[4, 4, 0, 0]} />
             <Line
               type="monotone"
               dataKey="cumulative"
-              name="Cumulative"
+              name={t('legendCumulative')}
               stroke="#C9A84C"
               strokeWidth={2}
               dot={false}
@@ -499,14 +499,14 @@ export function RevenueChart({
         <div className="mt-5 border-t border-white/6 pt-4">
           <div className="mb-3 flex items-center justify-between">
             <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-[#9A9080]">
-              Ventas registradas ({sortedSales.length})
+              {t('registeredSales', { n: sortedSales.length })}
             </p>
             {saleError && <span className="text-[10px] text-red-400">{saleError}</span>}
           </div>
 
           {sortedSales.length === 0 ? (
             <p className="py-4 text-center text-xs text-[#9A9080]/60">
-              Aún no has registrado ninguna venta. Usa el formulario de arriba.
+              {t('noSalesYet')}
             </p>
           ) : (
             <>
@@ -531,14 +531,14 @@ export function RevenueChart({
                             type="text"
                             value={editDraft.address}
                             onChange={(e) => setEditDraft({ ...editDraft, address: e.target.value })}
-                            placeholder="Dirección"
+                            placeholder={t('addressPlaceholder')}
                             className="w-full rounded-lg border border-white/10 bg-[#1C1C1C] px-3 py-2.5 text-sm text-[#F5F0E8] outline-none focus:border-[#C9A84C]/60"
                           />
                           <input
                             type="number"
                             value={editDraft.commission}
                             onChange={(e) => setEditDraft({ ...editDraft, commission: e.target.value })}
-                            placeholder="Comisión €"
+                            placeholder={t('commissionPlaceholder')}
                             className="w-full rounded-lg border border-white/10 bg-[#1C1C1C] px-3 py-2.5 text-sm text-[#F5F0E8] outline-none focus:border-[#C9A84C]/60"
                           />
                           <div className="flex gap-2">
@@ -547,13 +547,13 @@ export function RevenueChart({
                               disabled={isPending}
                               className="flex h-11 flex-1 items-center justify-center rounded-lg bg-[#2ECC9A]/15 text-sm font-bold text-[#2ECC9A] active:scale-95 disabled:opacity-50"
                             >
-                              ✓ Guardar
+                              ✓ {tCommon('save')}
                             </button>
                             <button
                               onClick={() => { setEditingSaleId(null); setSaleError(null) }}
                               className="flex h-11 flex-1 items-center justify-center rounded-lg border border-white/10 text-sm text-[#9A9080] active:scale-95"
                             >
-                              Cancelar
+                              {tCommon('cancel')}
                             </button>
                           </div>
                         </div>
@@ -564,7 +564,7 @@ export function RevenueChart({
                               {new Date(sale.closing_date + 'T00:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}
                             </div>
                             <div className="truncate text-sm font-medium text-[#F5F0E8]">
-                              {sale.property_address || <span className="text-[#9A9080]/60">Sin dirección</span>}
+                              {sale.property_address || <span className="text-[#9A9080]/60">{t('noAddress')}</span>}
                             </div>
                             <div className="mt-1 text-base font-bold text-[#C9A84C]">
                               {fmtEur(sale.commission ?? sale.sale_price ?? 0)}
@@ -574,8 +574,8 @@ export function RevenueChart({
                             <button
                               onClick={() => beginEdit(sale)}
                               className="flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-[#9A9080] active:scale-95"
-                              title="Editar"
-                              aria-label="Editar"
+                              title={tCommon('edit')}
+                              aria-label={tCommon('edit')}
                             >
                               ✎
                             </button>
@@ -583,8 +583,8 @@ export function RevenueChart({
                               onClick={() => handleDeleteSale(sale.id)}
                               disabled={isPending}
                               className="flex h-10 w-10 items-center justify-center rounded-lg border border-red-500/20 bg-red-500/10 text-red-400 active:scale-95 disabled:opacity-50"
-                              title="Eliminar"
-                              aria-label="Eliminar"
+                              title={tCommon('delete')}
+                              aria-label={tCommon('delete')}
                             >
                               🗑
                             </button>
@@ -602,9 +602,9 @@ export function RevenueChart({
                   <table className="w-full text-sm">
                   <thead className="sticky top-0 bg-[#1C1C1C] text-left text-[9px] font-bold uppercase tracking-[0.12em] text-[#9A9080]">
                     <tr>
-                      <th className="px-3 py-2">Fecha</th>
-                      <th className="px-3 py-2">Propiedad</th>
-                      <th className="px-3 py-2 text-right">Comisión</th>
+                      <th className="px-3 py-2">{t('colDate')}</th>
+                      <th className="px-3 py-2">{t('colProperty')}</th>
+                      <th className="px-3 py-2 text-right">{t('colCommission')}</th>
                       <th className="px-3 py-2"></th>
                     </tr>
                   </thead>
@@ -628,7 +628,7 @@ export function RevenueChart({
                                   type="text"
                                   value={editDraft.address}
                                   onChange={(e) => setEditDraft({ ...editDraft, address: e.target.value })}
-                                  placeholder="Dirección"
+                                  placeholder={t('addressPlaceholder')}
                                   className="w-full rounded border border-white/10 bg-[#1C1C1C] px-2 py-1 text-xs text-[#F5F0E8] outline-none focus:border-[#C9A84C]/60"
                                 />
                               </td>
@@ -674,7 +674,7 @@ export function RevenueChart({
                                   <button
                                     onClick={() => beginEdit(sale)}
                                     className="rounded border border-white/10 bg-white/5 px-2 py-1 text-[10px] text-[#9A9080] hover:border-[#C9A84C]/40 hover:text-[#F5F0E8]"
-                                    title="Editar"
+                                    title={tCommon('edit')}
                                   >
                                     ✎
                                   </button>
@@ -682,7 +682,7 @@ export function RevenueChart({
                                     onClick={() => handleDeleteSale(sale.id)}
                                     disabled={isPending}
                                     className="rounded border border-red-500/20 bg-red-500/10 px-2 py-1 text-[10px] text-red-400 hover:bg-red-500/20 disabled:opacity-50"
-                                    title="Eliminar"
+                                    title={tCommon('delete')}
                                   >
                                     🗑
                                   </button>

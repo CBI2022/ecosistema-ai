@@ -2,8 +2,11 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { deleteProperty } from '@/actions/properties'
 import type { Property } from '@/types/database'
+
+type TFn = ReturnType<typeof useTranslations>
 
 interface AgentInfo {
   full_name: string | null
@@ -19,14 +22,14 @@ interface PropertyListProps {
 // Estado que ve el AGENTE, según el flujo real (review_status):
 //  submitted = enviada a la oficina  ·  published = ya subida a Sooprema
 //  sin enviar todavía = borrador
-function StatusBadge({ p }: { p: Property }) {
-  let label = 'Borrador'
+function StatusBadge({ p, t }: { p: Property; t: TFn }) {
+  let label = t('list.statusDraft')
   let cls = 'bg-white/10 text-[#9A9080]'
   if (p.review_status === 'submitted') {
-    label = 'Enviada a la oficina'
+    label = t('list.statusSubmitted')
     cls = 'bg-[#C9A84C]/20 text-[#C9A84C]'
   } else if (p.review_status === 'published') {
-    label = 'Publicada'
+    label = t('list.statusPublished')
     cls = 'bg-[#2ECC9A]/15 text-[#2ECC9A]'
   }
   return <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide ${cls}`}>{label}</span>
@@ -41,7 +44,8 @@ function fmtShort(d: string | null): string {
   }
 }
 
-export function PropertyList({ properties, agentsMap = null, listTitle = 'My Properties' }: PropertyListProps) {
+export function PropertyList({ properties, agentsMap = null, listTitle }: PropertyListProps) {
+  const t = useTranslations('properties')
   const router = useRouter()
   const [confirmId, setConfirmId] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
@@ -70,7 +74,7 @@ export function PropertyList({ properties, agentsMap = null, listTitle = 'My Pro
 
   return (
     <div>
-      <h2 className="mb-4 text-[10px] font-bold uppercase tracking-[0.18em] text-[#C9A84C]">{listTitle}</h2>
+      <h2 className="mb-4 text-[10px] font-bold uppercase tracking-[0.18em] text-[#C9A84C]">{listTitle ?? t('list.myProperties')}</h2>
 
       <div className="space-y-2.5">
         {properties.map((p) => {
@@ -82,7 +86,7 @@ export function PropertyList({ properties, agentsMap = null, listTitle = 'My Pro
           >
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-semibold text-[#F5F0E8]">
-                {p.reference} — {p.title || p.location || 'Unnamed'}
+                {p.reference} — {p.title || p.location || t('list.unnamed')}
               </p>
               <p className="mt-0.5 text-xs text-[#9A9080]">
                 {p.zone} · €{p.price?.toLocaleString() ?? '—'} · {p.property_type}
@@ -91,28 +95,28 @@ export function PropertyList({ properties, agentsMap = null, listTitle = 'My Pro
                 )}
               </p>
               {p.review_status === 'submitted' && p.submitted_at && (
-                <p className="mt-1 text-[11px] text-[#7A7263]">Enviada el {fmtShort(p.submitted_at)} · pendiente en la oficina</p>
+                <p className="mt-1 text-[11px] text-[#7A7263]">{t('list.submittedOn', { date: fmtShort(p.submitted_at) })}</p>
               )}
               {p.review_status === 'published' && p.published_to_suprema_at && (
-                <p className="mt-1 text-[11px] text-[#2ECC9A]/80">Publicada el {fmtShort(p.published_to_suprema_at)}</p>
+                <p className="mt-1 text-[11px] text-[#2ECC9A]/80">{t('list.publishedOn', { date: fmtShort(p.published_to_suprema_at) })}</p>
               )}
             </div>
 
             <div className="flex items-center gap-2">
-              <StatusBadge p={p} />
+              <StatusBadge p={p} t={t} />
 
               <button
                 type="button"
                 onClick={() => handleEdit(p.id)}
                 disabled={isPending}
                 className="flex min-h-[44px] min-w-[44px] items-center justify-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs font-bold text-[#9A9080] transition hover:border-[#C9A84C]/40 hover:text-[#F5F0E8] disabled:opacity-50"
-                aria-label={`Editar ${p.reference}`}
+                aria-label={t('list.editAria', { ref: p.reference ?? '' })}
               >
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M12 20h9" />
                   <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
                 </svg>
-                <span className="hidden sm:inline">Editar</span>
+                <span className="hidden sm:inline">{t('list.edit')}</span>
               </button>
 
               <button
@@ -120,14 +124,14 @@ export function PropertyList({ properties, agentsMap = null, listTitle = 'My Pro
                 onClick={() => setConfirmId(p.id)}
                 disabled={isPending}
                 className="flex min-h-[44px] min-w-[44px] items-center justify-center gap-1.5 rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-2 text-xs font-bold text-red-400 transition hover:bg-red-500/10 disabled:opacity-50"
-                aria-label={`Eliminar ${p.reference}`}
+                aria-label={t('list.deleteAria', { ref: p.reference ?? '' })}
               >
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="3 6 5 6 21 6" />
                   <path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6" />
                   <path d="M10 11v6M14 11v6" />
                 </svg>
-                <span className="hidden sm:inline">Eliminar</span>
+                <span className="hidden sm:inline">{t('list.delete')}</span>
               </button>
             </div>
           </div>
@@ -150,12 +154,12 @@ export function PropertyList({ properties, agentsMap = null, listTitle = 'My Pro
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-4">
-              <h3 className="text-lg font-bold text-[#F5F0E8]">¿Eliminar propiedad?</h3>
+              <h3 className="text-lg font-bold text-[#F5F0E8]">{t('list.deleteConfirmTitle')}</h3>
               <p className="mt-1 text-sm text-[#9A9080]">
                 <strong className="text-[#F5F0E8]">{confirmProp.reference}</strong> — {confirmProp.title || confirmProp.location}
               </p>
               <p className="mt-3 text-xs text-[#9A9080]">
-                Se eliminará de la base de datos. Esta acción no borra la propiedad de Sooprema si ya fue publicada.
+                {t('list.deleteConfirmHint')}
               </p>
             </div>
 
@@ -166,7 +170,7 @@ export function PropertyList({ properties, agentsMap = null, listTitle = 'My Pro
                 disabled={isPending}
                 className="flex-1 rounded-xl border border-white/10 bg-white/5 py-3 text-sm font-bold text-[#F5F0E8] hover:bg-white/10 disabled:opacity-50"
               >
-                Cancelar
+                {t('list.cancel')}
               </button>
               <button
                 type="button"
@@ -174,7 +178,7 @@ export function PropertyList({ properties, agentsMap = null, listTitle = 'My Pro
                 disabled={isPending}
                 className="flex-1 rounded-xl bg-red-500 py-3 text-sm font-bold text-white hover:bg-red-600 disabled:opacity-50"
               >
-                {isPending ? 'Eliminando...' : 'Sí, eliminar'}
+                {isPending ? t('list.deleting') : t('list.confirmDelete')}
               </button>
             </div>
           </div>

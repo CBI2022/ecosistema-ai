@@ -1,24 +1,9 @@
 'use client'
 
 import { useState, useTransition, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { toggleChecklistItem, resetWeeklyPlan } from '@/actions/checklist'
 import type { ChecklistItem } from '@/types/database'
-
-const DAY_LABELS: Record<string, string> = {
-  monday: 'Monday',
-  tuesday: 'Tuesday',
-  wednesday: 'Wednesday',
-  thursday: 'Thursday',
-  friday: 'Friday',
-}
-
-const DAY_SHORT: Record<string, string> = {
-  monday: 'Mon',
-  tuesday: 'Tue',
-  wednesday: 'Wed',
-  thursday: 'Thu',
-  friday: 'Fri',
-}
 
 const DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday']
 
@@ -38,6 +23,7 @@ interface DailyPlanProps {
 }
 
 export function DailyPlan({ items: initialItems, weekStart }: DailyPlanProps) {
+  const t = useTranslations('dailyPlan')
   const todayKey = getTodayKey()
   const activeDefault = DAYS.includes(todayKey) ? todayKey : 'monday'
   const [activeDay, setActiveDay] = useState(activeDefault)
@@ -72,9 +58,7 @@ export function DailyPlan({ items: initialItems, weekStart }: DailyPlanProps) {
   }
 
   function handleReset() {
-    const ok = window.confirm(
-      '¿Resetear toda la semana? Todas las tareas marcadas se desmarcarán. Esta acción no se puede deshacer.'
-    )
+    const ok = window.confirm(t('confirmReset'))
     if (!ok) return
     setItems((prev) => prev.map((i) => ({ ...i, is_done: false, completed: 0 })))
     // Limpiar flags de "perfect day" mostrados esta semana
@@ -101,12 +85,12 @@ export function DailyPlan({ items: initialItems, weekStart }: DailyPlanProps) {
 
   const scoreLabel =
     score === 100
-      ? '🏆 Perfect Day!'
+      ? `🏆 ${t('perfectDay')}`
       : score >= 80
-        ? '🔥 Almost there!'
+        ? `🔥 ${t('almostThere')}`
         : score >= 50
-          ? '💪 Keep going!'
-          : '⚡ Start ticking!'
+          ? `💪 ${t('keepGoing')}`
+          : `⚡ ${t('startTicking')}`
 
   return (
     <div className="rounded-2xl border border-[#C9A84C]/12 bg-[#131313] p-5" style={{ borderTop: '1px solid #C9A84C' }}>
@@ -114,10 +98,10 @@ export function DailyPlan({ items: initialItems, weekStart }: DailyPlanProps) {
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#C9A84C]">
-            📋 Daily Action Plan
+            📋 {t('title')}
           </p>
           <p className="mt-0.5 text-[11px] text-[#9A9080]">
-            Week of{' '}
+            {t('weekOf')}{' '}
             {new Date(weekStart + 'T00:00:00').toLocaleDateString('en-GB', {
               day: 'numeric',
               month: 'short',
@@ -126,13 +110,13 @@ export function DailyPlan({ items: initialItems, weekStart }: DailyPlanProps) {
         </div>
         <div className="flex items-center gap-3">
           <span className="rounded-full bg-[#C9A84C]/15 px-3 py-1 text-xs font-bold text-[#C9A84C]">
-            {weekScore}% week
+            {t('weekPct', { pct: weekScore })}
           </span>
           <button
             onClick={handleReset}
             className="rounded-lg border border-white/10 bg-white/4 px-3 py-1.5 text-[11px] text-[#9A9080] transition hover:border-[#E05555]/30 hover:text-[#E05555]"
           >
-            Reset Week
+            {t('resetWeek')}
           </button>
         </div>
       </div>
@@ -173,7 +157,7 @@ export function DailyPlan({ items: initialItems, weekStart }: DailyPlanProps) {
                 />
               </div>
               <span className={`text-[9px] font-bold transition ${isToday ? 'text-[#C9A84C]' : activeDay === day ? 'text-[#F5F0E8]' : 'text-[#9A9080]'}`}>
-                {DAY_SHORT[day]}{isToday ? ' · Hoy' : ''}
+                {t(`short_${day}`)}{isToday ? ` · ${t('today')}` : ''}
               </span>
             </button>
           )
@@ -195,8 +179,8 @@ export function DailyPlan({ items: initialItems, weekStart }: DailyPlanProps) {
                   : 'border border-white/10 bg-white/4 text-[#9A9080] hover:text-[#F5F0E8]'
               }`}
             >
-              <span className="sm:hidden">{DAY_SHORT[day]}</span>
-              <span className="hidden sm:inline">{DAY_LABELS[day]}</span>
+              <span className="sm:hidden">{t(`short_${day}`)}</span>
+              <span className="hidden sm:inline">{t(`label_${day}`)}</span>
               {isToday && <span className="text-[10px]">👈</span>}
               <span
                 className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold ${
@@ -229,14 +213,14 @@ export function DailyPlan({ items: initialItems, weekStart }: DailyPlanProps) {
 
       {/* Tasks */}
       <TaskSection
-        title="⚡ Must Do — 80% of Your Results"
+        title={`⚡ ${t('mustDo')}`}
         titleColor="#C9A84C"
         items={mustDo}
         onToggle={toggle}
       />
       <div className="my-3" />
       <TaskSection
-        title="✅ Complete the Day"
+        title={`✅ ${t('completeTheDay')}`}
         titleColor="#2ECC9A"
         items={complete}
         onToggle={toggle}
@@ -247,15 +231,15 @@ export function DailyPlan({ items: initialItems, weekStart }: DailyPlanProps) {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
           <div className="mx-4 max-w-sm rounded-2xl border border-[#C9A84C]/30 bg-[#131313] p-8 text-center shadow-2xl">
             <div className="mb-4 text-6xl">🏆</div>
-            <h2 className="mb-2 text-2xl font-bold text-[#C9A84C]">PERFECT DAY!</h2>
+            <h2 className="mb-2 text-2xl font-bold text-[#C9A84C]">{t('perfectDayTitle')}</h2>
             <p className="mb-6 text-sm text-[#9A9080]">
-              You crushed every single task today. That&apos;s what separates top agents.
+              {t('perfectDayMessage')}
             </p>
             <button
               onClick={() => setShowPerfect(false)}
               className="rounded-xl bg-[#C9A84C] px-8 py-3 font-bold text-black transition hover:bg-[#E8C96A]"
             >
-              Let&apos;s Go! →
+              {t('letsGo')} →
             </button>
           </div>
         </div>
@@ -275,6 +259,7 @@ function TaskSection({
   items: ChecklistItem[]
   onToggle: (id: string) => void
 }) {
+  const t = useTranslations('dailyPlan')
   const done = items.filter((i) => i.is_done).length
   return (
     <div>
@@ -314,7 +299,7 @@ function TaskSection({
               {item.label}
             </span>
             <span className={`text-[10px] font-bold ${item.is_done ? 'text-[#2ECC9A]' : ''}`} style={!item.is_done ? { color: titleColor } : {}}>
-              {item.is_done ? 'DONE' : 'TODO'}
+              {item.is_done ? t('done') : t('todo')}
             </span>
           </button>
         ))}

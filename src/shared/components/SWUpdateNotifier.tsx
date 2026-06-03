@@ -1,10 +1,12 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useTranslations } from 'next-intl'
 
 // Escucha mensajes del service worker y muestra toast si hay version nueva disponible.
 // Al aceptar, recarga la pagina para coger la build nueva.
 export function SWUpdateNotifier() {
+  const t = useTranslations('appUpdate')
   const [updateAvailable, setUpdateAvailable] = useState(false)
 
   useEffect(() => {
@@ -73,7 +75,7 @@ export function SWUpdateNotifier() {
       {/* Backdrop oscuro con blur */}
       <button
         type="button"
-        aria-label="Cerrar"
+        aria-label={t('close')}
         onClick={() => setUpdateAvailable(false)}
         className="absolute inset-0 bg-black/75 backdrop-blur-md [animation:cbi-update-fade_0.2s_ease-out]"
       />
@@ -93,16 +95,16 @@ export function SWUpdateNotifier() {
           </div>
 
           <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#C9A84C]">
-            Nueva versión
+            {t('eyebrow')}
           </p>
           <h2
             id="sw-update-title"
             className="mt-2 text-xl font-bold leading-snug text-[#F5F0E8]"
           >
-            Hay una actualización disponible
+            {t('title')}
           </h2>
           <p className="mt-2 text-sm leading-relaxed text-[#9A9080]">
-            Se han subido cambios nuevos al SaaS. Pulsa Actualizar para verlos al instante.
+            {t('description')}
           </p>
 
           <button
@@ -110,14 +112,14 @@ export function SWUpdateNotifier() {
             onClick={applyUpdate}
             className="mt-6 w-full rounded-2xl bg-[#C9A84C] px-5 py-4 text-sm font-bold uppercase tracking-[0.08em] text-black transition active:scale-[0.98] hover:bg-[#E8C96A]"
           >
-            Actualizar ahora
+            {t('updateNow')}
           </button>
           <button
             type="button"
             onClick={() => setUpdateAvailable(false)}
             className="mt-2 w-full rounded-xl px-4 py-2.5 text-xs font-medium text-[#9A9080] transition hover:text-[#F5F0E8]"
           >
-            Más tarde
+            {t('later')}
           </button>
         </div>
       </div>

@@ -77,11 +77,11 @@ export function CompletedModal({ tasks, canEdit, onClose, onReopen, onOpenTask }
             <div className="py-16 text-center">
               <div className="mb-3 text-5xl opacity-20">✅</div>
               <p className="text-sm font-semibold text-[#9A9080]">{t('noCompletedTasks')}</p>
-              <p className="mt-1 text-xs text-[#9A9080]/60">Las tareas marcadas como "Complete" aparecerán aquí</p>
+              <p className="mt-1 text-xs text-[#9A9080]/60">{t('completedEmptyHint')}</p>
             </div>
           ) : filtered.length === 0 ? (
             <div className="py-12 text-center">
-              <p className="text-sm text-[#9A9080]">Ninguna coincide con "{search}"</p>
+              <p className="text-sm text-[#9A9080]">{t('noMatch', { search })}</p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -150,7 +150,7 @@ export function CompletedModal({ tasks, canEdit, onClose, onReopen, onOpenTask }
         {/* Footer */}
         <div className="border-t border-white/6 bg-[#0A0A0A]/50 px-6 py-3">
           <p className="text-[11px] text-[#9A9080]">
-            💡 Click en una tarea para abrir sus detalles. "Reabrir" la devuelve al flujo activo como Next Action.
+            💡 {t('completedFooterNote')}
           </p>
         </div>
       </div>

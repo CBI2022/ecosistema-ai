@@ -1,9 +1,11 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
+import { getTranslations } from 'next-intl/server'
 import { AdminOverview } from '@/features/admin/components/AdminOverview'
 
 export default async function AdminPage() {
+  const t = await getTranslations('shell.admin')
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
@@ -39,8 +41,8 @@ export default async function AdminPage() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-xl font-bold text-[#F5F0E8]">Admin Overview</h1>
-        <p className="mt-1 text-sm text-[#9A9080]">Métricas del equipo · Editar ventas · {year}</p>
+        <h1 className="text-xl font-bold text-[#F5F0E8]">{t('title')}</h1>
+        <p className="mt-1 text-sm text-[#9A9080]">{t('subtitle', { year })}</p>
       </div>
       <AdminOverview
         agents={agentMetrics}

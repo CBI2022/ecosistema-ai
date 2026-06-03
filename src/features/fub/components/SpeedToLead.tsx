@@ -1,3 +1,4 @@
+import { getTranslations } from 'next-intl/server'
 import { CBI_HEX } from '../theme'
 
 interface Props {
@@ -20,28 +21,32 @@ function fmtMins(m: number | null): string {
   return `${(hours / 24).toFixed(1)}d`
 }
 
-function tier(m: number | null): { label: string; color: string } {
+function tier(
+  m: number | null,
+  t: (key: string) => string,
+): { label: string; color: string } {
   if (m === null) return { label: '—', color: CBI_HEX.warmGray }
-  if (m < 5) return { label: 'excelente', color: CBI_HEX.emerald }
-  if (m < 30) return { label: 'bien', color: CBI_HEX.gold }
-  if (m < 60 * 4) return { label: 'mejorable', color: CBI_HEX.amber }
-  return { label: 'crítico', color: CBI_HEX.crimson }
+  if (m < 5) return { label: t('speedToLead.tierExcellent'), color: CBI_HEX.emerald }
+  if (m < 30) return { label: t('speedToLead.tierGood'), color: CBI_HEX.gold }
+  if (m < 60 * 4) return { label: t('speedToLead.tierImprovable'), color: CBI_HEX.amber }
+  return { label: t('speedToLead.tierCritical'), color: CBI_HEX.crimson }
 }
 
-export function SpeedToLead({ scope, overall_median_min, sample_size, by_user }: Props) {
-  const overallTier = tier(overall_median_min)
+export async function SpeedToLead({ scope, overall_median_min, sample_size, by_user }: Props) {
+  const t = await getTranslations('fub')
+  const overallTier = tier(overall_median_min, t)
 
   return (
     <section className="rounded-2xl border border-[#C9A84C]/20 bg-[#0F0F0F] p-5">
       <header className="mb-4 flex items-baseline justify-between">
-        <h3 className="text-sm font-semibold text-[#F5F0E8]">Speed to Lead</h3>
+        <h3 className="text-sm font-semibold text-[#F5F0E8]">{t('speedToLead.title')}</h3>
         <span className="text-[10px] uppercase tracking-[0.18em] text-[#9A9080]">
-          últimos {scope === 'month' ? '30 días' : '12 meses'}
+          {scope === 'month' ? t('common.last30Days') : t('common.last12Months')}
         </span>
       </header>
 
       <div className="mb-5 rounded-xl border border-[#C9A84C]/15 bg-gradient-to-br from-[#1A1408] to-[#0F0F0F] p-4">
-        <div className="text-[10px] uppercase tracking-[0.14em] text-[#9A9080]">Mediana global</div>
+        <div className="text-[10px] uppercase tracking-[0.14em] text-[#9A9080]">{t('speedToLead.globalMedian')}</div>
         <div className="mt-1 flex items-baseline gap-3">
           <span className="text-3xl font-bold text-[#F5F0E8]">{fmtMins(overall_median_min)}</span>
           <span
@@ -51,19 +56,19 @@ export function SpeedToLead({ scope, overall_median_min, sample_size, by_user }:
             {overallTier.label}
           </span>
         </div>
-        <div className="mt-1 text-[10px] text-[#9A9080]">{sample_size} leads analizados</div>
+        <div className="mt-1 text-[10px] text-[#9A9080]">{t('speedToLead.leadsAnalyzed', { count: sample_size })}</div>
       </div>
 
       <div>
         <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#9A9080]">
-          Por agente
+          {t('speedToLead.byAgent')}
         </div>
         {by_user.length === 0 ? (
-          <div className="py-3 text-center text-xs text-[#9A9080]">Sin datos</div>
+          <div className="py-3 text-center text-xs text-[#9A9080]">{t('speedToLead.noData')}</div>
         ) : (
           <div className="space-y-1.5">
             {by_user.slice(0, 10).map((u) => {
-              const t = tier(u.median_min)
+              const userTier = tier(u.median_min, t)
               return (
                 <div
                   key={u.fub_user_id}
@@ -74,8 +79,8 @@ export function SpeedToLead({ scope, overall_median_min, sample_size, by_user }:
                     <span className="font-mono text-xs font-semibold text-[#F5F0E8]">{fmtMins(u.median_min)}</span>
                     <span
                       className="h-2 w-2 rounded-full"
-                      style={{ backgroundColor: t.color, boxShadow: `0 0 6px ${t.color}` }}
-                      title={t.label}
+                      style={{ backgroundColor: userTier.color, boxShadow: `0 0 6px ${userTier.color}` }}
+                      title={userTier.label}
                     />
                   </div>
                 </div>

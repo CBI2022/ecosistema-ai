@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { linkShootToProperty } from '@/actions/photo-shoots'
 
 interface DeliveredShoot {
@@ -35,6 +36,7 @@ interface Props {
  * propiedad nueva con el link Drive ya cargado.
  */
 export function PhotosDeliveredBanner({ deliveries, draftProperties }: Props) {
+  const t = useTranslations('dashboard.photosDelivered')
   const router = useRouter()
   const [openId, setOpenId] = useState<string | null>(null)
   const [selectedPropertyId, setSelectedPropertyId] = useState<string>('')
@@ -45,7 +47,7 @@ export function PhotosDeliveredBanner({ deliveries, draftProperties }: Props) {
 
   function handleLink(shootId: string) {
     if (!selectedPropertyId) {
-      setError('Selecciona una propiedad')
+      setError(t('selectProperty'))
       return
     }
     setError(null)
@@ -76,14 +78,14 @@ export function PhotosDeliveredBanner({ deliveries, draftProperties }: Props) {
       <div className="mb-3 flex items-center gap-2">
         <h3 className="text-sm font-bold text-[#F5F0E8]">
           {deliveries.length === 1
-            ? 'Tienes 1 set de fotos pendiente de Jelle'
-            : `Tienes ${deliveries.length} sets de fotos pendientes de Jelle`}
+            ? t('headingOne')
+            : t('headingMany', { n: deliveries.length })}
         </h3>
       </div>
 
       <div className="space-y-2">
         {deliveries.map((d) => {
-          const refOrAddr = d.property_reference || d.property_address || 'Sin referencia'
+          const refOrAddr = d.property_reference || d.property_address || t('noReference')
           const isOpen = openId === d.id
           return (
             <div
@@ -98,7 +100,7 @@ export function PhotosDeliveredBanner({ deliveries, draftProperties }: Props) {
                     </span>
                     {d.delivered_at && (
                       <span className="text-[10px] text-[#9A9080]">
-                        entregado{' '}
+                        {t('delivered')}{' '}
                         {new Date(d.delivered_at).toLocaleDateString('es-ES', {
                           day: 'numeric',
                           month: 'short',
@@ -118,7 +120,7 @@ export function PhotosDeliveredBanner({ deliveries, draftProperties }: Props) {
                       rel="noopener noreferrer"
                       className="mt-1 inline-flex items-center gap-1 text-[10px] text-[#C9A84C] hover:underline"
                     >
-                      🔗 Ver carpeta de Drive
+                      🔗 {t('viewDriveFolder')}
                     </a>
                   )}
                 </div>
@@ -132,7 +134,7 @@ export function PhotosDeliveredBanner({ deliveries, draftProperties }: Props) {
                     }}
                     className="shrink-0 rounded-lg bg-[#C9A84C] px-3 py-2 text-[11px] font-bold uppercase text-black transition hover:bg-[#E8C96A]"
                   >
-                    Asociar
+                    {t('associate')}
                   </button>
                 )}
               </div>
@@ -140,23 +142,23 @@ export function PhotosDeliveredBanner({ deliveries, draftProperties }: Props) {
               {isOpen && (
                 <div className="mt-3 space-y-3 rounded-lg border border-[#C9A84C]/20 bg-[#0A0A0A] p-3">
                   <p className="text-[10px] font-bold uppercase text-[#C9A84C]">
-                    Asocia las fotos a una propiedad
+                    {t('associatePhotos')}
                   </p>
 
                   {draftProperties.length > 0 ? (
                     <>
                       <p className="text-[11px] text-[#9A9080]">
-                        Selecciona una propiedad que ya tengas creada (en cualquier estado):
+                        {t('selectExisting')}
                       </p>
                       <select
                         value={selectedPropertyId}
                         onChange={(e) => setSelectedPropertyId(e.target.value)}
                         className="w-full rounded-lg border border-white/10 bg-[#1C1C1C] px-3 py-2.5 text-sm text-[#F5F0E8] outline-none focus:border-[#C9A84C]/60"
                       >
-                        <option value="">— Elige una propiedad —</option>
+                        <option value="">{t('chooseProperty')}</option>
                         {draftProperties.map((p) => (
                           <option key={p.id} value={p.id}>
-                            {p.reference ?? '(sin ref)'} — {p.property_type ?? '?'} en {p.zone ?? '?'}{' '}
+                            {p.reference ?? t('noRef')} — {p.property_type ?? '?'} {t('in')} {p.zone ?? '?'}{' '}
                             {p.street_name ? `· ${p.street_name}` : ''}
                           </option>
                         ))}
@@ -169,7 +171,7 @@ export function PhotosDeliveredBanner({ deliveries, draftProperties }: Props) {
                           disabled={isPending || !selectedPropertyId}
                           className="rounded-lg bg-[#C9A84C] px-3 py-2 text-[11px] font-bold uppercase text-black transition hover:bg-[#E8C96A] disabled:opacity-50"
                         >
-                          {isPending ? 'Asociando…' : 'Asociar a esta propiedad'}
+                          {isPending ? t('associating') : t('associateToProperty')}
                         </button>
                         <button
                           type="button"
@@ -177,7 +179,7 @@ export function PhotosDeliveredBanner({ deliveries, draftProperties }: Props) {
                           disabled={isPending}
                           className="rounded-lg border border-[#C9A84C]/40 bg-[#C9A84C]/10 px-3 py-2 text-[11px] font-bold uppercase text-[#C9A84C] transition hover:bg-[#C9A84C]/20"
                         >
-                          O crear propiedad nueva
+                          {t('orCreateNew')}
                         </button>
                         <button
                           type="button"
@@ -187,21 +189,21 @@ export function PhotosDeliveredBanner({ deliveries, draftProperties }: Props) {
                           }}
                           className="rounded-lg px-3 py-2 text-[11px] text-[#9A9080] hover:text-[#F5F0E8]"
                         >
-                          Cancelar
+                          {t('cancel')}
                         </button>
                       </div>
                     </>
                   ) : (
                     <>
                       <p className="text-[11px] text-[#9A9080]">
-                        No tienes propiedades existentes. Crea una nueva con estas fotos:
+                        {t('noExisting')}
                       </p>
                       <button
                         type="button"
                         onClick={() => handleCreateNew(d)}
                         className="rounded-lg bg-[#C9A84C] px-3 py-2 text-[11px] font-bold uppercase text-black transition hover:bg-[#E8C96A]"
                       >
-                        + Crear propiedad nueva con estas fotos
+                        {t('createNewWithPhotos')}
                       </button>
                     </>
                   )}

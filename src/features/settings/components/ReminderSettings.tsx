@@ -67,7 +67,7 @@ export const ReminderSettings = forwardRef<ReminderSettingsHandle, Props>(functi
         setInitial(config)
         return { success: true as const }
       } catch {
-        return { error: 'No se pudo guardar' }
+        return { error: t('reminderSaveError') }
       }
     },
   }), [config, dirty, initial.lastDismissedDate])
@@ -116,6 +116,8 @@ export const ReminderSettings = forwardRef<ReminderSettingsHandle, Props>(functi
             onChange={(v) => setConfig({ ...config, hour: Math.max(0, Math.min(23, v)) })}
             disabled={!config.enabled}
             max={23}
+            upLabel={t('increase')}
+            downLabel={t('decrease')}
           />
 
           <span className="font-['Maharlika',serif] text-5xl text-[#C9A84C]">:</span>
@@ -128,6 +130,8 @@ export const ReminderSettings = forwardRef<ReminderSettingsHandle, Props>(functi
             onChange={(v) => setConfig({ ...config, minute: Math.max(0, Math.min(59, v)) })}
             disabled={!config.enabled}
             max={59}
+            upLabel={t('increase')}
+            downLabel={t('decrease')}
           />
         </div>
 
@@ -146,6 +150,8 @@ function TimeWheel({
   onChange,
   disabled,
   max,
+  upLabel,
+  downLabel,
 }: {
   value: number
   onUp: () => void
@@ -153,6 +159,8 @@ function TimeWheel({
   onChange: (v: number) => void
   disabled: boolean
   max: number
+  upLabel: string
+  downLabel: string
 }) {
   return (
     <div className="flex flex-col items-center gap-1.5">
@@ -161,7 +169,7 @@ function TimeWheel({
         onClick={onUp}
         disabled={disabled}
         className="flex h-7 w-14 items-center justify-center rounded-lg border border-white/10 text-[#9A9080] transition hover:border-[#C9A84C]/40 hover:text-[#C9A84C] disabled:opacity-30"
-        aria-label="Aumentar"
+        aria-label={upLabel}
       >
         ▲
       </button>
@@ -179,7 +187,7 @@ function TimeWheel({
         onClick={onDown}
         disabled={disabled}
         className="flex h-7 w-14 items-center justify-center rounded-lg border border-white/10 text-[#9A9080] transition hover:border-[#C9A84C]/40 hover:text-[#C9A84C] disabled:opacity-30"
-        aria-label="Disminuir"
+        aria-label={downLabel}
       >
         ▼
       </button>

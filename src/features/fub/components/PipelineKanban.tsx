@@ -1,3 +1,4 @@
+import { getTranslations } from 'next-intl/server'
 import type { PipelineColumn } from '@/actions/fub-stats'
 import { STAGE_COLORS } from '../theme'
 
@@ -18,11 +19,12 @@ function timeAgo(iso: string | null): string {
   return `${Math.floor(days / 30)}mo`
 }
 
-export function PipelineKanban({ columns, compact = false }: Props) {
+export async function PipelineKanban({ columns, compact = false }: Props) {
+  const t = await getTranslations('fub')
   if (!columns.length) {
     return (
       <div className="rounded-2xl border border-[#C9A84C]/20 bg-[#0F0F0F] p-6 text-center text-sm text-[#9A9080]">
-        Sin stages configurados. Aplicar el seed de Follow Up Boss.
+        {t('pipeline.noStages')}
       </div>
     )
   }
@@ -32,9 +34,9 @@ export function PipelineKanban({ columns, compact = false }: Props) {
   return (
     <section className="rounded-2xl border border-[#C9A84C]/20 bg-[#0F0F0F] p-5">
       <header className="mb-4 flex items-baseline justify-between">
-        <h3 className="text-sm font-semibold text-[#F5F0E8]">Pipeline</h3>
+        <h3 className="text-sm font-semibold text-[#F5F0E8]">{t('pipeline.title')}</h3>
         <span className="text-[10px] uppercase tracking-[0.18em] text-[#9A9080]">
-          {total} leads activos
+          {t('pipeline.activeLeads', { count: total })}
         </span>
       </header>
       <div className="-mx-1 flex gap-3 overflow-x-auto pb-2">
@@ -59,7 +61,7 @@ export function PipelineKanban({ columns, compact = false }: Props) {
               </div>
               <div className="max-h-[420px] space-y-1.5 overflow-y-auto p-2">
                 {col.people.length === 0 && (
-                  <div className="py-6 text-center text-[11px] text-[#9A9080]/70">vacío</div>
+                  <div className="py-6 text-center text-[11px] text-[#9A9080]/70">{t('pipeline.emptyColumn')}</div>
                 )}
                 {col.people.map((p) => (
                   <a

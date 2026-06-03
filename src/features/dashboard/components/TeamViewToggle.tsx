@@ -3,12 +3,14 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
+import { useTranslations } from 'next-intl'
 
 interface TeamViewToggleProps {
   teamView: boolean
 }
 
 export function TeamViewToggle({ teamView }: TeamViewToggleProps) {
+  const t = useTranslations('dashboard')
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [optimisticTeam, setOptimisticTeam] = useState(teamView)
@@ -57,7 +59,7 @@ export function TeamViewToggle({ teamView }: TeamViewToggleProps) {
           {pendingTarget === 'mine' && (
             <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
           )}
-          <span>👤 Mis datos</span>
+          <span>👤 {t('myData')}</span>
         </span>
       </button>
 
@@ -71,7 +73,7 @@ export function TeamViewToggle({ teamView }: TeamViewToggleProps) {
           {pendingTarget === 'team' && (
             <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
           )}
-          <span>👥 Vista equipo</span>
+          <span>👥 {t('teamView')}</span>
         </span>
       </button>
     </div>

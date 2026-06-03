@@ -117,7 +117,7 @@ export function TaskModal({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               disabled={!canEditAll}
-              placeholder="Título de la tarea..."
+              placeholder={t('titlePlaceholder')}
               className="w-full border-0 bg-transparent font-['Maharlika',serif] text-2xl font-bold text-[#F5F0E8] placeholder-[#9A9080]/40 outline-none disabled:text-[#F5F0E8] disabled:opacity-100"
             />
           </div>
@@ -153,7 +153,7 @@ export function TaskModal({
                   disabled={!canEditAll}
                   className="w-full rounded-md border border-white/10 bg-[#1C1C1C] px-2.5 py-1.5 text-xs text-[#F5F0E8] outline-none focus:border-[#C9A84C]/60 disabled:opacity-60"
                 >
-                  <option value="">— Sin prioridad —</option>
+                  <option value="">{t('noPriorityOption')}</option>
                   {(Object.keys(PRIORITY_CONFIG) as TaskPriority[]).map((p) => (
                     <option key={p} value={p}>{PRIORITY_CONFIG[p].label}</option>
                   ))}
@@ -221,7 +221,7 @@ export function TaskModal({
               {canEditAll && (
                 <>
                   <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-[#9A9080]">
-                    <span>🏗️</span> Core SaaS
+                    <span>🏗️</span> {t('coreSaas')}
                   </div>
                   <div>
                     <button
@@ -236,7 +236,7 @@ export function TaskModal({
                       }`}
                     >
                       <span className="font-semibold">
-                        {isSaasCore ? 'Cuenta para la barra de progreso' : 'No cuenta para la barra de progreso'}
+                        {isSaasCore ? t('coreSaasOn') : t('coreSaasOff')}
                       </span>
                       <span
                         className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition ${

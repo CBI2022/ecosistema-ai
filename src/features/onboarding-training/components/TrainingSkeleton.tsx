@@ -1,10 +1,13 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
+
 /**
  * Skeleton de carga del módulo Training (DC + Agent).
  * Reemplaza el "Loading..." plano por un esqueleto que comunica progreso real.
  */
 export function TrainingSkeleton({ accent = '#D4A853' }: { accent?: string }) {
+  const t = useTranslations('training')
   return (
     <div
       style={{
@@ -71,7 +74,7 @@ export function TrainingSkeleton({ accent = '#D4A853' }: { accent?: string }) {
               color: accent,
             }}
           >
-            Cargando formación
+            {t('loadingTraining')}
           </span>
         </div>
       </div>

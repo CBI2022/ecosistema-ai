@@ -1,7 +1,9 @@
 import Link from 'next/link'
+import { getTranslations } from 'next-intl/server'
 import { PendingApprovalListener } from '@/features/auth/components/PendingApprovalListener'
 
-export default function PendingApprovalPage() {
+export default async function PendingApprovalPage() {
+  const t = await getTranslations('auth')
   return (
     <div className="py-4 text-center">
       <PendingApprovalListener />
@@ -23,13 +25,13 @@ export default function PendingApprovalPage() {
       </div>
 
       <h1 className="mb-2 text-xl font-bold text-[#F5F0E8]">
-        Solicitud enviada
+        {t('pendingApproval')}
       </h1>
       <p className="mb-1 text-sm text-[#F5F0E8]/50">
-        Tu solicitud está pendiente de aprobación.
+        {t('pendingApprovalDesc1')}
       </p>
       <p className="text-sm text-[#F5F0E8]/50">
-        Bruno o Darcy revisarán tu cuenta y recibirás acceso en breve.
+        {t('pendingApprovalDesc2')}
       </p>
 
       <div className="mt-8 border-t border-white/8 pt-6">
@@ -37,7 +39,7 @@ export default function PendingApprovalPage() {
           href="/login"
           className="text-sm text-[#C9A84C]/70 transition hover:text-[#C9A84C]"
         >
-          ← Volver al inicio de sesión
+          {t('backToSignIn')}
         </Link>
       </div>
     </div>

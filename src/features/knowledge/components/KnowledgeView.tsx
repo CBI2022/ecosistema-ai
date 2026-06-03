@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import {
   createFolder,
   deleteFolder,
@@ -36,6 +37,7 @@ interface Props {
 }
 
 export function KnowledgeView({ initialFolders, initialItems }: Props) {
+  const t = useTranslations('knowledge')
   const [folders, setFolders] = useState<Folder[]>(initialFolders)
   const [items, setItems] = useState<Item[]>(initialItems)
   const [activeFolderId, setActiveFolderId] = useState<string | null>(initialFolders[0]?.id ?? null)
@@ -75,7 +77,7 @@ export function KnowledgeView({ initialFolders, initialItems }: Props) {
   }
 
   async function handleDeleteFolder(id: string) {
-    if (!confirm('¿Borrar esta carpeta y todas sus fichas? No se puede deshacer.')) return
+    if (!confirm(t('confirmDeleteFolder'))) return
     const res = await deleteFolder(id)
     if ('error' in res && res.error) {
       alert(res.error)
@@ -91,7 +93,7 @@ export function KnowledgeView({ initialFolders, initialItems }: Props) {
 
   async function handleNewItem() {
     if (!activeFolderId) return
-    const res = await createItem({ folder_id: activeFolderId, title: 'Nueva ficha', content: '' })
+    const res = await createItem({ folder_id: activeFolderId, title: t('newItemTitle'), content: '' })
     if ('error' in res && res.error) {
       alert(res.error)
       return
@@ -116,7 +118,7 @@ export function KnowledgeView({ initialFolders, initialItems }: Props) {
 
   async function handleDeleteItem() {
     if (!activeItemId) return
-    if (!confirm('¿Borrar esta ficha?')) return
+    if (!confirm(t('confirmDeleteItem'))) return
     const res = await deleteItem(activeItemId)
     if ('error' in res && res.error) {
       alert(res.error)
@@ -136,7 +138,7 @@ export function KnowledgeView({ initialFolders, initialItems }: Props) {
         >
           <span className="flex items-center gap-2">
             <span>{activeFolder?.icon || '📁'}</span>
-            <span className="font-semibold">{activeFolder?.name || 'Selecciona carpeta'}</span>
+            <span className="font-semibold">{activeFolder?.name || t('selectFolder')}</span>
           </span>
           <span className="text-[#9A9080]">▾</span>
         </button>
@@ -155,12 +157,12 @@ export function KnowledgeView({ initialFolders, initialItems }: Props) {
       >
         <div className="absolute inset-x-0 bottom-0 max-h-[80vh] overflow-y-auto rounded-t-3xl border border-[#C9A84C]/20 bg-[#0F0F0F] p-4 md:relative md:max-h-none md:rounded-2xl">
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-[#F5F0E8]">Carpetas</h2>
+            <h2 className="text-sm font-semibold text-[#F5F0E8]">{t('folders')}</h2>
             <button
               onClick={() => setShowNewFolder(true)}
               className="flex h-7 w-7 items-center justify-center rounded-full bg-[#C9A84C]/15 text-[#C9A84C] transition active:scale-95"
-              aria-label="Nueva carpeta"
-              title="Nueva carpeta"
+              aria-label={t('newFolder')}
+              title={t('newFolder')}
             >
               +
             </button>
@@ -199,7 +201,7 @@ export function KnowledgeView({ initialFolders, initialItems }: Props) {
             onClick={() => setShowNewFolder(true)}
             className="mt-4 w-full rounded-lg border border-dashed border-[#C9A84C]/30 px-3 py-2 text-xs font-medium text-[#9A9080] transition hover:border-[#C9A84C]/60 hover:text-[#F5F0E8]"
           >
-            + Nueva carpeta
+            + {t('newFolder')}
           </button>
         </div>
       </aside>
@@ -211,7 +213,7 @@ export function KnowledgeView({ initialFolders, initialItems }: Props) {
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <span className="text-lg">{activeFolder?.icon || '📁'}</span>
-              <h2 className="truncate text-base font-bold text-[#F5F0E8]">{activeFolder?.name || 'Sin carpeta'}</h2>
+              <h2 className="truncate text-base font-bold text-[#F5F0E8]">{activeFolder?.name || t('noFolder')}</h2>
             </div>
             {activeFolder?.description && (
               <p className="mt-0.5 truncate text-[11px] text-[#9A9080]">{activeFolder.description}</p>
@@ -222,8 +224,8 @@ export function KnowledgeView({ initialFolders, initialItems }: Props) {
               <button
                 onClick={() => handleDeleteFolder(activeFolder.id)}
                 className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/5 text-[#9A9080] transition hover:bg-red-500/15 hover:text-red-400"
-                aria-label="Borrar carpeta"
-                title="Borrar carpeta"
+                aria-label={t('deleteFolder')}
+                title={t('deleteFolder')}
               >
                 🗑
               </button>
@@ -233,7 +235,7 @@ export function KnowledgeView({ initialFolders, initialItems }: Props) {
               disabled={!activeFolderId}
               className="rounded-lg bg-[#C9A84C] px-3 py-1.5 text-[12px] font-bold text-black transition active:scale-95 disabled:opacity-40"
             >
-              + Ficha
+              + {t('itemShort')}
             </button>
           </div>
         </div>
@@ -243,7 +245,7 @@ export function KnowledgeView({ initialFolders, initialItems }: Props) {
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Buscar dentro de esta carpeta..."
+          placeholder={t('searchInFolder')}
           className="mb-3 w-full rounded-xl border border-white/10 bg-[#0F0F0F] px-4 py-2.5 text-sm text-[#F5F0E8] placeholder:text-[#5A554C] focus:border-[#C9A84C]/40 focus:outline-none"
         />
 
@@ -251,7 +253,7 @@ export function KnowledgeView({ initialFolders, initialItems }: Props) {
         <div className="grid gap-3 md:grid-cols-[280px_1fr]">
           <ul className="max-h-[60vh] space-y-1.5 overflow-y-auto rounded-2xl border border-white/8 bg-[#0F0F0F] p-2">
             {folderItems.length === 0 && (
-              <li className="px-3 py-6 text-center text-xs text-[#9A9080]">Sin fichas. Pulsa "+ Ficha" para crear.</li>
+              <li className="px-3 py-6 text-center text-xs text-[#9A9080]">{t('noItemsHint')}</li>
             )}
             {folderItems.map((it) => {
               const active = it.id === activeItemId
@@ -281,8 +283,8 @@ export function KnowledgeView({ initialFolders, initialItems }: Props) {
           <div className="rounded-2xl border border-white/8 bg-[#0F0F0F] p-4">
             {!activeItem ? (
               <div className="flex h-full min-h-[300px] flex-col items-center justify-center text-center text-sm text-[#9A9080]">
-                <p>Selecciona una ficha para verla.</p>
-                <p className="mt-1 text-[11px]">O crea una nueva con "+ Ficha".</p>
+                <p>{t('selectItemHint')}</p>
+                <p className="mt-1 text-[11px]">{t('createItemHint')}</p>
               </div>
             ) : (
               <ItemEditor
@@ -313,6 +315,7 @@ function ItemEditor({
   onSave: (patch: { title?: string; content?: string; pinned?: boolean }) => Promise<void>
   onDelete: () => Promise<void>
 }) {
+  const t = useTranslations('knowledge')
   const [title, setTitle] = useState(item.title)
   const [content, setContent] = useState(item.content)
   const [pinned, setPinned] = useState(item.pinned)
@@ -342,16 +345,16 @@ function ItemEditor({
           className={`flex h-9 w-9 items-center justify-center rounded-lg transition ${
             pinned ? 'bg-[#C9A84C]/20 text-[#C9A84C]' : 'bg-white/5 text-[#9A9080] hover:text-[#F5F0E8]'
           }`}
-          aria-label={pinned ? 'Quitar fijado' : 'Fijar arriba'}
-          title={pinned ? 'Quitar fijado' : 'Fijar arriba'}
+          aria-label={pinned ? t('unpin') : t('pin')}
+          title={pinned ? t('unpin') : t('pin')}
         >
           📌
         </button>
         <button
           onClick={onDelete}
           className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/5 text-[#9A9080] transition hover:bg-red-500/15 hover:text-red-400"
-          aria-label="Borrar"
-          title="Borrar"
+          aria-label={t('delete')}
+          title={t('delete')}
         >
           🗑
         </button>
@@ -361,24 +364,24 @@ function ItemEditor({
         value={content}
         onChange={(e) => setContent(e.target.value)}
         rows={18}
-        placeholder="Escribe el contenido de la ficha. Acepta markdown sencillo."
+        placeholder={t('contentPlaceholder')}
         className="min-h-[300px] flex-1 resize-y rounded-lg border border-white/10 bg-[#0A0A0A] p-3 text-sm leading-relaxed text-[#F5F0E8] placeholder:text-[#5A554C] focus:border-[#C9A84C]/40 focus:outline-none"
       />
 
       <div className="flex items-center justify-between gap-2">
         <span className="text-[11px] text-[#5A554C]">
           {saving
-            ? 'Guardando…'
+            ? t('saving')
             : savedAt
-              ? `Guardado a las ${new Date(savedAt).toLocaleTimeString()}`
-              : `Última edición: ${new Date(item.updated_at).toLocaleString()}`}
+              ? t('savedAt', { time: new Date(savedAt).toLocaleTimeString() })
+              : t('lastEdited', { date: new Date(item.updated_at).toLocaleString() })}
         </span>
         <button
           onClick={save}
           disabled={!dirty || saving}
           className="rounded-lg bg-[#C9A84C] px-4 py-2 text-xs font-bold text-black transition active:scale-95 disabled:opacity-40"
         >
-          Guardar
+          {t('save')}
         </button>
       </div>
     </div>
@@ -386,19 +389,20 @@ function ItemEditor({
 }
 
 function NewFolderDialog({ onClose, onCreate }: { onClose: () => void; onCreate: (name: string) => Promise<void> }) {
+  const t = useTranslations('knowledge')
   const [name, setName] = useState('')
   const [busy, setBusy] = useState(false)
 
   return (
     <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
       <div className="w-full max-w-sm rounded-2xl border border-[#C9A84C]/25 bg-[#0F0F0F] p-5">
-        <h3 className="text-base font-bold text-[#F5F0E8]">Nueva carpeta</h3>
-        <p className="mt-1 text-xs text-[#9A9080]">Ej: Decisiones de Marco, Errores resueltos, Roles…</p>
+        <h3 className="text-base font-bold text-[#F5F0E8]">{t('newFolder')}</h3>
+        <p className="mt-1 text-xs text-[#9A9080]">{t('newFolderHint')}</p>
         <input
           autoFocus
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="Nombre de la carpeta"
+          placeholder={t('folderNamePlaceholder')}
           className="mt-3 w-full rounded-lg border border-white/10 bg-[#0A0A0A] px-3 py-2 text-sm text-[#F5F0E8] placeholder:text-[#5A554C] focus:border-[#C9A84C]/40 focus:outline-none"
         />
         <div className="mt-4 flex justify-end gap-2">
@@ -406,7 +410,7 @@ function NewFolderDialog({ onClose, onCreate }: { onClose: () => void; onCreate:
             onClick={onClose}
             className="rounded-lg bg-white/5 px-3 py-2 text-xs font-medium text-[#D0C8B8] hover:bg-white/10"
           >
-            Cancelar
+            {t('cancel')}
           </button>
           <button
             disabled={!name.trim() || busy}
@@ -417,7 +421,7 @@ function NewFolderDialog({ onClose, onCreate }: { onClose: () => void; onCreate:
             }}
             className="rounded-lg bg-[#C9A84C] px-4 py-2 text-xs font-bold text-black disabled:opacity-40"
           >
-            Crear
+            {t('create')}
           </button>
         </div>
       </div>

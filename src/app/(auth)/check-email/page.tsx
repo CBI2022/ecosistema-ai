@@ -1,6 +1,8 @@
 import Link from 'next/link'
+import { getTranslations } from 'next-intl/server'
 
-export default function CheckEmailPage() {
+export default async function CheckEmailPage() {
+  const t = await getTranslations('auth')
   return (
     <div className="py-4 text-center">
       <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full border border-[#C9A84C]/30 bg-[#C9A84C]/10">
@@ -20,11 +22,10 @@ export default function CheckEmailPage() {
       </div>
 
       <h1 className="mb-2 text-xl font-bold text-[#F5F0E8]">
-        Confirma tu email
+        {t('confirmEmailTitle')}
       </h1>
       <p className="text-sm text-[#F5F0E8]/50">
-        Hemos enviado un enlace de confirmación a tu correo. Verifica tu bandeja
-        de entrada para activar tu cuenta.
+        {t('confirmEmailDesc')}
       </p>
 
       <div className="mt-8 border-t border-white/8 pt-6">
@@ -32,7 +33,7 @@ export default function CheckEmailPage() {
           href="/login"
           className="text-sm text-[#C9A84C]/70 transition hover:text-[#C9A84C]"
         >
-          ← Volver al login
+          {t('backToLogin')}
         </Link>
       </div>
     </div>

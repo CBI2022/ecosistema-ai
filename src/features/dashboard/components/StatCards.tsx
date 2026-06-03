@@ -1,3 +1,7 @@
+'use client'
+
+import { useTranslations } from 'next-intl'
+
 interface StatCardsProps {
   thisMonthRevenue: number
   monthlyGoal: number
@@ -26,33 +30,34 @@ export function StatCards({
   totalClosings,
   currentMonth,
 }: StatCardsProps) {
+  const t = useTranslations('dashboard')
   const remaining = annualGoal - ytdRevenue
   const monthPct = pct(thisMonthRevenue, monthlyGoal)
   const ytdPct = pct(ytdRevenue, annualGoal)
 
   const cards = [
     {
-      label: 'This Month',
+      label: t('thisMonth'),
       value: fmt(thisMonthRevenue),
-      sub: monthlyGoal ? `${monthPct}% of €${(monthlyGoal / 1000).toFixed(0)}K goal` : 'No goal set',
+      sub: monthlyGoal ? t('ofMonthlyGoal', { pct: monthPct, goal: (monthlyGoal / 1000).toFixed(0) }) : t('noGoalSet'),
       color: '#F5F0E8',
     },
     {
-      label: 'Year to Date',
+      label: t('yearToDate'),
       value: fmt(ytdRevenue),
-      sub: annualGoal ? `${ytdPct}% of €${(annualGoal / 1000).toFixed(0)}K annual` : 'No goal set',
+      sub: annualGoal ? t('ofAnnualGoal', { pct: ytdPct, goal: (annualGoal / 1000).toFixed(0) }) : t('noGoalSet'),
       color: '#F5F0E8',
     },
     {
-      label: 'Remaining',
+      label: t('remaining'),
       value: fmt(Math.max(0, remaining)),
-      sub: remaining <= 0 ? 'Goal achieved' : 'To hit annual goal',
+      sub: remaining <= 0 ? t('goalAchievedShort') : t('toAnnualGoal'),
       color: remaining <= 0 ? '#2ECC9A' : '#F5F0E8',
     },
     {
-      label: 'Closings',
+      label: t('closings'),
       value: `${totalClosings}`,
-      sub: `${currentMonth} months tracked`,
+      sub: t('closingsTracked', { months: currentMonth }),
       color: '#F5F0E8',
     },
   ]

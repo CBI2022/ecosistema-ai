@@ -2,6 +2,7 @@
 // Hace fetch en paralelo de stats + pipeline + hot list + stalled + tasks + goals.
 // Si la integración FUB no está configurada (no fub_user_map) muestra estado vacío.
 
+import { getTranslations } from 'next-intl/server'
 import {
   getAgentActivityStats,
   getAgentPipeline,
@@ -17,6 +18,7 @@ import { StalledLeads } from './StalledLeads'
 import { TodayTasks } from './TodayTasks'
 
 export async function FubDashboardSection() {
+  const t = await getTranslations('fub')
   const [today, week, month, pipeline, hot, stalled, tasks, goalsRes] = await Promise.all([
     getAgentActivityStats('today'),
     getAgentActivityStats('week'),
@@ -52,12 +54,15 @@ export async function FubDashboardSection() {
         <div className="mx-auto max-w-md">
           <div className="mb-2 text-3xl">🔗</div>
           <h3 className="mb-1 text-sm font-semibold text-[#F5F0E8]">
-            Follow Up Boss no está sincronizado todavía
+            {t('dashboard.notSyncedTitle')}
           </h3>
           <p className="text-xs text-[#9A9080]">
-            Pídele a un admin que abra{' '}
-            <code className="rounded bg-white/6 px-1.5 py-0.5 text-[#C9A84C]">/admin/fub</code> y pulse{' '}
-            <em>Resync forzado</em>.
+            {t.rich('dashboard.notSyncedHint', {
+              code: (chunks) => (
+                <code className="rounded bg-white/6 px-1.5 py-0.5 text-[#C9A84C]">{chunks}</code>
+              ),
+              em: (chunks) => <em>{chunks}</em>,
+            })}
           </p>
         </div>
       </div>

@@ -1,4 +1,7 @@
+import { useTranslations } from 'next-intl'
+
 export default function MainLoading() {
+  const t = useTranslations('shell')
   return (
     <>
       {/* Top progress bar — barra fina dorada arriba */}
@@ -14,7 +17,7 @@ export default function MainLoading() {
             <span className="absolute inset-0 animate-[cbi-spin_0.9s_linear_infinite] rounded-full border-2 border-transparent border-t-[#C9A84C] border-r-[#C9A84C]" />
           </div>
           <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#C9A84C]">
-            Cargando
+            {t('loading')}
           </span>
         </div>
       </div>

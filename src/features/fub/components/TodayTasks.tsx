@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server'
+
 interface Props {
   tasks: Array<{
     id: number
@@ -27,28 +29,29 @@ const TYPE_ICON: Record<string, string> = {
   default: '📌',
 }
 
-export function TodayTasks({ tasks }: Props) {
+export async function TodayTasks({ tasks }: Props) {
+  const tr = await getTranslations('fub')
   const overdue = tasks.filter((t) => t.is_overdue)
   const today = tasks.filter((t) => !t.is_overdue)
 
   return (
     <section className="rounded-2xl border border-[#C9A84C]/20 bg-[#0F0F0F] p-5">
       <header className="mb-4 flex items-baseline justify-between">
-        <h3 className="text-sm font-semibold text-[#F5F0E8]">Tareas de hoy</h3>
+        <h3 className="text-sm font-semibold text-[#F5F0E8]">{tr('today.title')}</h3>
         <span className="text-[10px] uppercase tracking-[0.18em] text-[#9A9080]">
-          {tasks.length} pendientes
+          {tr('today.pending', { count: tasks.length })}
         </span>
       </header>
       {tasks.length === 0 ? (
         <div className="py-8 text-center text-sm text-[#9A9080]">
-          🎉 Sin tareas pendientes hoy.
+          🎉 {tr('today.empty')}
         </div>
       ) : (
         <>
           {overdue.length > 0 && (
             <div className="mb-4">
               <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#E8907A]">
-                Vencidas ({overdue.length})
+                {tr('today.overdue', { count: overdue.length })}
               </div>
               <ul className="space-y-1.5">
                 {overdue.map((t) => (
@@ -60,7 +63,7 @@ export function TodayTasks({ tasks }: Props) {
           {today.length > 0 && (
             <div>
               <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#9A9080]">
-                Hoy ({today.length})
+                {tr('today.todayCount', { count: today.length })}
               </div>
               <ul className="space-y-1.5">
                 {today.map((t) => (
@@ -75,13 +78,14 @@ export function TodayTasks({ tasks }: Props) {
   )
 }
 
-function TaskItem({
+async function TaskItem({
   task,
   variant,
 }: {
   task: Props['tasks'][number]
   variant: 'overdue' | 'today'
 }) {
+  const tr = await getTranslations('fub')
   const icon = TYPE_ICON[task.type || 'default'] || TYPE_ICON.default
   const overdue = variant === 'overdue'
 
@@ -98,7 +102,7 @@ function TaskItem({
         <span className="text-base">{icon}</span>
         <div className="min-w-0 flex-1">
           <div className="truncate text-sm text-[#F5F0E8]">
-            {task.description || task.type || 'Tarea'}
+            {task.description || task.type || tr('today.taskFallback')}
           </div>
           {task.person_name && (
             <div className="truncate text-[11px] text-[#9A9080]">{task.person_name}</div>

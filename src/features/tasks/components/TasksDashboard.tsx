@@ -223,7 +223,7 @@ export function TasksDashboard({
         <div className="rounded-2xl border border-[#C9A84C]/25 bg-gradient-to-br from-[#C9A84C]/8 via-[#131313] to-[#131313] p-4 sm:p-5">
           <div className="flex items-center justify-between gap-3">
             <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#C9A84C]">
-              🏗️ Construcción del SaaS
+              🏗️ {t('saasBuild')}
             </p>
             <span className="font-['Maharlika',serif] text-3xl font-bold text-[#C9A84C] sm:text-4xl">
               {saasPct}%
@@ -237,7 +237,7 @@ export function TasksDashboard({
               aria-valuenow={saasPct}
               aria-valuemin={0}
               aria-valuemax={100}
-              aria-label={`Progreso del SaaS: ${saasPct}%`}
+              aria-label={t('saasProgressLabel', { pct: saasPct })}
             />
           </div>
         </div>
@@ -262,7 +262,9 @@ export function TasksDashboard({
           </div>
         ) : (
           <div className="text-xs text-[#9A9080]">
-            Viendo <strong className="text-[#F5F0E8]">solo tus tareas</strong>
+            {t.rich('viewingOnlyYours', {
+              strong: (chunks) => <strong className="text-[#F5F0E8]">{chunks}</strong>,
+            })}
           </div>
         )}
 
@@ -355,7 +357,7 @@ export function TasksDashboard({
           {(Object.keys(PRIORITY_CONFIG) as TaskPriority[]).map((p) => (
             <option key={p} value={p}>{PRIORITY_CONFIG[p].label}</option>
           ))}
-          <option value="none">Sin prioridad</option>
+          <option value="none">{t('noPriority')}</option>
         </select>
         {isAdmin && scope === 'all' && (
           <select
@@ -597,7 +599,7 @@ function TableView({
         <table className="w-full text-sm">
           <thead className="border-b border-white/8 bg-[#1C1C1C]">
             <tr>
-              {[tT('status'), tT('priority'), tT('category'), 'Título', tT('assignee'), tT('dueDate'), 'Acción'].map((label) => (
+              {[tT('status'), tT('priority'), tT('category'), tT('titleColumn'), tT('assignee'), tT('dueDate'), tT('actionColumn')].map((label) => (
                 <th key={label} className="px-4 py-3 text-left text-[9px] font-bold uppercase tracking-[0.12em] text-[#9A9080]">
                   {label}
                 </th>
@@ -671,7 +673,7 @@ function TableView({
                       onClick={() => onTaskClick(task)}
                       className="rounded-md border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-bold text-[#9A9080] transition hover:border-[#C9A84C]/40 hover:text-[#F5F0E8]"
                     >
-                      Abrir →
+                      {tT('open')} →
                     </button>
                   </td>
                 </tr>

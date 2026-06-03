@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { useTranslations } from 'next-intl'
 import { updateSaleRevenue } from '@/actions/admin'
 
 interface AgentMetric {
@@ -37,6 +38,7 @@ const initials = (name: string | null, email: string) => {
 }
 
 export function AdminOverview({ agents, recentSales, year }: AdminOverviewProps) {
+  const t = useTranslations('adminOverview')
   const [editingSale, setEditingSale] = useState<string | null>(null)
   const [editValue, setEditValue] = useState('')
   const [sales, setSales] = useState(recentSales)
@@ -61,19 +63,19 @@ export function AdminOverview({ agents, recentSales, year }: AdminOverviewProps)
       {/* Team stats */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <div className="rounded-2xl border border-[#C9A84C]/20 bg-[#131313] p-4" style={{ borderTop: '2px solid #C9A84C' }}>
-          <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-[#9A9080]">Team Revenue {year}</p>
+          <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-[#9A9080]">{t('teamRevenue', { year })}</p>
           <p className="mt-1 text-2xl font-bold text-[#C9A84C]">{fmt(totalRevenue)}</p>
         </div>
         <div className="rounded-2xl border border-white/8 bg-[#131313] p-4">
-          <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-[#9A9080]">Total Closings</p>
+          <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-[#9A9080]">{t('totalClosings')}</p>
           <p className="mt-1 text-2xl font-bold text-[#F5F0E8]">{totalClosings}</p>
         </div>
         <div className="rounded-2xl border border-white/8 bg-[#131313] p-4">
-          <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-[#9A9080]">Active Agents</p>
+          <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-[#9A9080]">{t('activeAgents')}</p>
           <p className="mt-1 text-2xl font-bold text-[#2ECC9A]">{activeAgents}</p>
         </div>
         <div className="rounded-2xl border border-white/8 bg-[#131313] p-4">
-          <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-[#9A9080]">Avg per Closing</p>
+          <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-[#9A9080]">{t('avgPerClosing')}</p>
           <p className="mt-1 text-2xl font-bold text-[#F5F0E8]">
             {totalClosings ? fmt(Math.round(totalRevenue / totalClosings)) : '—'}
           </p>
@@ -83,9 +85,9 @@ export function AdminOverview({ agents, recentSales, year }: AdminOverviewProps)
       <div className="grid gap-6 lg:grid-cols-[1fr_420px]">
         {/* Agent ranking */}
         <div className="rounded-2xl border border-white/8 bg-[#131313] p-5">
-          <p className="mb-4 text-[9px] font-bold uppercase tracking-[0.18em] text-[#C9A84C]">🏆 Agent Performance — {year}</p>
+          <p className="mb-4 text-[9px] font-bold uppercase tracking-[0.18em] text-[#C9A84C]">🏆 {t('agentPerformance', { year })}</p>
           {agents.length === 0 ? (
-            <p className="text-sm text-[#9A9080]">No agents with revenue this year.</p>
+            <p className="text-sm text-[#9A9080]">{t('noAgentsRevenue')}</p>
           ) : (
             <div className="space-y-3">
               {agents.map((agent, idx) => {
@@ -105,7 +107,7 @@ export function AdminOverview({ agents, recentSales, year }: AdminOverviewProps)
                         <div className="h-1 flex-1 rounded-full bg-white/8">
                           <div className="h-1 rounded-full bg-[#C9A84C]" style={{ width: `${pct}%` }} />
                         </div>
-                        <span className="text-[10px] text-[#9A9080]">{agent.closings} closings</span>
+                        <span className="text-[10px] text-[#9A9080]">{t('closingsCount', { count: agent.closings })}</span>
                       </div>
                     </div>
                   </div>
@@ -117,9 +119,9 @@ export function AdminOverview({ agents, recentSales, year }: AdminOverviewProps)
 
         {/* Recent sales — editable by admin/secretary */}
         <div className="rounded-2xl border border-white/8 bg-[#131313] p-5">
-          <p className="mb-4 text-[9px] font-bold uppercase tracking-[0.18em] text-[#C9A84C]">✏️ Recent Sales (editable)</p>
+          <p className="mb-4 text-[9px] font-bold uppercase tracking-[0.18em] text-[#C9A84C]">✏️ {t('recentSales')}</p>
           {sales.length === 0 ? (
-            <p className="text-sm text-[#9A9080]">No sales logged yet.</p>
+            <p className="text-sm text-[#9A9080]">{t('noSalesLogged')}</p>
           ) : (
             <div className="space-y-2.5">
               {sales.map((sale) => {
@@ -128,9 +130,9 @@ export function AdminOverview({ agents, recentSales, year }: AdminOverviewProps)
                   <div key={sale.id} className="rounded-xl border border-white/8 bg-[#1C1C1C] px-4 py-3">
                     <div className="flex items-center justify-between gap-2">
                       <div className="min-w-0 flex-1">
-                        <p className="text-xs font-semibold text-[#F5F0E8] truncate">{sale.property_address || 'Sin dirección'}</p>
+                        <p className="text-xs font-semibold text-[#F5F0E8] truncate">{sale.property_address || t('noAddress')}</p>
                         <p className="text-[10px] text-[#9A9080]">
-                          {agent?.full_name || 'Agente'} · {new Date(sale.closing_date).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
+                          {agent?.full_name || t('agent')} · {new Date(sale.closing_date).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
                         </p>
                       </div>
                       {editingSale === sale.id ? (
@@ -154,7 +156,7 @@ export function AdminOverview({ agents, recentSales, year }: AdminOverviewProps)
                             onClick={() => { setEditingSale(sale.id); setEditValue(String(sale.commission ?? '')) }}
                             className="rounded border border-white/10 px-2 py-1 text-[10px] text-[#9A9080] hover:text-[#F5F0E8]"
                           >
-                            Edit
+                            {t('edit')}
                           </button>
                         </div>
                       )}

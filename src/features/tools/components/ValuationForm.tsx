@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
+import { useTranslations } from 'next-intl'
 
 const ZONES = ['Altea','Albir','Calpe','Javea','Moraira','Benissa','Denia','Benidorm','La Nucia','Polop','Finestrat']
 const TYPES = ['Villa','Apartment','Townhouse','Land','Commercial','Penthouse']
@@ -16,6 +17,7 @@ function fmt(n: number) {
 }
 
 export function ValuationForm() {
+  const t = useTranslations('valuationForm')
   const [loading, setLoading] = useState(false)
   const formRef = useRef<HTMLFormElement>(null)
 
@@ -73,42 +75,42 @@ export function ValuationForm() {
     <form ref={formRef} onSubmit={(e) => e.preventDefault()} className="space-y-6">
       {/* Property Details */}
       <section className={sectionClass} style={{ borderTop: '1px solid #C9A84C' }}>
-        <p className={sectionTitleClass}>📋 Detalles de la propiedad</p>
+        <p className={sectionTitleClass}>📋 {t('propertyDetails')}</p>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <div>
-            <label className={labelClass}>Nombre del propietario</label>
+            <label className={labelClass}>{t('ownerName')}</label>
             <input type="text" name="owner_name" className={inputClass} placeholder="John Smith" />
           </div>
           <div>
-            <label className={labelClass}>Email del propietario</label>
+            <label className={labelClass}>{t('ownerEmail')}</label>
             <input type="email" name="owner_email" className={inputClass} placeholder="john@email.com" />
           </div>
           <div>
-            <label className={labelClass}>Teléfono</label>
+            <label className={labelClass}>{t('phone')}</label>
             <input type="tel" name="owner_phone" className={inputClass} placeholder="+34 ..." />
           </div>
           <div>
-            <label className={labelClass}>Tipo de propiedad</label>
+            <label className={labelClass}>{t('propertyType')}</label>
             <select name="property_type" className={inputClass}>
-              {TYPES.map((t) => <option key={t}>{t}</option>)}
+              {TYPES.map((ty) => <option key={ty}>{ty}</option>)}
             </select>
           </div>
           <div className="sm:col-span-2">
-            <label className={labelClass}>Dirección</label>
+            <label className={labelClass}>{t('address')}</label>
             <input type="text" name="address" className={inputClass} placeholder="Calle Mayor 12, Altea" />
           </div>
           <div>
-            <label className={labelClass}>Zona</label>
+            <label className={labelClass}>{t('zone')}</label>
             <select name="zone" className={inputClass}>
               {ZONES.map((z) => <option key={z}>{z}</option>)}
             </select>
           </div>
           <div>
-            <label className={labelClass}>Referencia catastral (opcional)</label>
+            <label className={labelClass}>{t('cadastralRef')}</label>
             <input type="text" name="cadastral_ref" className={inputClass} placeholder="1234567XX1234" />
           </div>
           <div>
-            <label className={labelClass}>Año de construcción</label>
+            <label className={labelClass}>{t('yearBuilt')}</label>
             <input type="number" name="year_built" className={inputClass} placeholder="2008" />
           </div>
         </div>
@@ -116,22 +118,22 @@ export function ValuationForm() {
 
       {/* Specifications */}
       <section className={sectionClass}>
-        <p className={sectionTitleClass}>📐 Especificaciones</p>
+        <p className={sectionTitleClass}>📐 {t('specifications')}</p>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <div>
-            <label className={labelClass}>Dormitorios</label>
+            <label className={labelClass}>{t('bedrooms')}</label>
             <input type="number" name="bedrooms" className={inputClass} placeholder="4" />
           </div>
           <div>
-            <label className={labelClass}>Baños</label>
+            <label className={labelClass}>{t('bathrooms')}</label>
             <input type="number" name="bathrooms" className={inputClass} placeholder="3" />
           </div>
           <div>
-            <label className={labelClass}>Superficie construida m²</label>
+            <label className={labelClass}>{t('buildArea')}</label>
             <input type="number" name="build_area" className={inputClass} placeholder="280" />
           </div>
           <div>
-            <label className={labelClass}>Parcela m²</label>
+            <label className={labelClass}>{t('plotArea')}</label>
             <input type="number" name="plot_area" className={inputClass} placeholder="1200" />
           </div>
         </div>
@@ -139,15 +141,15 @@ export function ValuationForm() {
 
       {/* Features */}
       <section className={sectionClass}>
-        <p className={sectionTitleClass}>✨ Características</p>
+        <p className={sectionTitleClass}>✨ {t('features')}</p>
         <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
           {[
-            { name: 'has_pool', label: 'Piscina', emoji: '🏊' },
-            { name: 'has_garage', label: 'Garaje', emoji: '🚗' },
-            { name: 'has_garden', label: 'Jardín', emoji: '🌳' },
-            { name: 'has_terrace', label: 'Terraza', emoji: '☀️' },
-            { name: 'has_ac', label: 'A/C', emoji: '❄️' },
-            { name: 'has_sea_view', label: 'Vistas al mar', emoji: '🌊' },
+            { name: 'has_pool', label: t('featPool'), emoji: '🏊' },
+            { name: 'has_garage', label: t('featGarage'), emoji: '🚗' },
+            { name: 'has_garden', label: t('featGarden'), emoji: '🌳' },
+            { name: 'has_terrace', label: t('featTerrace'), emoji: '☀️' },
+            { name: 'has_ac', label: t('featAc'), emoji: '❄️' },
+            { name: 'has_sea_view', label: t('featSeaView'), emoji: '🌊' },
           ].map((f) => (
             <label
               key={f.name}
@@ -163,18 +165,18 @@ export function ValuationForm() {
 
       {/* Gastos */}
       <section className={sectionClass}>
-        <p className={sectionTitleClass}>🧾 Gastos anuales (opcional)</p>
+        <p className={sectionTitleClass}>🧾 {t('annualCosts')}</p>
         <div className="grid gap-4 sm:grid-cols-3">
           <div>
-            <label className={labelClass}>IBI €/año</label>
+            <label className={labelClass}>{t('ibiAnnual')}</label>
             <input type="number" name="ibi_annual" className={inputClass} placeholder="850" />
           </div>
           <div>
-            <label className={labelClass}>Basura €/año</label>
+            <label className={labelClass}>{t('basuraAnnual')}</label>
             <input type="number" name="basura_annual" className={inputClass} placeholder="120" />
           </div>
           <div>
-            <label className={labelClass}>Comunidad €/año</label>
+            <label className={labelClass}>{t('communityAnnual')}</label>
             <input type="number" name="community_annual" className={inputClass} placeholder="1200" />
           </div>
         </div>
@@ -182,34 +184,34 @@ export function ValuationForm() {
 
       {/* Valuation */}
       <section className={sectionClass}>
-        <p className={sectionTitleClass}>💰 Valoración</p>
+        <p className={sectionTitleClass}>💰 {t('valuation')}</p>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <div>
-            <label className={labelClass}>Valor estimado €</label>
+            <label className={labelClass}>{t('estimatedValue')}</label>
             <input type="number" name="estimated_value" className={inputClass} placeholder="750000" />
           </div>
           <div>
-            <label className={labelClass}>Valor mínimo €</label>
+            <label className={labelClass}>{t('minValue')}</label>
             <input type="number" name="min_value" className={inputClass} placeholder="700000" />
           </div>
           <div>
-            <label className={labelClass}>Valor máximo €</label>
+            <label className={labelClass}>{t('maxValue')}</label>
             <input type="number" name="max_value" className={inputClass} placeholder="800000" />
           </div>
         </div>
         <div className="mt-4">
-          <label className={labelClass}>Notas del agente</label>
-          <textarea name="notes" rows={3} className={inputClass} placeholder="Comentario de mercado, razones de la valoración, detalles únicos..." />
+          <label className={labelClass}>{t('agentNotes')}</label>
+          <textarea name="notes" rows={3} className={inputClass} placeholder={t('agentNotesPlaceholder')} />
         </div>
       </section>
 
       {/* Commission + Net — en vivo */}
       <section className={sectionClass} style={{ borderTop: '1px solid #2ECC9A' }}>
-        <p className={sectionTitleClass}>🧮 Comisión y neto para el vendedor</p>
+        <p className={sectionTitleClass}>🧮 {t('commissionAndNet')}</p>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <label className={labelClass}>Precio de venta propuesto €</label>
+            <label className={labelClass}>{t('proposedSalePrice')}</label>
             <input
               type="number"
               name="sale_price"
@@ -220,7 +222,7 @@ export function ValuationForm() {
             />
           </div>
           <div>
-            <label className={labelClass}>Comisión %</label>
+            <label className={labelClass}>{t('commissionPct')}</label>
             <input
               type="number"
               step="0.1"
@@ -235,10 +237,10 @@ export function ValuationForm() {
 
         <div className="mt-5 grid gap-3 sm:grid-cols-4">
           {[
-            { label: 'Precio venta', value: fmt(priceNum), color: '#F5F0E8' },
-            { label: `Comisión (${pctNum}%)`, value: fmt(commissionAmount), color: '#C9A84C' },
-            { label: 'IVA 21%', value: fmt(vat), color: '#9A9080' },
-            { label: 'Neto al vendedor', value: fmt(netToSeller), color: '#2ECC9A' },
+            { label: t('salePriceShort'), value: fmt(priceNum), color: '#F5F0E8' },
+            { label: t('commissionWithPct', { pct: pctNum }), value: fmt(commissionAmount), color: '#C9A84C' },
+            { label: t('vat21'), value: fmt(vat), color: '#9A9080' },
+            { label: t('netToSeller'), value: fmt(netToSeller), color: '#2ECC9A' },
           ].map((row) => (
             <div
               key={row.label}
@@ -260,7 +262,7 @@ export function ValuationForm() {
       <section className={sectionClass}>
         <div className="mb-4 flex items-center justify-between">
           <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-[#C9A84C]">
-            🏘️ Comparables de mercado
+            🏘️ {t('marketComparables')}
           </p>
           <button
             type="button"
@@ -268,24 +270,24 @@ export function ValuationForm() {
             disabled={comparables.length >= 5}
             className="rounded-lg border border-[#C9A84C]/30 bg-[#C9A84C]/10 px-3 py-1.5 text-[10px] font-bold text-[#C9A84C] transition hover:bg-[#C9A84C]/20 disabled:opacity-40"
           >
-            + Añadir comparable
+            + {t('addComparable')}
           </button>
         </div>
         <div className="space-y-3">
           {comparables.map((c, idx) => (
             <div key={idx} className="grid gap-3 rounded-xl border border-white/8 bg-[#0A0A0A] p-4 sm:grid-cols-[2fr_1fr_1fr_1fr_auto]">
               <div>
-                <label className={labelClass}>Dirección</label>
+                <label className={labelClass}>{t('compAddress')}</label>
                 <input
                   type="text"
                   value={c.address}
                   onChange={(e) => updateComparable(idx, 'address', e.target.value)}
                   className={inputClass}
-                  placeholder="Calle vecina..."
+                  placeholder={t('compAddressPlaceholder')}
                 />
               </div>
               <div>
-                <label className={labelClass}>Precio €</label>
+                <label className={labelClass}>{t('compPrice')}</label>
                 <input
                   type="number"
                   value={c.price}
@@ -295,7 +297,7 @@ export function ValuationForm() {
                 />
               </div>
               <div>
-                <label className={labelClass}>m² construidos</label>
+                <label className={labelClass}>{t('compArea')}</label>
                 <input
                   type="number"
                   value={c.area}
@@ -305,7 +307,7 @@ export function ValuationForm() {
                 />
               </div>
               <div>
-                <label className={labelClass}>Distancia (m)</label>
+                <label className={labelClass}>{t('compDistance')}</label>
                 <input
                   type="number"
                   value={c.distance}
@@ -320,7 +322,7 @@ export function ValuationForm() {
                     type="button"
                     onClick={() => removeComparable(idx)}
                     className="h-[42px] rounded-lg border border-red-500/20 bg-red-500/10 px-3 text-xs font-bold text-red-400 transition hover:bg-red-500/20"
-                    aria-label="Eliminar"
+                    aria-label={t('remove')}
                   >
                     ✕
                   </button>
@@ -333,18 +335,18 @@ export function ValuationForm() {
 
       {/* Agent info */}
       <section className={sectionClass}>
-        <p className={sectionTitleClass}>🧑‍💼 Agente CBI (aparecerá en la página de firmas)</p>
+        <p className={sectionTitleClass}>🧑‍💼 {t('cbiAgentSection')}</p>
         <div className="grid gap-4 sm:grid-cols-3">
           <div>
-            <label className={labelClass}>Nombre del agente</label>
+            <label className={labelClass}>{t('agentName')}</label>
             <input type="text" name="agent_name" className={inputClass} placeholder="Bruno Felipe" />
           </div>
           <div>
-            <label className={labelClass}>Email</label>
+            <label className={labelClass}>{t('email')}</label>
             <input type="email" name="agent_email" className={inputClass} placeholder="bruno@cbi.com" />
           </div>
           <div>
-            <label className={labelClass}>Teléfono</label>
+            <label className={labelClass}>{t('phone')}</label>
             <input type="tel" name="agent_phone" className={inputClass} placeholder="+34 651 77 03 68" />
           </div>
         </div>
@@ -356,7 +358,7 @@ export function ValuationForm() {
         disabled={loading}
         className="w-full rounded-xl bg-[#C9A84C] py-4 text-sm font-bold uppercase tracking-[0.08em] text-black transition hover:bg-[#E8C96A] disabled:opacity-50"
       >
-        {loading ? 'Generando PDF...' : '📄 Generar informe de valoración (PDF)'}
+        {loading ? t('generatingPdf') : `📄 ${t('generateValuationPdf')}`}
       </button>
     </form>
   )

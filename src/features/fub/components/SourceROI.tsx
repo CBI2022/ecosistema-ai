@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server'
+
 interface Props {
   scope: 'month' | 'year'
   rows: Array<{
@@ -15,29 +17,30 @@ function fmtEur(n: number): string {
   return `€${n}`
 }
 
-export function SourceROI({ scope, rows }: Props) {
+export async function SourceROI({ scope, rows }: Props) {
+  const t = await getTranslations('fub')
   const maxLeads = Math.max(...rows.map((r) => r.leads), 1)
 
   return (
     <section className="rounded-2xl border border-[#C9A84C]/20 bg-[#0F0F0F] p-5">
       <header className="mb-4 flex items-baseline justify-between">
-        <h3 className="text-sm font-semibold text-[#F5F0E8]">Source ROI</h3>
+        <h3 className="text-sm font-semibold text-[#F5F0E8]">{t('sourceRoi.title')}</h3>
         <span className="text-[10px] uppercase tracking-[0.18em] text-[#9A9080]">
-          últimos {scope === 'month' ? '30 días' : '12 meses'}
+          {scope === 'month' ? t('common.last30Days') : t('common.last12Months')}
         </span>
       </header>
       {rows.length === 0 ? (
-        <div className="py-6 text-center text-sm text-[#9A9080]">Sin datos de sources</div>
+        <div className="py-6 text-center text-sm text-[#9A9080]">{t('sourceRoi.empty')}</div>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-white/8 text-[10px] uppercase tracking-[0.14em] text-[#9A9080]">
-                <th className="pb-2 text-left font-medium">Source</th>
-                <th className="pb-2 text-right font-medium">Leads</th>
-                <th className="pb-2 text-right font-medium">Closings</th>
-                <th className="pb-2 text-right font-medium">Conv.</th>
-                <th className="pb-2 text-right font-medium">Revenue</th>
+                <th className="pb-2 text-left font-medium">{t('sourceRoi.colSource')}</th>
+                <th className="pb-2 text-right font-medium">{t('sourceRoi.colLeads')}</th>
+                <th className="pb-2 text-right font-medium">{t('sourceRoi.colClosings')}</th>
+                <th className="pb-2 text-right font-medium">{t('sourceRoi.colConv')}</th>
+                <th className="pb-2 text-right font-medium">{t('sourceRoi.colRevenue')}</th>
               </tr>
             </thead>
             <tbody>

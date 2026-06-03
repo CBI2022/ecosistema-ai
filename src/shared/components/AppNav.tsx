@@ -260,12 +260,12 @@ export function AppNav({ role }: AppNavProps) {
 
   // Subsecciones DENTRO del dropdown Admin▾ (solo admin las ve)
   const ADMIN_SUBITEMS: NavTab[] = [
-    { href: '/admin/roadmaps', label: 'RoadMaps', icon: 'map' },
-    { href: '/inbox', label: 'Propiedades recibidas', icon: 'inbox' },
+    { href: '/admin/roadmaps', label: t('roadmaps'), icon: 'map' },
+    { href: '/inbox', label: t('receivedProperties'), icon: 'inbox' },
     { href: '/admin', label: t('team'), icon: 'users' },
     { href: '/tasks', label: t('tasks'), icon: 'check' },
     { href: '/kpi', label: t('kpi'), icon: 'chart' },
-    { href: '/admin/fub', label: 'CRM (FUB)', icon: 'crm' },
+    { href: '/admin/fub', label: t('crmFub'), icon: 'crm' },
     { href: '/social', label: t('social'), icon: 'share' },
     { href: '/admin/knowledge', label: t('knowledge'), icon: 'brain' },
   ]
@@ -273,7 +273,7 @@ export function AppNav({ role }: AppNavProps) {
   // Fase 1: el agente solo ve la pantalla de subir propiedad. El resto de
   // secciones siguen existiendo (no se borran) pero se ocultan de su nav.
   const AGENT_TABS: NavEntry[] = [
-    { href: '/properties', label: 'Subir propiedad', icon: 'building' },
+    { href: '/properties', label: t('uploadProperty'), icon: 'building' },
   ]
 
   // Secciones que aún NO rediseñamos — accesibles solo para admin en el menú
@@ -290,13 +290,13 @@ export function AppNav({ role }: AppNavProps) {
   // Admin: al entrar ve lo mismo que la gente (subir propiedad) + dos menús:
   // "Opciones antiguas" (secciones aparcadas) y "Admin" (intacto).
   const ADMIN_TABS: NavEntry[] = [
-    { href: '/properties', label: 'Subir propiedad', icon: 'building' },
-    { type: 'group', key: 'legacy-group', label: 'Opciones antiguas', icon: 'archive', items: LEGACY_SUBITEMS },
+    { href: '/properties', label: t('uploadProperty'), icon: 'building' },
+    { type: 'group', key: 'legacy-group', label: t('legacyOptions'), icon: 'archive', items: LEGACY_SUBITEMS },
     { type: 'group', key: 'admin-group', label: t('admin'), icon: 'shield', items: ADMIN_SUBITEMS },
   ]
 
   const SECRETARY_TABS: NavEntry[] = [
-    { href: '/inbox', label: 'Propiedades', icon: 'inbox' },
+    { href: '/inbox', label: t('properties'), icon: 'inbox' },
     { href: '/dashboard', label: t('dashboard'), icon: 'home' },
     { href: '/admin', label: t('team'), icon: 'users' },
     { href: '/properties', label: t('properties'), icon: 'building' },
@@ -499,7 +499,7 @@ export function AppNav({ role }: AppNavProps) {
       {/* ───────── MOBILE: bottom tab bar ───────── */}
       <nav
         className="pb-safe fixed inset-x-0 bottom-0 z-40 border-t border-[#C9A84C]/15 bg-[#0A0A0A]/96 backdrop-blur-xl md:hidden"
-        aria-label="Navegación principal"
+        aria-label={t('primaryNav')}
       >
         <div className="mx-auto flex h-16 max-w-md items-stretch justify-around px-1">
           {primaryTabs.map((tab) => {
@@ -572,7 +572,7 @@ export function AppNav({ role }: AppNavProps) {
             <button
               onClick={() => setMoreOpen(true)}
               className="group flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 transition active:scale-95"
-              aria-label="Más opciones"
+              aria-label={t('more')}
             >
               <div
                 className={`flex h-7 items-center justify-center transition ${
@@ -590,7 +590,7 @@ export function AppNav({ role }: AppNavProps) {
                     : 'font-medium text-[#9A9080]'
                 }`}
               >
-                Más
+                {t('more')}
               </span>
             </button>
           )}
@@ -602,7 +602,7 @@ export function AppNav({ role }: AppNavProps) {
       {moreOpen && mounted && createPortal(
         <div className="fixed inset-0 z-[60] md:hidden" role="dialog" aria-modal="true">
           <button
-            aria-label="Cerrar"
+            aria-label={t('close')}
             onClick={() => setMoreOpen(false)}
             className="absolute inset-0 bg-black/70 backdrop-blur-sm"
           />
@@ -611,11 +611,11 @@ export function AppNav({ role }: AppNavProps) {
               <div className="h-1.5 w-10 rounded-full bg-white/15" />
             </div>
             <div className="flex items-center justify-between px-5 py-3">
-              <h3 className="text-base font-bold text-[#F5F0E8]">Más opciones</h3>
+              <h3 className="text-base font-bold text-[#F5F0E8]">{t('moreOptions')}</h3>
               <button
                 onClick={() => setMoreOpen(false)}
                 className="flex h-9 w-9 items-center justify-center rounded-full bg-white/5 text-[#9A9080] transition active:scale-95"
-                aria-label="Cerrar"
+                aria-label={t('close')}
               >
                 ✕
               </button>
@@ -672,7 +672,7 @@ export function AppNav({ role }: AppNavProps) {
         return createPortal(
           <div className="fixed inset-0 z-[60] md:hidden" role="dialog" aria-modal="true">
             <button
-              aria-label="Cerrar"
+              aria-label={t('close')}
               onClick={() => setOpenSheetKey(null)}
               className="absolute inset-0 bg-black/70 backdrop-blur-sm"
             />
@@ -688,7 +688,7 @@ export function AppNav({ role }: AppNavProps) {
                 <button
                   onClick={() => setOpenSheetKey(null)}
                   className="flex h-9 w-9 items-center justify-center rounded-full bg-white/5 text-[#9A9080] transition active:scale-95"
-                  aria-label="Cerrar"
+                  aria-label={t('close')}
                 >
                   ✕
                 </button>

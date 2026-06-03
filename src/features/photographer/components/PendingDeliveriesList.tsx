@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { useTranslations } from 'next-intl'
 import { deliverShootPhotos } from '@/actions/photo-shoots'
 import { useRouter } from 'next/navigation'
 
@@ -16,6 +17,7 @@ interface PendingDelivery {
 }
 
 export function PendingDeliveriesList({ deliveries }: { deliveries: PendingDelivery[] }) {
+  const t = useTranslations('photographer.deliveries')
   const router = useRouter()
   const [activeId, setActiveId] = useState<string | null>(null)
   const [driveLink, setDriveLink] = useState('')
@@ -25,7 +27,7 @@ export function PendingDeliveriesList({ deliveries }: { deliveries: PendingDeliv
   function handleDeliver(shootId: string) {
     setError(null)
     if (!driveLink.trim()) {
-      setError('Pega el link de la carpeta de Drive con las fotos')
+      setError(t('errorNoLink'))
       return
     }
     startTransition(async () => {
@@ -44,7 +46,7 @@ export function PendingDeliveriesList({ deliveries }: { deliveries: PendingDeliv
     return (
       <div className="rounded-2xl border border-white/8 bg-[#131313] p-5 text-center">
         <p className="text-xs text-[#9A9080]">
-          No tienes sesiones pendientes de entregar fotos.
+          {t('empty')}
         </p>
       </div>
     )
@@ -54,7 +56,7 @@ export function PendingDeliveriesList({ deliveries }: { deliveries: PendingDeliv
     <div className="space-y-3">
       {deliveries.map((d) => {
         const isOpen = activeId === d.id
-        const refOrAddr = d.property_reference || d.property_address || 'Sin referencia'
+        const refOrAddr = d.property_reference || d.property_address || t('noReference')
         const dateLabel = new Date(d.shoot_date + 'T00:00:00').toLocaleDateString('es-ES', {
           weekday: 'short',
           day: 'numeric',
@@ -81,7 +83,7 @@ export function PendingDeliveriesList({ deliveries }: { deliveries: PendingDeliv
                   </p>
                 )}
                 <p className="mt-1 text-xs text-[#F5F0E8]">
-                  Agente: <strong>{d.agent_name ?? '—'}</strong>
+                  {t('agentLabel')} <strong>{d.agent_name ?? '—'}</strong>
                 </p>
                 {d.notes && (
                   <p className="mt-1 text-[11px] italic text-[#9A9080]">"{d.notes}"</p>
@@ -97,7 +99,7 @@ export function PendingDeliveriesList({ deliveries }: { deliveries: PendingDeliv
                   }}
                   className="shrink-0 rounded-lg bg-[#C9A84C] px-3 py-2 text-[11px] font-bold uppercase tracking-wide text-black transition hover:bg-[#E8C96A]"
                 >
-                  📤 Entregar fotos
+                  📤 {t('deliverPhotos')}
                 </button>
               )}
             </div>
@@ -105,12 +107,10 @@ export function PendingDeliveriesList({ deliveries }: { deliveries: PendingDeliv
             {isOpen && (
               <div className="mt-4 space-y-3 rounded-xl border border-[#C9A84C]/20 bg-[#0A0A0A] p-4">
                 <p className="text-[10px] font-bold uppercase tracking-wider text-[#C9A84C]">
-                  📸 Pega el link público de Drive con las fotos
+                  📸 {t('pasteLinkTitle')}
                 </p>
                 <p className="text-[11px] text-[#9A9080]">
-                  Asegúrate de que la carpeta esté <strong>compartida públicamente</strong>{' '}
-                  (Cualquiera con el enlace puede ver). El sistema descargará las fotos y se
-                  las enviará al agente.
+                  {t.rich('pasteLinkHelp', { strong: (chunks) => <strong>{chunks}</strong> })}
                 </p>
                 <input
                   type="url"
@@ -133,10 +133,10 @@ export function PendingDeliveriesList({ deliveries }: { deliveries: PendingDeliv
                     {isPending ? (
                       <>
                         <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-black/30 border-t-black" />
-                        Enviando…
+                        {t('sending')}
                       </>
                     ) : (
-                      <>🚀 Enviar al agente</>
+                      <>🚀 {t('sendToAgent')}</>
                     )}
                   </button>
                   <button
@@ -149,7 +149,7 @@ export function PendingDeliveriesList({ deliveries }: { deliveries: PendingDeliv
                     disabled={isPending}
                     className="rounded-lg border border-white/10 px-4 py-2.5 text-xs font-medium text-[#9A9080] transition hover:text-[#F5F0E8] disabled:opacity-50"
                   >
-                    Cancelar
+                    {t('cancel')}
                   </button>
                 </div>
               </div>

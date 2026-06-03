@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { changeInitialCredentials } from '@/actions/profile'
 import { LoadingOverlay } from './LoadingOverlay'
@@ -10,6 +11,7 @@ interface FirstLoginModalProps {
 }
 
 export function FirstLoginModal({ currentEmail }: FirstLoginModalProps) {
+  const t = useTranslations('auth')
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -22,7 +24,7 @@ export function FirstLoginModal({ currentEmail }: FirstLoginModalProps) {
     const confirm = String(formData.get('password_confirm') || '')
 
     if (password !== confirm) {
-      setError('Las contraseñas no coinciden')
+      setError(t('passwordsDontMatch'))
       setLoading(false)
       return
     }
@@ -42,23 +44,23 @@ export function FirstLoginModal({ currentEmail }: FirstLoginModalProps) {
 
   return (
     <>
-      {loading && <LoadingOverlay title="Guardando credenciales..." subtitle="Actualizando email y contraseña" />}
+      {loading && <LoadingOverlay title={t('savingCredentials')} subtitle={t('updatingEmailPwd')} />}
       <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4">
       <div className="w-full max-w-md rounded-2xl border border-[#C9A84C]/30 bg-[#131313] p-8 shadow-2xl">
         <div className="mb-6 text-center">
           <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-[#C9A84C]/15">
             <span className="text-3xl">🔒</span>
           </div>
-          <h2 className="text-xl font-bold text-[#F5F0E8]">Bienvenido a CBI</h2>
+          <h2 className="text-xl font-bold text-[#F5F0E8]">{t('firstLoginTitle')}</h2>
           <p className="mt-2 text-sm text-[#9A9080]">
-            Por seguridad, cambia tu email y contraseña antes de continuar. Esta ventana no se puede cerrar.
+            {t('firstLoginSubtitle')}
           </p>
         </div>
 
         <form action={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-[10px] font-bold uppercase tracking-[0.12em] text-[#9A9080] mb-1.5">
-              Email actual
+              {t('currentEmail')}
             </label>
             <input
               type="email"
@@ -70,20 +72,20 @@ export function FirstLoginModal({ currentEmail }: FirstLoginModalProps) {
 
           <div>
             <label className="block text-[10px] font-bold uppercase tracking-[0.12em] text-[#9A9080] mb-1.5">
-              Nuevo email real *
+              {t('newEmailRequired')}
             </label>
             <input
               name="email"
               type="email"
               required
-              placeholder="tu.email@cbi.com"
+              placeholder={t('newRealEmailPlaceholder')}
               className="w-full rounded-lg border border-white/10 bg-[#1C1C1C] px-4 py-3 text-sm text-[#F5F0E8] placeholder-[#9A9080] outline-none transition focus:border-[#C9A84C]/60"
             />
           </div>
 
           <div>
             <label className="block text-[10px] font-bold uppercase tracking-[0.12em] text-[#9A9080] mb-1.5">
-              Nueva contraseña * (mín. 8 caracteres)
+              {t('newPasswordMin8')}
             </label>
             <input
               name="password"
@@ -96,7 +98,7 @@ export function FirstLoginModal({ currentEmail }: FirstLoginModalProps) {
 
           <div>
             <label className="block text-[10px] font-bold uppercase tracking-[0.12em] text-[#9A9080] mb-1.5">
-              Confirmar contraseña *
+              {t('confirmPasswordRequired')}
             </label>
             <input
               name="password_confirm"
@@ -121,10 +123,10 @@ export function FirstLoginModal({ currentEmail }: FirstLoginModalProps) {
             {loading ? (
               <>
                 <span className="h-4 w-4 animate-spin rounded-full border-2 border-black/30 border-t-black" />
-                Guardando...
+                {t('saving')}
               </>
             ) : (
-              'Guardar y continuar'
+              t('saveAndContinue')
             )}
           </button>
         </form>

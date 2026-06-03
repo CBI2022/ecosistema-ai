@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import { useTranslations } from 'next-intl'
 import { STATUS_CONFIG, PRIORITY_CONFIG } from './TasksDashboard'
 import type { ProjectTask } from '@/types/database'
 
@@ -11,12 +12,6 @@ interface Assignee {
   role: string
 }
 type TaskWithAssignee = ProjectTask & { assignee: Assignee | null }
-
-const WEEK_DAYS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
-const MONTHS_ES = [
-  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
-]
 
 function toISODate(d: Date) {
   return d.toISOString().split('T')[0]
@@ -51,6 +46,15 @@ export function CalendarView({
   tasks: TaskWithAssignee[]
   onTaskClick: (t: TaskWithAssignee) => void
 }) {
+  const t = useTranslations('tasks')
+  const WEEK_DAYS = [
+    t('weekdayMon'), t('weekdayTue'), t('weekdayWed'), t('weekdayThu'),
+    t('weekdayFri'), t('weekdaySat'), t('weekdaySun'),
+  ]
+  const MONTHS = [
+    t('monthJan'), t('monthFeb'), t('monthMar'), t('monthApr'), t('monthMay'), t('monthJun'),
+    t('monthJul'), t('monthAug'), t('monthSep'), t('monthOct'), t('monthNov'), t('monthDec'),
+  ]
   const today = new Date()
   const [year, setYear] = useState(today.getFullYear())
   const [month, setMonth] = useState(today.getMonth())
@@ -94,7 +98,7 @@ export function CalendarView({
             ‹
           </button>
           <p className="text-sm font-bold uppercase tracking-[0.12em] text-[#F5F0E8]">
-            {MONTHS_ES[month]} {year}
+            {MONTHS[month]} {year}
           </p>
           <button
             onClick={nextMonth}
@@ -169,7 +173,7 @@ export function CalendarView({
         </div>
 
         <p className="mt-3 text-[10px] text-[#9A9080]">
-          💡 Haz click en un día para ver todas sus tareas a la derecha.
+          💡 {t('calendarHint')}
         </p>
       </div>
 
@@ -184,7 +188,7 @@ export function CalendarView({
               <button onClick={() => setSelectedDay(null)} className="text-xs text-[#9A9080] hover:text-[#F5F0E8]">✕</button>
             </div>
             {daySelected.length === 0 ? (
-              <p className="text-xs text-[#9A9080]/60">Sin tareas programadas</p>
+              <p className="text-xs text-[#9A9080]/60">{t('noTasksScheduled')}</p>
             ) : (
               <div className="space-y-2">
                 {daySelected.map((t) => (
@@ -198,17 +202,17 @@ export function CalendarView({
         {/* Tareas sin fecha */}
         <div className="rounded-2xl border border-white/8 bg-[#131313] p-4">
           <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.15em] text-[#9A9080]">
-            📌 Sin fecha asignada ({unscheduled.length})
+            📌 {t('noDateAssigned', { n: unscheduled.length })}
           </p>
           {unscheduled.length === 0 ? (
-            <p className="text-xs text-[#9A9080]/60">Todas tienen fecha 🎉</p>
+            <p className="text-xs text-[#9A9080]/60">{t('allHaveDate')} 🎉</p>
           ) : (
             <div className="max-h-[400px] space-y-2 overflow-y-auto">
               {unscheduled.slice(0, 20).map((t) => (
                 <TaskMiniCard key={t.id} task={t} onClick={() => onTaskClick(t)} />
               ))}
               {unscheduled.length > 20 && (
-                <p className="text-center text-[10px] text-[#9A9080]/60">... y {unscheduled.length - 20} más</p>
+                <p className="text-center text-[10px] text-[#9A9080]/60">{t('andMore', { n: unscheduled.length - 20 })}</p>
               )}
             </div>
           )}

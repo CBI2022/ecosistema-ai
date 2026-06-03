@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { useTranslations } from 'next-intl'
 import { schedulePost, archiveClip } from '@/actions/social'
 import type { Clip, SocialAccount, SocialPlatform } from '@/types/database'
 
@@ -18,6 +19,7 @@ const PLATFORMS: Array<{ id: SocialPlatform; label: string; emoji: string; color
 type FilterStatus = 'all' | 'available' | 'scheduled' | 'published'
 
 export function ClipsTab({ clips: initialClips, accounts }: Props) {
+  const t = useTranslations('social')
   const [clips, setClips] = useState(initialClips)
   const [filter, setFilter] = useState<FilterStatus>('available')
   const [selected, setSelected] = useState<typeof initialClips[number] | null>(null)
@@ -44,7 +46,7 @@ export function ClipsTab({ clips: initialClips, accounts }: Props) {
                 filter === f ? 'bg-[#C9A84C] text-black' : 'border border-white/10 text-[#9A9080] hover:text-[#F5F0E8]'
               }`}
             >
-              {f === 'available' ? 'Disponibles' : f === 'scheduled' ? 'Programados' : f === 'published' ? 'Publicados' : 'Todos'}
+              {t(`clips.filter.${f}`)}
               <span className={`rounded-full px-1.5 py-0.5 text-[10px] ${filter === f ? 'bg-black/20' : 'bg-white/10'}`}>
                 {count}
               </span>
@@ -57,7 +59,7 @@ export function ClipsTab({ clips: initialClips, accounts }: Props) {
       {filtered.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-white/10 bg-[#131313] p-12 text-center">
           <div className="mb-3 text-4xl opacity-30">🎬</div>
-          <p className="text-sm font-semibold text-[#9A9080]">No hay clips en esta categoría</p>
+          <p className="text-sm font-semibold text-[#9A9080]">{t('clips.empty')}</p>
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -93,7 +95,7 @@ export function ClipsTab({ clips: initialClips, accounts }: Props) {
               </div>
               <div className="p-3">
                 <p className="line-clamp-2 text-xs font-semibold text-[#F5F0E8]">
-                  {clip.title || 'Sin título'}
+                  {clip.title || t('clips.untitled')}
                 </p>
                 <div className="mt-2 flex gap-2">
                   <button
@@ -101,16 +103,16 @@ export function ClipsTab({ clips: initialClips, accounts }: Props) {
                     disabled={clip.status === 'published'}
                     className="flex-1 rounded-lg bg-[#C9A84C] px-3 py-1.5 text-[10px] font-bold text-black transition hover:bg-[#E8C96A] disabled:opacity-40"
                   >
-                    📅 Programar
+                    📅 {t('clips.schedule')}
                   </button>
                   <button
                     onClick={async () => {
-                      if (!window.confirm('¿Archivar este clip?')) return
+                      if (!window.confirm(t('clips.confirmArchive'))) return
                       removeClip(clip.id)
                       await archiveClip(clip.id)
                     }}
                     className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-[10px] font-bold text-[#9A9080] transition hover:text-[#F5F0E8]"
-                    title="Archivar"
+                    title={t('clips.archive')}
                   >
                     🗄
                   </button>
@@ -148,6 +150,7 @@ function ScheduleModal({
   onClose: () => void
   onScheduled: () => void
 }) {
+  const t = useTranslations('social')
   const [isPending, startTransition] = useTransition()
   const [caption, setCaption] = useState('')
   const [hashtags, setHashtags] = useState('#realestate #costablanca #luxury')
@@ -169,11 +172,11 @@ function ScheduleModal({
   async function handleSubmit() {
     setError(null)
     if (platforms.size === 0) {
-      setError('Selecciona al menos una red social')
+      setError(t('modal.errorNoPlatform'))
       return
     }
     if (!caption.trim()) {
-      setError('Añade un caption')
+      setError(t('modal.errorNoCaption'))
       return
     }
 
@@ -195,7 +198,7 @@ function ScheduleModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
       <div className="w-full max-w-3xl overflow-hidden rounded-2xl border border-[#C9A84C]/25 bg-[#131313] shadow-2xl">
         <div className="flex items-center justify-between border-b border-white/8 px-6 py-4">
-          <p className="text-base font-bold text-[#F5F0E8]">📅 Programar publicación</p>
+          <p className="text-base font-bold text-[#F5F0E8]">📅 {t('modal.title')}</p>
           <button onClick={onClose} className="text-[#9A9080] hover:text-[#F5F0E8]">✕</button>
         </div>
 
@@ -216,7 +219,7 @@ function ScheduleModal({
             {/* Platforms */}
             <div>
               <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.15em] text-[#9A9080]">
-                Redes sociales
+                {t('modal.platforms')}
               </p>
               <div className="grid grid-cols-3 gap-2">
                 {PLATFORMS.map((p) => {
@@ -247,7 +250,7 @@ function ScheduleModal({
               </div>
               {[...platforms].some((p) => !connected.has(p)) && (
                 <p className="mt-2 text-[10px] text-orange-400">
-                  ⚠️ Alguna red seleccionada no está conectada. Ve a "Connections".
+                  ⚠️ {t('modal.notConnectedWarning')}
                 </p>
               )}
             </div>
@@ -255,22 +258,22 @@ function ScheduleModal({
             {/* Caption */}
             <div>
               <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.15em] text-[#9A9080]">
-                Caption
+                {t('modal.caption')}
               </p>
               <textarea
                 rows={4}
                 value={caption}
                 onChange={(e) => setCaption(e.target.value)}
-                placeholder="Escribe el texto de la publicación..."
+                placeholder={t('modal.captionPlaceholder')}
                 className="w-full rounded-lg border border-white/10 bg-[#1C1C1C] px-3.5 py-2.5 text-sm text-[#F5F0E8] outline-none focus:border-[#C9A84C]/60 placeholder-[#9A9080]"
               />
-              <p className="mt-1 text-[10px] text-[#9A9080]">{caption.length} / 2200 caracteres</p>
+              <p className="mt-1 text-[10px] text-[#9A9080]">{t('modal.charCount', { count: caption.length })}</p>
             </div>
 
             {/* Hashtags */}
             <div>
               <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.15em] text-[#9A9080]">
-                Hashtags
+                {t('modal.hashtags')}
               </p>
               <input
                 type="text"
@@ -283,7 +286,7 @@ function ScheduleModal({
             {/* Schedule */}
             <div>
               <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.15em] text-[#9A9080]">
-                Cuándo publicar
+                {t('modal.whenToPublish')}
               </p>
               <div className="flex gap-2">
                 <button
@@ -292,7 +295,7 @@ function ScheduleModal({
                     scheduleMode === 'now' ? 'border-[#C9A84C] bg-[#C9A84C]/15 text-[#C9A84C]' : 'border-white/10 text-[#9A9080]'
                   }`}
                 >
-                  🚀 Ahora
+                  🚀 {t('modal.now')}
                 </button>
                 <button
                   onClick={() => setScheduleMode('later')}
@@ -300,7 +303,7 @@ function ScheduleModal({
                     scheduleMode === 'later' ? 'border-[#C9A84C] bg-[#C9A84C]/15 text-[#C9A84C]' : 'border-white/10 text-[#9A9080]'
                   }`}
                 >
-                  📅 Programar
+                  📅 {t('modal.schedule')}
                 </button>
               </div>
               {scheduleMode === 'later' && (
@@ -325,7 +328,7 @@ function ScheduleModal({
               disabled={isPending}
               className="w-full rounded-xl bg-[#C9A84C] py-3 text-sm font-bold uppercase tracking-[0.06em] text-black transition hover:bg-[#E8C96A] disabled:opacity-50"
             >
-              {isPending ? 'Programando...' : scheduleMode === 'now' ? '🚀 Publicar ahora' : '📅 Añadir a la cola'}
+              {isPending ? t('modal.submitting') : scheduleMode === 'now' ? `🚀 ${t('modal.publishNow')}` : `📅 ${t('modal.addToQueue')}`}
             </button>
           </div>
         </div>

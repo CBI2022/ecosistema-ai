@@ -15,16 +15,15 @@ interface AppHeaderProps {
   notifCount?: number
 }
 
-const ROLE_LABELS: Record<string, string> = {
-  admin: 'Admin',
-  agent: 'Agent',
-  secretary: 'Secretary',
-  photographer: 'Photographer',
-  dc: 'Director Comercial',
-}
-
 export function AppHeader({ profile, notifCount = 0 }: AppHeaderProps) {
   const t = useTranslations('header')
+  const ROLE_LABELS: Record<string, string> = {
+    admin: t('roleAdmin'),
+    agent: t('roleAgent'),
+    secretary: t('roleSecretary'),
+    photographer: t('rolePhotographer'),
+    dc: t('roleDc'),
+  }
   const [avatarUrl, setAvatarUrl] = useState(profile.avatar_url)
   const [uploading, setUploading] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
@@ -53,7 +52,7 @@ export function AppHeader({ profile, notifCount = 0 }: AppHeaderProps) {
     <header className="pt-safe sticky top-0 z-50 border-b border-[#C9A84C]/12 bg-[#0A0A0A]/96 backdrop-blur-xl">
       {/* ───────── MOBILE HEADER (< md) ───────── */}
       <div className="flex h-14 items-center justify-between gap-2 px-3 md:hidden">
-        <Link href="/dashboard" className="flex items-center gap-2" aria-label="CBI Dashboard">
+        <Link href="/dashboard" className="flex items-center gap-2" aria-label={t('dashboardAria')}>
           <img
             src="/logo-cbi.png"
             alt="CBI"
@@ -94,7 +93,7 @@ export function AppHeader({ profile, notifCount = 0 }: AppHeaderProps) {
           </Link>
           <div className="h-4 w-px bg-[#C9A84C]/20" />
           <span className="text-[11px] tracking-widest text-[#9A9080]">
-            Performance Dashboard
+            {t('performanceDashboard')}
           </span>
         </div>
 
@@ -118,7 +117,7 @@ export function AppHeader({ profile, notifCount = 0 }: AppHeaderProps) {
           <div className="flex items-center gap-3">
             <button
               onClick={() => fileRef.current?.click()}
-              title="Change profile photo"
+              title={t('changePhoto')}
               className={`relative h-9 w-9 overflow-hidden rounded-full border transition hover:opacity-80 ${uploading ? 'opacity-50' : 'border-[#C9A84C]/30'}`}
             >
               {avatarUrl ? (

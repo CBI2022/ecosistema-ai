@@ -1,6 +1,7 @@
 'use client'
 
 import { useTransition, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { completeShoot } from '@/actions/photo-shoots'
 
 interface Shoot {
@@ -25,6 +26,7 @@ function formatES(dateIso: string) {
 }
 
 export function UpcomingShootsActions({ shoots }: Props) {
+  const t = useTranslations('photographer.upcoming')
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const todayIso = new Date().toISOString().split('T')[0]
@@ -42,7 +44,7 @@ export function UpcomingShootsActions({ shoots }: Props) {
       <div className="mb-4 flex items-center gap-2">
         <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#2ECC9A]/15 text-base">🚀</span>
         <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#2ECC9A]">
-          Próximos shoots ({shoots.length})
+          {t('title', { count: shoots.length })}
         </p>
       </div>
 
@@ -53,7 +55,7 @@ export function UpcomingShootsActions({ shoots }: Props) {
       )}
 
       {shoots.length === 0 ? (
-        <p className="text-xs text-[#9A9080]/60">No tienes shoots confirmados próximos.</p>
+        <p className="text-xs text-[#9A9080]/60">{t('empty')}</p>
       ) : (
         <div className="space-y-2.5">
           {shoots.map((s) => {
@@ -63,10 +65,10 @@ export function UpcomingShootsActions({ shoots }: Props) {
                 <div className="mb-2 flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-bold text-[#F5F0E8]">
-                      {s.property_address || s.property_reference || 'Sin dirección'}
+                      {s.property_address || s.property_reference || t('noAddress')}
                     </p>
                     <p className="mt-0.5 text-xs text-[#9A9080]">
-                      👤 {s.agent_name ?? 'Agente'}
+                      👤 {s.agent_name ?? t('agent')}
                       {s.agent_phone ? ` · ${s.agent_phone}` : ''}
                     </p>
                     <p className="mt-1 text-xs text-[#2ECC9A]">
@@ -74,7 +76,7 @@ export function UpcomingShootsActions({ shoots }: Props) {
                     </p>
                   </div>
                   <span className="rounded-full bg-[#2ECC9A]/15 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider text-[#2ECC9A]">
-                    Confirmado
+                    {t('confirmed')}
                   </span>
                 </div>
 
@@ -90,7 +92,7 @@ export function UpcomingShootsActions({ shoots }: Props) {
                     onClick={() => handleComplete(s.id)}
                     className="w-full rounded-lg bg-[#2ECC9A] px-3 py-2.5 text-xs font-bold uppercase tracking-wide text-black transition active:scale-95 hover:bg-[#3DD9A8] disabled:opacity-50"
                   >
-                    ✓ Marcar completado
+                    ✓ {t('markComplete')}
                   </button>
                 )}
               </div>

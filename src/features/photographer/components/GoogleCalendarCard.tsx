@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useTransition } from 'react'
+import { useTranslations } from 'next-intl'
 import {
   disconnectMyGoogleCalendar,
   listMyCalendars,
@@ -33,6 +34,7 @@ export function GoogleCalendarCard({
   initialFlash,
   errorReason,
 }: Props) {
+  const t = useTranslations('photographer.calendar')
   const [pending, startTransition] = useTransition()
   const [calendars, setCalendars] = useState<CalendarOption[]>([])
   const [loadingCals, setLoadingCals] = useState(false)
@@ -59,7 +61,7 @@ export function GoogleCalendarCard({
   }
 
   function handleDisconnect() {
-    if (!confirm('¿Seguro que quieres desconectar tu Google Calendar? Los shoots ya creados no se borrarán.')) return
+    if (!confirm(t('disconnectConfirm'))) return
     startTransition(async () => {
       await disconnectMyGoogleCalendar()
     })
@@ -74,10 +76,9 @@ export function GoogleCalendarCard({
         <div className="flex items-start gap-3">
           <span className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-500/20 text-base">⚙️</span>
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-bold text-amber-200">Google Calendar — pendiente de configurar</p>
+            <p className="text-sm font-bold text-amber-200">{t('notConfiguredTitle')}</p>
             <p className="mt-1 text-xs text-amber-200/80">
-              El admin todavía no ha conectado las credenciales del proyecto en Google Cloud.
-              En cuanto estén, este recuadro pasará a ser un botón para conectar tu calendario.
+              {t('notConfiguredDesc')}
             </p>
           </div>
         </div>
@@ -92,15 +93,15 @@ export function GoogleCalendarCard({
           <div className="flex items-start gap-3">
             <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#2ECC9A]/20 text-base">✅</span>
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-bold text-[#2ECC9A]">Google Calendar conectado</p>
+              <p className="text-sm font-bold text-[#2ECC9A]">{t('connectedTitle')}</p>
               {email && (
                 <p className="mt-0.5 text-xs text-[#9A9080]">
-                  Cuenta: <strong className="text-[#F5F0E8]">{email}</strong>
+                  {t('accountLabel')} <strong className="text-[#F5F0E8]">{email}</strong>
                 </p>
               )}
               {initialFlash === 'connected' && (
                 <p className="mt-2 inline-block rounded-full bg-[#2ECC9A]/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[#2ECC9A]">
-                  ¡Conectado correctamente!
+                  {t('connectedFlash')}
                 </p>
               )}
             </div>
@@ -110,20 +111,20 @@ export function GoogleCalendarCard({
             onClick={handleDisconnect}
             className="shrink-0 rounded-lg border border-red-500/30 bg-red-500/5 px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-red-400 transition active:scale-95 hover:bg-red-500/10 disabled:opacity-50"
           >
-            {pending ? 'Desconectando...' : 'Desconectar'}
+            {pending ? t('disconnecting') : t('disconnect')}
           </button>
         </div>
 
         {/* Selector de calendario activo */}
         <div className="mt-4 rounded-xl border border-white/8 bg-[#0A0A0A] p-3">
           <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-[#C9A84C]">
-            📂 Calendario donde se crean los shoots
+            {t('selectorTitle')}
           </p>
           {loadingCals ? (
-            <p className="text-xs text-[#9A9080]">Cargando tus calendarios...</p>
+            <p className="text-xs text-[#9A9080]">{t('loadingCalendars')}</p>
           ) : calendars.length === 0 ? (
             <p className="text-xs text-[#9A9080]">
-              No se han podido cargar los calendarios.
+              {t('noCalendars')}
             </p>
           ) : (
             <>
@@ -135,22 +136,21 @@ export function GoogleCalendarCard({
               >
                 {calendars.map((c) => (
                   <option key={c.id} value={c.id}>
-                    {c.summary}{c.primary ? ' (principal)' : ''}
+                    {c.summary}{c.primary ? ` ${t('primarySuffix')}` : ''}
                   </option>
                 ))}
               </select>
               <p className="mt-2 text-[11px] leading-relaxed text-[#9A9080]">
-                Solo se sincroniza con este calendario. Si tienes uno separado para CBI (ej: <em>CBI JELLE FOTOS</em>),
-                elígelo aquí y tu calendario privado no se tocará.
+                {t.rich('selectorHelp', { em: (chunks) => <em>{chunks}</em> })}
               </p>
               {savedFlash && (
                 <p className="mt-2 inline-block rounded-full bg-[#2ECC9A]/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[#2ECC9A]">
-                  ✓ Guardado
+                  {t('saved')}
                 </p>
               )}
               {activeCalendarSummary && !savedFlash && (
                 <p className="mt-2 text-[10px] text-[#9A9080]">
-                  Activo: <strong className="text-[#F5F0E8]">{activeCalendarSummary}</strong>
+                  {t('activeLabel')} <strong className="text-[#F5F0E8]">{activeCalendarSummary}</strong>
                 </p>
               )}
             </>
@@ -170,10 +170,9 @@ export function GoogleCalendarCard({
         <div className="flex items-start gap-3">
           <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#C9A84C]/15 text-lg">📅</span>
           <div className="min-w-0">
-            <p className="text-sm font-bold text-[#F5F0E8]">Conecta tu Google Calendar</p>
+            <p className="text-sm font-bold text-[#F5F0E8]">{t('connectTitle')}</p>
             <p className="mt-1 text-xs text-[#9A9080]">
-              Cada shoot que confirmes aparecerá en tu Calendar (móvil incluido). Tus eventos personales
-              bloquearán automáticamente esos huecos para los agentes.
+              {t('connectDesc')}
             </p>
           </div>
         </div>
@@ -187,15 +186,15 @@ export function GoogleCalendarCard({
             <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
             <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
           </svg>
-          Conectar
+          {t('connect')}
         </a>
       </div>
 
       {initialFlash === 'error' && (
         <div className="mt-3 rounded-lg border border-red-500/30 bg-red-500/5 px-3 py-2 text-xs text-red-300">
           {errorReason === 'no_refresh_token'
-            ? 'Google no devolvió el permiso permanente. Desconecta esta app en tu cuenta Google y vuelve a intentarlo.'
-            : `No se pudo conectar (${errorReason ?? 'error desconocido'}). Inténtalo de nuevo.`}
+            ? t('errorNoRefreshToken')
+            : t('errorGeneric', { reason: errorReason ?? t('unknownError') })}
         </div>
       )}
     </div>

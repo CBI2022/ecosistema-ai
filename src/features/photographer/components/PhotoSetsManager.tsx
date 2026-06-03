@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { useTranslations } from 'next-intl'
 import { deletePhoto, deletePhotoSet, updatePhoto } from '@/actions/photographer'
 
 interface PhotoItem {
@@ -30,6 +31,7 @@ interface PhotoSetsManagerProps {
 }
 
 export function PhotoSetsManager({ sets: initialSets }: PhotoSetsManagerProps) {
+  const t = useTranslations('photographer.sets')
   const [sets, setSets] = useState(initialSets)
   const [viewSet, setViewSet] = useState<PhotoSet | null>(null)
   const [isPending, startTransition] = useTransition()
@@ -44,17 +46,17 @@ export function PhotoSetsManager({ sets: initialSets }: PhotoSetsManagerProps) {
   }
 
   function handleDeletePhoto(photoId: string) {
-    if (!window.confirm('¿Eliminar esta foto? No se puede recuperar.')) return
+    if (!window.confirm(t('deletePhotoConfirm'))) return
     removePhotoLocally(photoId)
     startTransition(async () => { await deletePhoto(photoId) })
   }
 
   function handleDeleteSet(shootId: string | null) {
     if (!shootId) {
-      window.alert('Este set no está vinculado a un shoot. Elimina las fotos individualmente.')
+      window.alert(t('deleteSetNotLinked'))
       return
     }
-    if (!window.confirm('¿Eliminar TODO el set? Todas las fotos y el shoot vuelve a "scheduled".')) return
+    if (!window.confirm(t('deleteSetConfirm'))) return
     setSets((prev) => prev.filter((s) => s.shoot_id !== shootId))
     setViewSet(null)
     startTransition(async () => { await deletePhotoSet(shootId) })
@@ -77,12 +79,12 @@ export function PhotoSetsManager({ sets: initialSets }: PhotoSetsManagerProps) {
     <div className="rounded-2xl border border-white/8 bg-[#131313] p-5">
       <div className="mb-4 flex items-center justify-between">
         <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#C9A84C]">
-          📁 Mis sets subidos ({sets.length})
+          📁 {t('title', { count: sets.length })}
         </p>
       </div>
 
       {sets.length === 0 ? (
-        <p className="py-8 text-center text-sm text-[#9A9080]/60">No has subido sets todavía</p>
+        <p className="py-8 text-center text-sm text-[#9A9080]/60">{t('empty')}</p>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {sets.map((set) => (
@@ -96,10 +98,10 @@ export function PhotoSetsManager({ sets: initialSets }: PhotoSetsManagerProps) {
                 )}
               </div>
               <p className="text-sm font-semibold text-[#F5F0E8]">
-                {set.property_reference || set.property_address || 'Set sin referencia'}
+                {set.property_reference || set.property_address || t('setNoReference')}
               </p>
               <p className="mt-0.5 text-xs text-[#9A9080]">
-                {set.agent_name ?? 'Agente'} · {set.photos.length} foto{set.photos.length !== 1 ? 's' : ''}
+                {set.agent_name ?? t('agent')} · {t('photoCount', { count: set.photos.length })}
               </p>
               <p className="mt-0.5 text-[10px] text-[#9A9080]/60">
                 {new Date(set.created_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}
@@ -109,12 +111,12 @@ export function PhotoSetsManager({ sets: initialSets }: PhotoSetsManagerProps) {
                   onClick={() => setViewSet(set)}
                   className="flex-1 rounded-lg border border-[#C9A84C]/30 bg-[#C9A84C]/10 px-3 py-1.5 text-[10px] font-bold text-[#C9A84C] transition hover:bg-[#C9A84C]/20"
                 >
-                  👁 Ver / editar
+                  👁 {t('viewEdit')}
                 </button>
                 <button
                   onClick={() => handleDeleteSet(set.shoot_id)}
                   className="rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-1.5 text-[10px] font-bold text-red-400 transition hover:bg-red-500/20"
-                  title="Eliminar set completo"
+                  title={t('deleteSetTitle')}
                 >
                   🗑
                 </button>
@@ -131,17 +133,17 @@ export function PhotoSetsManager({ sets: initialSets }: PhotoSetsManagerProps) {
             <div className="mb-4 flex items-start justify-between">
               <div>
                 <p className="text-sm font-bold text-[#F5F0E8]">
-                  {viewSet.property_reference || viewSet.property_address || 'Set'}
+                  {viewSet.property_reference || viewSet.property_address || t('setFallback')}
                 </p>
                 <p className="text-xs text-[#9A9080]">
-                  {viewSet.agent_name} · {viewSet.photos.length} fotos
+                  {viewSet.agent_name} · {t('photoCount', { count: viewSet.photos.length })}
                 </p>
               </div>
               <button onClick={() => setViewSet(null)} className="text-[#9A9080] hover:text-[#F5F0E8]">✕</button>
             </div>
 
             {viewSet.photos.length === 0 ? (
-              <p className="py-12 text-center text-sm text-[#9A9080]">El set está vacío</p>
+              <p className="py-12 text-center text-sm text-[#9A9080]">{t('setEmpty')}</p>
             ) : (
               <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-4">
                 {viewSet.photos.map((photo) => (
@@ -151,7 +153,7 @@ export function PhotoSetsManager({ sets: initialSets }: PhotoSetsManagerProps) {
                     </div>
                     {photo.is_drone && (
                       <span className="absolute left-1.5 top-1.5 rounded-full bg-black/70 px-1.5 py-0.5 text-[9px] font-bold text-[#C9A84C]">
-                        🚁 DRONE
+                        🚁 {t('droneBadge')}
                       </span>
                     )}
                     <div className="absolute inset-x-0 bottom-0 flex justify-between gap-1 bg-gradient-to-t from-black/90 to-transparent p-2 opacity-0 transition group-hover:opacity-100">
@@ -159,9 +161,9 @@ export function PhotoSetsManager({ sets: initialSets }: PhotoSetsManagerProps) {
                         onClick={() => handleToggleDrone(photo.id, photo.is_drone)}
                         disabled={isPending}
                         className="flex-1 rounded-md bg-[#C9A84C]/80 px-2 py-1 text-[10px] font-bold text-black hover:bg-[#C9A84C] disabled:opacity-50"
-                        title="Marcar/desmarcar drone"
+                        title={t('toggleDroneTitle')}
                       >
-                        {photo.is_drone ? '🚁 Es drone' : 'Marcar drone'}
+                        {photo.is_drone ? `🚁 ${t('isDrone')}` : t('markDrone')}
                       </button>
                       <button
                         onClick={() => handleDeletePhoto(photo.id)}

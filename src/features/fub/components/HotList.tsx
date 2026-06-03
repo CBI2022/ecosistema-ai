@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server'
+
 interface Props {
   people: Array<{
     id: number
@@ -10,32 +12,33 @@ interface Props {
   }>
 }
 
-function timeAgo(iso: string | null): string {
+function timeAgo(iso: string | null, t: (key: string, values?: Record<string, string | number>) => string): string {
   if (!iso) return '—'
   const ms = Date.now() - new Date(iso).getTime()
   const mins = Math.floor(ms / 60_000)
-  if (mins < 60) return `hace ${mins} min`
+  if (mins < 60) return t('time.agoMin', { n: mins })
   const hours = Math.floor(mins / 60)
-  if (hours < 24) return `hace ${hours}h`
+  if (hours < 24) return t('time.agoHours', { n: hours })
   const days = Math.floor(hours / 24)
-  return `hace ${days}d`
+  return t('time.agoDays', { n: days })
 }
 
-export function HotList({ people }: Props) {
+export async function HotList({ people }: Props) {
+  const t = await getTranslations('fub')
   return (
     <section className="rounded-2xl border border-[#C84B45]/30 bg-gradient-to-br from-[#1A0F0E] to-[#0F0F0F] p-5">
       <header className="mb-3 flex items-baseline justify-between">
         <h3 className="flex items-center gap-2 text-sm font-semibold text-[#F5F0E8]">
           <span className="text-base">🔥</span>
-          Hot List
+          {t('hotList.title')}
         </h3>
         <span className="text-[10px] uppercase tracking-[0.18em] text-[#E8907A]">
-          {people.length} urgentes
+          {t('hotList.urgent', { count: people.length })}
         </span>
       </header>
       {people.length === 0 ? (
         <div className="py-6 text-center text-sm text-[#9A9080]">
-          Sin leads calientes ahora. Buena oportunidad para prospectar.
+          {t('hotList.empty')}
         </div>
       ) : (
         <ul className="space-y-2">
@@ -58,7 +61,7 @@ export function HotList({ people }: Props) {
                 </div>
                 <div className="flex-shrink-0 text-right">
                   <div className="text-[10px] uppercase tracking-[0.14em] text-[#E8907A]">
-                    {timeAgo(p.last_activity_at)}
+                    {timeAgo(p.last_activity_at, t)}
                   </div>
                 </div>
               </a>

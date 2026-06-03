@@ -17,14 +17,6 @@ interface MobileUserMenuProps {
   onAvatarClick: () => void
 }
 
-const ROLE_LABELS: Record<string, string> = {
-  admin: 'Admin',
-  agent: 'Agent',
-  secretary: 'Secretary',
-  photographer: 'Photographer',
-  dc: 'Director Comercial',
-}
-
 export function MobileUserMenu({
   profile,
   avatarUrl,
@@ -33,6 +25,13 @@ export function MobileUserMenu({
   onAvatarClick,
 }: MobileUserMenuProps) {
   const t = useTranslations('header')
+  const ROLE_LABELS: Record<string, string> = {
+    admin: t('roleAdmin'),
+    agent: t('roleAgent'),
+    secretary: t('roleSecretary'),
+    photographer: t('rolePhotographer'),
+    dc: t('roleDc'),
+  }
   const currentLocale = useLocale() as Locale
   const [open, setOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
@@ -61,8 +60,8 @@ export function MobileUserMenu({
     <>
       <button
         onClick={() => setOpen(true)}
-        title="Menu"
-        aria-label="Open menu"
+        title={t('menu')}
+        aria-label={t('openMenu')}
         className={`relative h-9 w-9 overflow-hidden rounded-full border transition active:scale-95 ${
           uploading ? 'opacity-50' : 'border-[#C9A84C]/30'
         }`}
@@ -84,7 +83,7 @@ export function MobileUserMenu({
         >
           {/* Backdrop */}
           <button
-            aria-label="Close menu"
+            aria-label={t('closeMenu')}
             onClick={() => setOpen(false)}
             className="absolute inset-0 bg-black/70 backdrop-blur-sm"
           />
@@ -131,7 +130,7 @@ export function MobileUserMenu({
             {/* Idioma */}
             <div className="px-5 py-4">
               <div className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-[#9A9080]">
-                Idioma
+                {t('language')}
               </div>
               <div className="grid grid-cols-3 gap-2">
                 {LOCALES.map((locale) => {
@@ -189,7 +188,7 @@ export function MobileUserMenu({
                     <circle cx="12" cy="13" r="4" />
                   </svg>
                 </span>
-                Cambiar foto de perfil
+                {t('changePhoto')}
               </button>
             </nav>
 

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
+import { useTranslations } from 'next-intl'
 import {
   TIME_SLOTS,
   MAX_SHOOTS_PER_DAY,
@@ -9,12 +10,6 @@ import {
   isSlotBlockedByBuffer,
   isDayAtCap,
 } from '@/features/photographer/lib/shoot-rules'
-
-const WEEK_DAYS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
-const MONTHS_ES = [
-  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
-]
 
 interface BookedSlot {
   date: string
@@ -67,6 +62,12 @@ interface BlockedSlot {
 }
 
 export function BookShootingCalendar({ onClose }: BookShootingCalendarProps) {
+  const t = useTranslations('dashboard.bookCalendar')
+  const WEEK_DAYS_T = [t('dowMon'), t('dowTue'), t('dowWed'), t('dowThu'), t('dowFri'), t('dowSat'), t('dowSun')]
+  const MONTHS_T = [
+    t('monthJan'), t('monthFeb'), t('monthMar'), t('monthApr'), t('monthMay'), t('monthJun'),
+    t('monthJul'), t('monthAug'), t('monthSep'), t('monthOct'), t('monthNov'), t('monthDec'),
+  ]
   const today = new Date()
   const [year, setYear] = useState(today.getFullYear())
   const [month, setMonth] = useState(today.getMonth())
@@ -160,7 +161,7 @@ export function BookShootingCalendar({ onClose }: BookShootingCalendarProps) {
 
   async function handleBook(extraordinary = false) {
     if (!address || !selectedDate || !selectedTime) {
-      setError('Completa todos los campos')
+      setError(t('fillAllFields'))
       return
     }
     setLoading(true)
@@ -189,8 +190,8 @@ export function BookShootingCalendar({ onClose }: BookShootingCalendarProps) {
               📅
             </div>
             <div>
-              <p className="text-base font-bold text-[#F5F0E8]">Reservar sesión fotográfica</p>
-              <p className="text-[11px] text-[#9A9080]">Calendario de Jelle · Selecciona fecha y hora</p>
+              <p className="text-base font-bold text-[#F5F0E8]">{t('headerTitle')}</p>
+              <p className="text-[11px] text-[#9A9080]">{t('headerSubtitle')}</p>
             </div>
           </div>
           <button onClick={onClose} className="text-[#9A9080] hover:text-[#F5F0E8]">✕</button>
@@ -199,19 +200,18 @@ export function BookShootingCalendar({ onClose }: BookShootingCalendarProps) {
         {success ? (
           <div className="px-6 py-12 text-center">
             <div className="mb-3 text-5xl">📨</div>
-            <p className="text-lg font-bold text-[#C9A84C]">¡Solicitud enviada a Jelle!</p>
+            <p className="text-lg font-bold text-[#C9A84C]">{t('successTitle')}</p>
             <p className="mt-1 text-sm text-[#9A9080]">
               {selectedDate} · {selectedTime}
             </p>
             <p className="mx-auto mt-3 max-w-sm text-xs text-[#9A9080]">
-              Jelle recibirá un aviso. Te avisaremos por email y notificación cuando confirme,
-              proponga otra hora o no pueda ese día.
+              {t('successBody')}
             </p>
             <button
               onClick={onClose}
               className="mt-6 rounded-xl bg-[#C9A84C] px-8 py-2.5 text-sm font-bold uppercase tracking-[0.06em] text-black hover:bg-[#E8C96A]"
             >
-              Cerrar
+              {t('close')}
             </button>
           </div>
         ) : (
@@ -226,7 +226,7 @@ export function BookShootingCalendar({ onClose }: BookShootingCalendarProps) {
                   ‹
                 </button>
                 <p className="text-sm font-bold uppercase tracking-[0.12em] text-[#F5F0E8]">
-                  {MONTHS_ES[month]} {year}
+                  {MONTHS_T[month]} {year}
                 </p>
                 <button
                   onClick={nextMonth}
@@ -238,7 +238,7 @@ export function BookShootingCalendar({ onClose }: BookShootingCalendarProps) {
 
               {/* Weekday headers */}
               <div className="mb-1.5 grid grid-cols-7 gap-1">
-                {WEEK_DAYS.map((d) => (
+                {WEEK_DAYS_T.map((d) => (
                   <div key={d} className="py-1.5 text-center text-[10px] font-bold uppercase tracking-wider text-[#9A9080]">
                     {d}
                   </div>
@@ -282,10 +282,10 @@ export function BookShootingCalendar({ onClose }: BookShootingCalendarProps) {
                     >
                       <span>{cell.date.getDate()}</span>
                       {isFullDayBlocked && cell.inMonth && !isPast && (
-                        <span className="text-[8px] font-bold text-blue-300/80">NO DISP</span>
+                        <span className="text-[8px] font-bold text-blue-300/80">{t('badgeUnavailable')}</span>
                       )}
                       {!isFullDayBlocked && atCap && cell.inMonth && !isPast && (
-                        <span className="text-[8px] text-red-400">LLENO</span>
+                        <span className="text-[8px] text-red-400">{t('badgeFull')}</span>
                       )}
                       {!isFullDayBlocked && !atCap && cell.inMonth && shoots > 0 && (
                         <span className={`text-[8px] ${isSelected ? 'text-black/70' : 'text-[#C9A84C]'}`}>
@@ -301,26 +301,25 @@ export function BookShootingCalendar({ onClose }: BookShootingCalendarProps) {
               <div className="mt-4 flex flex-wrap items-center gap-3 text-[10px] text-[#9A9080]">
                 <span className="flex items-center gap-1.5">
                   <span className="h-3 w-3 rounded border border-[#C9A84C]/40 bg-[#C9A84C]/5" />
-                  Hoy
+                  {t('legendToday')}
                 </span>
                 <span className="flex items-center gap-1.5">
                   <span className="h-3 w-3 rounded bg-[#C9A84C]" />
-                  Seleccionado
+                  {t('legendSelected')}
                 </span>
                 <span className="flex items-center gap-1.5">
                   <span className="h-3 w-3 rounded border border-red-400 bg-red-500/10" />
-                  Lleno (3/3)
+                  {t('legendFull')}
                 </span>
                 <span className="flex items-center gap-1.5">
                   <span className="h-3 w-3 rounded border border-blue-400/50 bg-blue-500/10" />
-                  Jelle no disponible
+                  {t('legendUnavailable')}
                 </span>
               </div>
 
               {/* Reglas — visible siempre */}
               <p className="mt-3 rounded-lg bg-[#0A0A0A] px-3 py-2 text-[10px] leading-relaxed text-[#9A9080]">
-                ⓘ Cada shoot dura ~{SHOOT_DURATION_HOURS}h. Después hay {SHOOT_BUFFER_HOURS}h de margen para que Jelle se desplace.
-                Máximo {MAX_SHOOTS_PER_DAY} shoots/día. Horario: 09:30–15:00.
+                ⓘ {t('rules', { duration: SHOOT_DURATION_HOURS, buffer: SHOOT_BUFFER_HOURS, max: MAX_SHOOTS_PER_DAY })}
               </p>
             </div>
 
@@ -329,21 +328,20 @@ export function BookShootingCalendar({ onClose }: BookShootingCalendarProps) {
               {!selectedDate ? (
                 <div className="flex h-full flex-col items-center justify-center py-12 text-center">
                   <div className="mb-3 text-4xl opacity-30">📅</div>
-                  <p className="text-sm font-semibold text-[#9A9080]">Selecciona un día</p>
+                  <p className="text-sm font-semibold text-[#9A9080]">{t('selectDay')}</p>
                   <p className="mt-1 text-xs text-[#9A9080]/60">
-                    Verás los horarios disponibles aquí
+                    {t('selectDayHint')}
                   </p>
                 </div>
               ) : (
                 <>
                   <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.15em] text-[#C9A84C]">
-                    Horarios · {new Date(selectedDate + 'T00:00:00').toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}
+                    {t('timesLabel')} · {new Date(selectedDate + 'T00:00:00').toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}
                   </p>
 
                   {dayAtCap && !extraordinaryMode && (
                     <p className="mb-3 rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-300">
-                      Día lleno ({MAX_SHOOTS_PER_DAY}/{MAX_SHOOTS_PER_DAY} shoots).
-                      Pulsa <strong>Solicitud extraordinaria</strong> abajo si es urgente.
+                      {t.rich('dayFull', { max: MAX_SHOOTS_PER_DAY, strong: (chunks) => <strong>{chunks}</strong> })}
                     </p>
                   )}
 
@@ -382,7 +380,7 @@ export function BookShootingCalendar({ onClose }: BookShootingCalendarProps) {
 
                   {!extraordinaryMode && (
                     <p className="mb-4 rounded-lg bg-[#0A0A0A] px-3 py-2 text-[10px] text-[#9A9080]">
-                      ⓘ Los huecos en ámbar están bloqueados por margen ({SHOOT_BUFFER_HOURS}h alrededor de cada shoot).
+                      ⓘ {t('bufferHint', { buffer: SHOOT_BUFFER_HOURS })}
                     </p>
                   )}
 
@@ -390,25 +388,24 @@ export function BookShootingCalendar({ onClose }: BookShootingCalendarProps) {
                     <div className="space-y-3 border-t border-white/8 pt-4">
                       {extraordinaryMode && (
                         <div className="rounded-lg border border-purple-400/30 bg-purple-500/8 px-3 py-2 text-[11px] text-purple-200">
-                          ⚠️ <strong>Solicitud extraordinaria.</strong> Saltas las reglas estándar (horario, margen o cap diario).
-                          Jelle decide caso por caso. Explica el motivo en notas.
+                          ⚠️ {t.rich('extraordinaryWarning', { strong: (chunks) => <strong>{chunks}</strong> })}
                         </div>
                       )}
                       <div>
                         <label className="mb-1.5 block text-[9px] font-bold uppercase tracking-[0.12em] text-[#9A9080]">
-                          Dirección de la propiedad *
+                          {t('addressLabel')}
                         </label>
                         <input
                           type="text"
                           value={address}
                           onChange={(e) => setAddress(e.target.value)}
-                          placeholder="Calle Mayor 12, Altea"
+                          placeholder={t('addressPlaceholder')}
                           className="w-full rounded-lg border border-white/10 bg-[#1C1C1C] px-3 py-2 text-sm text-[#F5F0E8] outline-none focus:border-[#C9A84C]/60 placeholder-[#9A9080]"
                         />
                       </div>
                       <div>
                         <label className="mb-1.5 block text-[9px] font-bold uppercase tracking-[0.12em] text-[#9A9080]">
-                          🗺️ Link de Google Maps (opcional)
+                          🗺️ {t('mapsLinkLabel')}
                         </label>
                         <input
                           type="url"
@@ -418,18 +415,18 @@ export function BookShootingCalendar({ onClose }: BookShootingCalendarProps) {
                           className="w-full rounded-lg border border-white/10 bg-[#1C1C1C] px-3 py-2 text-sm text-[#F5F0E8] outline-none focus:border-[#C9A84C]/60 placeholder-[#9A9080]"
                         />
                         <p className="mt-1 text-[10px] text-[#6A6070]">
-                          Ayuda a Jelle a encontrar la casa exacta. Pégalo desde la app de Google Maps → Compartir → Copiar enlace.
+                          {t('mapsLinkHint')}
                         </p>
                       </div>
                       <div>
                         <label className="mb-1.5 block text-[9px] font-bold uppercase tracking-[0.12em] text-[#9A9080]">
-                          {extraordinaryMode ? 'Motivo de la excepción *' : 'Notas para Jelle (opcional)'}
+                          {extraordinaryMode ? t('reasonLabel') : t('notesLabel')}
                         </label>
                         <textarea
                           rows={2}
                           value={notes}
                           onChange={(e) => setNotes(e.target.value)}
-                          placeholder={extraordinaryMode ? 'Villa de 12M€, propietario solo puede ese día...' : 'Acceso, código portal, mejor luz tarde, etc.'}
+                          placeholder={extraordinaryMode ? t('reasonPlaceholder') : t('notesPlaceholder')}
                           className="w-full rounded-lg border border-white/10 bg-[#1C1C1C] px-3 py-2 text-sm text-[#F5F0E8] outline-none focus:border-[#C9A84C]/60 placeholder-[#9A9080]"
                         />
                       </div>
@@ -448,10 +445,10 @@ export function BookShootingCalendar({ onClose }: BookShootingCalendarProps) {
                         }`}
                       >
                         {loading
-                          ? 'Reservando...'
+                          ? t('booking')
                           : extraordinaryMode
-                            ? `⚠️ Pedir excepción a las ${selectedTime}`
-                            : `📅 Reservar ${selectedTime}`}
+                            ? `⚠️ ${t('requestException', { time: selectedTime })}`
+                            : `📅 ${t('bookAt', { time: selectedTime })}`}
                       </button>
                     </div>
                   )}
@@ -471,8 +468,8 @@ export function BookShootingCalendar({ onClose }: BookShootingCalendarProps) {
                     }`}
                   >
                     {extraordinaryMode
-                      ? '↩ Volver a reserva normal'
-                      : '⚠️ Necesito algo fuera de las reglas (Solicitud extraordinaria)'}
+                      ? `↩ ${t('backToNormal')}`
+                      : `⚠️ ${t('needException')}`}
                   </button>
                 </>
               )}

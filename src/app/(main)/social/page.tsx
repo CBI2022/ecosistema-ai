@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
+import { getTranslations } from 'next-intl/server'
 import { SocialDashboard } from '@/features/social/components/SocialDashboard'
 
 export default async function SocialPage({
@@ -8,6 +9,7 @@ export default async function SocialPage({
 }: {
   searchParams: Promise<{ tab?: string; platform?: string }>
 }) {
+  const t = await getTranslations('shell.social')
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
@@ -60,9 +62,9 @@ export default async function SocialPage({
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-xl font-bold text-[#F5F0E8]">Social Media Command Center</h1>
+        <h1 className="text-xl font-bold text-[#F5F0E8]">{t('title')}</h1>
         <p className="mt-1 text-sm text-[#9A9080]">
-          Instagram · YouTube · TikTok — solo visible para admins
+          {t('subtitle')}
         </p>
       </div>
 

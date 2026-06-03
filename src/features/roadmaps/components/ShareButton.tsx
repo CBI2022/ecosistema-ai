@@ -1,17 +1,20 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 
 export function ShareButton({
   path,
   variant = 'ghost',
-  label = 'Compartir',
+  label,
 }: {
   /** Ruta pública a copiar, ej. "/r/fase-1-publicar-propiedad" */
   path: string
   variant?: 'ghost' | 'solid'
   label?: string
 }) {
+  const t = useTranslations('roadmaps')
+  const resolvedLabel = label ?? t('share')
   const [copied, setCopied] = useState(false)
 
   async function copy(e: React.MouseEvent) {
@@ -31,7 +34,7 @@ export function ShareButton({
       try {
         document.execCommand('copy')
       } catch {
-        window.prompt('Copia este enlace:', url)
+        window.prompt(t('copyThisLink'), url)
       }
       document.body.removeChild(ta)
     }
@@ -46,13 +49,13 @@ export function ShareButton({
       : 'border border-[#C9A84C]/30 text-[#C9A84C] hover:bg-[#C9A84C]/10'
 
   return (
-    <button type="button" onClick={copy} className={`${base} ${styles}`} aria-label="Copiar enlace para compartir">
+    <button type="button" onClick={copy} className={`${base} ${styles}`} aria-label={t('copyLinkAria')}>
       {copied ? (
         <>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5">
             <polyline points="20 6 9 17 4 12" />
           </svg>
-          Enlace copiado
+          {t('linkCopied')}
         </>
       ) : (
         <>
@@ -60,7 +63,7 @@ export function ShareButton({
             <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
             <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
           </svg>
-          {label}
+          {resolvedLabel}
         </>
       )}
     </button>

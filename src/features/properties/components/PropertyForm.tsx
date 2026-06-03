@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition, useEffect, useMemo } from 'react'
+import { useTranslations } from 'next-intl'
 import { saveProperty, submitProperty } from '@/actions/properties'
 import { OwnerPicker } from './OwnerPicker'
 import { AddressPicker } from './AddressPicker'
@@ -78,12 +79,12 @@ function NumberSelect({
 
 type TabId = 'general' | 'equipment' | 'features' | 'location' | 'costs'
 
-const TABS: { id: TabId; label: string }[] = [
-  { id: 'general', label: '🏠 Información general' },
-  { id: 'equipment', label: '🛠️ Equipment' },
-  { id: 'features', label: '✨ Features' },
-  { id: 'location', label: '📍 Ubicación y propietario' },
-  { id: 'costs', label: '💶 Gastos y portales' },
+const TABS: { id: TabId; emoji: string; labelKey: string }[] = [
+  { id: 'general', emoji: '🏠', labelKey: 'tabs.general' },
+  { id: 'equipment', emoji: '🛠️', labelKey: 'tabs.equipment' },
+  { id: 'features', emoji: '✨', labelKey: 'tabs.features' },
+  { id: 'location', emoji: '📍', labelKey: 'tabs.location' },
+  { id: 'costs', emoji: '💶', labelKey: 'tabs.costs' },
 ]
 
 export function PropertyForm({
@@ -91,6 +92,7 @@ export function PropertyForm({
   agentOptions = null,
   defaultAgentId = null,
 }: PropertyFormProps = {}) {
+  const t = useTranslations('properties')
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
@@ -194,7 +196,7 @@ export function PropertyForm({
     startTransition(async () => {
       const res = await saveProperty(fd, false)
       if (res?.error) setError(res.error)
-      else setSuccess('💾 Borrador guardado. Puedes seguir editando — solo tú lo ves hasta que pulses "Enviar propiedad".')
+      else setSuccess(`💾 ${t('form.draftSaved')}`)
     })
   }
 
@@ -212,7 +214,7 @@ export function PropertyForm({
     startTransition(async () => {
       const res = await submitProperty(fd)
       if (res && 'error' in res && res.error) setError(res.error)
-      else setSuccess('✅ Propiedad enviada a la oficina. Te avisaremos cuando esté publicada.')
+      else setSuccess(`✅ ${t('form.submitted')}`)
     })
   }
 
@@ -226,16 +228,16 @@ export function PropertyForm({
       {isEditing && (
         <div className="flex items-center justify-between rounded-xl border border-[#C9A84C]/40 bg-[#C9A84C]/10 px-4 py-3">
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#C9A84C]">Editando propiedad</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-[#C9A84C]">{t('form.editingProperty')}</p>
             <p className="mt-0.5 text-sm text-[#F5F0E8]">
-              {initialProperty?.reference} — {initialProperty?.title_headline || initialProperty?.location || 'Sin título'}
+              {initialProperty?.reference} — {initialProperty?.title_headline || initialProperty?.location || t('form.untitled')}
             </p>
           </div>
           <a
             href="/properties"
             className="rounded-lg border border-white/10 px-3 py-1.5 text-xs font-bold text-[#9A9080] hover:text-[#F5F0E8]"
           >
-            ✕ Cancelar
+            ✕ {t('form.cancel')}
           </a>
         </div>
       )}
@@ -243,7 +245,7 @@ export function PropertyForm({
       {/* Selector de agente (admin/secretary) */}
       {canPickAgent && (
         <div className="rounded-xl border border-[#8B7CF6]/30 bg-[#8B7CF6]/8 px-4 py-3">
-          <label className={`${labelClass} text-[#8B7CF6]`}>Agente dueño de la propiedad *</label>
+          <label className={`${labelClass} text-[#8B7CF6]`}>{t('form.agentOwner')} *</label>
           <select
             name="agent_id"
             value={selectedAgentId}
@@ -256,25 +258,25 @@ export function PropertyForm({
               </option>
             ))}
           </select>
-          <p className="mt-1.5 text-[10px] text-[#9A9080]">La propiedad se guarda a nombre de este agente.</p>
+          <p className="mt-1.5 text-[10px] text-[#9A9080]">{t('form.agentOwnerHint')}</p>
         </div>
       )}
 
       {/* ═══ Barra de pestañas (scroll horizontal en móvil) ═══ */}
       <div className="sticky top-0 z-20 -mx-4 border-b border-white/8 bg-[#0A0A0A]/95 px-4 py-2 backdrop-blur-xl sm:mx-0 sm:rounded-xl sm:border sm:border-white/8 sm:px-3">
         <div className="flex gap-1.5 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {TABS.map((t) => (
+          {TABS.map((tab) => (
             <button
-              key={t.id}
+              key={tab.id}
               type="button"
-              onClick={() => setActiveTab(t.id)}
+              onClick={() => setActiveTab(tab.id)}
               className={`shrink-0 whitespace-nowrap rounded-lg px-3.5 py-2 text-xs font-bold transition ${
-                activeTab === t.id
+                activeTab === tab.id
                   ? 'bg-[#C9A84C] text-black'
                   : 'bg-white/5 text-[#9A9080] hover:bg-white/10 hover:text-[#F5F0E8]'
               }`}
             >
-              {t.label}
+              {tab.emoji} {t(tab.labelKey)}
             </button>
           ))}
         </div>
@@ -287,17 +289,16 @@ export function PropertyForm({
         {/* Precio (PRIMER campo) + calculadora de comisión */}
         <section className={sectionClass}>
           <h2 className={sectionTitle}>
-            💰 Precio<Req />
+            💰 {t('price.title')}<Req />
           </h2>
           <p className={sectionSubtitle}>
-            Pon el <strong>precio de venta de la web</strong> (ya incluye la comisión de CBI) y el % de comisión.
-            Calculamos la comisión y lo que recibe el propietario.
+            {t.rich('price.subtitle', { strong: (chunks) => <strong>{chunks}</strong> })}
           </p>
 
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
               <label className={labelClass}>
-                Precio de venta (web, €)<Req />
+                {t('price.salePriceLabel')}<Req />
               </label>
               <input
                 type="number"
@@ -308,7 +309,7 @@ export function PropertyForm({
               />
             </div>
             <div>
-              <label className={labelClass}>% comisión CBI</label>
+              <label className={labelClass}>{t('price.commissionPct')}</label>
               <input
                 type="number"
                 step="0.1"
@@ -323,16 +324,16 @@ export function PropertyForm({
           {salePrice > 0 && (
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               <div className="rounded-xl border border-[#2ECC9A]/30 bg-[#2ECC9A]/8 p-4">
-                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#2ECC9A]">💵 Comisión CBI</p>
+                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#2ECC9A]">💵 {t('price.commissionCbi')}</p>
                 <p className="mt-1 text-2xl font-bold text-[#2ECC9A]">€{calculation.commission.toLocaleString('es-ES')}</p>
                 <p className="text-[10px] text-[#9A9080]">
-                  {commissionPct}% sobre €{salePrice.toLocaleString('es-ES')}
+                  {t('price.commissionOver', { pct: commissionPct, amount: salePrice.toLocaleString('es-ES') })}
                 </p>
               </div>
               <div className="rounded-xl border border-[#C9A84C]/30 bg-[#C9A84C]/8 p-4">
-                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#C9A84C]">🏷️ Recibe el propietario</p>
+                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#C9A84C]">🏷️ {t('price.ownerReceives')}</p>
                 <p className="mt-1 text-2xl font-bold text-[#C9A84C]">€{calculation.ownerReceives.toLocaleString('es-ES')}</p>
-                <p className="text-[10px] text-[#9A9080]">Precio de venta − comisión</p>
+                <p className="text-[10px] text-[#9A9080]">{t('price.ownerReceivesHint')}</p>
               </div>
             </div>
           )}
@@ -343,7 +344,7 @@ export function PropertyForm({
           <div className="grid gap-4 sm:grid-cols-3">
             <div>
               <label className={labelClass}>
-                📍 Zona<Req />
+                📍 {t('general.zone')}<Req />
               </label>
               <select value={zone} onChange={(e) => setZone(e.target.value)} className={inputClass}>
                 {ZONES.map((z) => (
@@ -355,7 +356,7 @@ export function PropertyForm({
             </div>
             <div>
               <label className={labelClass}>
-                🏠 Tipo de propiedad<Req />
+                🏠 {t('general.propertyType')}<Req />
               </label>
               <select
                 value={propertyType}
@@ -371,7 +372,7 @@ export function PropertyForm({
             </div>
             <div>
               <label className={labelClass}>
-                Vistas<Req />
+                {t('general.views')}<Req />
               </label>
               <select name="views" className={inputClass} defaultValue={initialProperty?.views ?? ''}>
                 <option value="">—</option>
@@ -387,8 +388,8 @@ export function PropertyForm({
 
         {/* Tamaños y habitaciones */}
         <section className={sectionClass}>
-          <h2 className={sectionTitle}>📐 Tamaños y habitaciones</h2>
-          <p className={sectionSubtitle}>Las medidas y habitaciones de la propiedad principal.</p>
+          <h2 className={sectionTitle}>📐 {t('sizes.title')}</h2>
+          <p className={sectionSubtitle}>{t('sizes.subtitle')}</p>
 
           <div className="grid gap-4 lg:grid-cols-2">
             {/* Columna izquierda: tamaños */}
@@ -396,7 +397,7 @@ export function PropertyForm({
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
                   <label className={labelClass}>
-                    Built size / Construido (m²)<Req />
+                    {t('sizes.builtSize')}<Req />
                   </label>
                   <input
                     name="build_area_m2"
@@ -408,7 +409,7 @@ export function PropertyForm({
                 </div>
                 <div>
                   <label className={labelClass}>
-                    Plot size / Parcela (m²){!plotOptional && <Req />}
+                    {t('sizes.plotSize')}{!plotOptional && <Req />}
                   </label>
                   <input
                     name="plot_area_m2"
@@ -418,11 +419,11 @@ export function PropertyForm({
                     placeholder="0"
                   />
                   <p className="mt-1 text-[10px] text-[#9A9080]">
-                    Si la propiedad no tiene parcela, escribe aquí lo mismo que en Construido.
+                    {t('sizes.plotHint')}
                   </p>
                 </div>
                 <div>
-                  <label className={labelClass}>Useful (m²)</label>
+                  <label className={labelClass}>{t('sizes.useful')}</label>
                   <input
                     name="useful_area_m2"
                     type="number"
@@ -432,7 +433,7 @@ export function PropertyForm({
                   />
                 </div>
                 <div>
-                  <label className={labelClass}>Terrace (m²)</label>
+                  <label className={labelClass}>{t('sizes.terrace')}</label>
                   <input
                     name="terrace_area_m2"
                     type="number"
@@ -442,7 +443,7 @@ export function PropertyForm({
                   />
                 </div>
                 <div className="sm:col-span-2">
-                  <label className={labelClass}>Superficie Jardín (m²)</label>
+                  <label className={labelClass}>{t('sizes.garden')}</label>
                   <input
                     name="garden_area_m2"
                     type="number"
@@ -457,27 +458,27 @@ export function PropertyForm({
             {/* Columna derecha: habitaciones */}
             <div className="space-y-3">
               <div>
-                <label className={labelClass}>Bedrooms</label>
+                <label className={labelClass}>{t('rooms.bedrooms')}</label>
                 <NumberSelect name="bedrooms" defaultValue={getNum('bedrooms')} max={15} />
               </div>
               <div>
-                <label className={labelClass}>Bathrooms</label>
+                <label className={labelClass}>{t('rooms.bathrooms')}</label>
                 <NumberSelect name="bathrooms" defaultValue={getNum('bathrooms')} max={10} />
               </div>
               <div>
-                <label className={labelClass}>Guest toilet</label>
+                <label className={labelClass}>{t('rooms.guestToilet')}</label>
                 <NumberSelect name="toilets" defaultValue={getNum('toilets')} max={5} />
               </div>
               <div>
-                <label className={labelClass}>Lounge</label>
+                <label className={labelClass}>{t('rooms.lounge')}</label>
                 <NumberSelect name="living_rooms" defaultValue={getNum('living_rooms')} max={5} />
               </div>
               <div>
-                <label className={labelClass}>Dining room</label>
+                <label className={labelClass}>{t('rooms.diningRoom')}</label>
                 <NumberSelect name="dining_rooms" defaultValue={getNum('dining_rooms')} max={5} />
               </div>
               <div>
-                <label className={labelClass}>Kitchen</label>
+                <label className={labelClass}>{t('rooms.kitchen')}</label>
                 <select
                   name="kitchen_type"
                   className={inputClass}
@@ -493,7 +494,7 @@ export function PropertyForm({
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
-                  <label className={labelClass}>Build year</label>
+                  <label className={labelClass}>{t('rooms.buildYear')}</label>
                   <input
                     name="year_built"
                     type="number"
@@ -503,7 +504,7 @@ export function PropertyForm({
                   />
                 </div>
                 <div>
-                  <label className={labelClass}>Renovated in</label>
+                  <label className={labelClass}>{t('rooms.renovatedIn')}</label>
                   <input
                     name="year_reformed"
                     type="number"
@@ -521,8 +522,8 @@ export function PropertyForm({
         <section className={sectionClass}>
           <div className="mb-4 flex items-center justify-between">
             <div>
-              <h2 className={sectionTitle}>🛏️ Guest Apartment</h2>
-              <p className={sectionSubtitle}>Apartamento de invitados (si la propiedad lo tiene).</p>
+              <h2 className={sectionTitle}>🛏️ {t('guest.title')}</h2>
+              <p className={sectionSubtitle}>{t('guest.subtitle')}</p>
             </div>
             <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-white/10 bg-[#1C1C1C] px-3 py-2 text-xs text-[#F5F0E8]">
               <input
@@ -531,34 +532,34 @@ export function PropertyForm({
                 onChange={(e) => setHasGuestApt(e.target.checked)}
                 className="accent-[#C9A84C]"
               />
-              Tiene apartamento de invitados
+              {t('guest.hasGuestApartment')}
             </label>
           </div>
 
           {hasGuestApt && (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               <div>
-                <label className={labelClass}>Bedrooms</label>
+                <label className={labelClass}>{t('rooms.bedrooms')}</label>
                 <NumberSelect name="guest_bedrooms" defaultValue={getNum('guest_bedrooms')} max={10} />
               </div>
               <div>
-                <label className={labelClass}>Bathrooms</label>
+                <label className={labelClass}>{t('rooms.bathrooms')}</label>
                 <NumberSelect name="guest_bathrooms" defaultValue={getNum('guest_bathrooms')} max={10} />
               </div>
               <div>
-                <label className={labelClass}>Toilet</label>
+                <label className={labelClass}>{t('rooms.toilet')}</label>
                 <NumberSelect name="guest_toilets" defaultValue={getNum('guest_toilets')} max={10} />
               </div>
               <div>
-                <label className={labelClass}>Lounge</label>
+                <label className={labelClass}>{t('rooms.lounge')}</label>
                 <NumberSelect name="guest_lounge_count" defaultValue={getNum('guest_lounge_count')} max={10} />
               </div>
               <div>
-                <label className={labelClass}>Dining room</label>
+                <label className={labelClass}>{t('rooms.diningRoom')}</label>
                 <NumberSelect name="guest_dining_count" defaultValue={getNum('guest_dining_count')} max={10} />
               </div>
               <div>
-                <label className={labelClass}>Kitchen</label>
+                <label className={labelClass}>{t('rooms.kitchen')}</label>
                 <NumberSelect name="guest_kitchen_count" defaultValue={getNum('guest_kitchen_count')} max={10} />
               </div>
             </div>
@@ -567,12 +568,12 @@ export function PropertyForm({
 
         {/* Certificado energético */}
         <section className={sectionClass}>
-          <h2 className={sectionTitle}>⚡ Certificado energético</h2>
-          <p className={sectionSubtitle}>Las dos calificaciones oficiales (emisiones y consumo).</p>
+          <h2 className={sectionTitle}>⚡ {t('energy.title')}</h2>
+          <p className={sectionSubtitle}>{t('energy.subtitle')}</p>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className={labelClass}>Energy rating (emisiones)</label>
+              <label className={labelClass}>{t('energy.emissionsRating')}</label>
               <select
                 name="energy_certificate"
                 className={inputClass}
@@ -587,7 +588,7 @@ export function PropertyForm({
               </select>
             </div>
             <div>
-              <label className={labelClass}>Calificación energética consumo</label>
+              <label className={labelClass}>{t('energy.consumptionRating')}</label>
               <select
                 name="energy_consumption_rating"
                 className={inputClass}
@@ -629,8 +630,8 @@ export function PropertyForm({
       <div className={`space-y-5 ${hide('location')}`}>
         {/* Dirección — NO TOCAR la lógica */}
         <section className={sectionClass}>
-          <h2 className={sectionTitle}>📍 Dirección</h2>
-          <p className={sectionSubtitle}>Busca la dirección oficial. Si no se valida, los portales pueden rechazarla.</p>
+          <h2 className={sectionTitle}>📍 {t('location.addressTitle')}</h2>
+          <p className={sectionSubtitle}>{t('location.addressSubtitle')}</p>
 
           <AddressPicker
             initialQuery={getStr('location')}
@@ -654,7 +655,7 @@ export function PropertyForm({
           <div className="mt-5 grid gap-3 sm:grid-cols-[2fr_1fr_1fr_1fr]">
             <div>
               <label className={labelClass}>
-                Calle <span className="text-red-400">*</span>
+                {t('location.street')} <span className="text-red-400">*</span>
               </label>
               <input
                 name="street_name"
@@ -665,7 +666,7 @@ export function PropertyForm({
             </div>
             <div>
               <label className={labelClass}>
-                Número <span className="text-red-400">*</span>
+                {t('location.number')} <span className="text-red-400">*</span>
               </label>
               <input
                 name="street_number"
@@ -675,7 +676,7 @@ export function PropertyForm({
               />
             </div>
             <div>
-              <label className={labelClass}>Planta</label>
+              <label className={labelClass}>{t('location.floor')}</label>
               <input
                 name="apartment_floor"
                 defaultValue={getStr('apartment_floor')}
@@ -684,7 +685,7 @@ export function PropertyForm({
               />
             </div>
             <div>
-              <label className={labelClass}>Puerta</label>
+              <label className={labelClass}>{t('location.door')}</label>
               <input
                 name="apartment_door"
                 defaultValue={getStr('apartment_door')}
@@ -697,18 +698,18 @@ export function PropertyForm({
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
             <div>
               <label className={labelClass}>
-                Población <span className="text-red-400">*</span>
+                {t('location.city')} <span className="text-red-400">*</span>
               </label>
               <input
                 name="city"
                 defaultValue={getStr('city')}
                 className={inputClass}
-                placeholder="p. ej. Alicante"
+                placeholder={t('location.cityPlaceholder')}
               />
             </div>
             <div>
               <label className={labelClass}>
-                Código postal <span className="text-red-400">*</span>
+                {t('location.postalCode')} <span className="text-red-400">*</span>
               </label>
               <input
                 name="postal_code"
@@ -724,8 +725,8 @@ export function PropertyForm({
 
         {/* Propietario */}
         <section className={sectionClass}>
-          <h2 className={sectionTitle}>👤 Propietario</h2>
-          <p className={sectionSubtitle}>Asocia un propietario existente o crea uno nuevo.</p>
+          <h2 className={sectionTitle}>👤 {t('location.ownerTitle')}</h2>
+          <p className={sectionSubtitle}>{t('location.ownerSubtitle')}</p>
           <OwnerPicker value={ownerId} onChange={(id) => setOwnerId(id)} />
         </section>
       </div>
@@ -737,12 +738,12 @@ export function PropertyForm({
       <div className={`space-y-5 ${hide('costs')}`}>
         {/* Community costs */}
         <section className={sectionClass}>
-          <h2 className={sectionTitle}>🏘️ Community costs</h2>
-          <p className={sectionSubtitle}>Gastos anuales (€). No obligatorios, pero importantes en pisos.</p>
+          <h2 className={sectionTitle}>🏘️ {t('costs.title')}</h2>
+          <p className={sectionSubtitle}>{t('costs.subtitle')}</p>
 
           <div className="grid gap-4 sm:grid-cols-3">
             <div>
-              <label className={labelClass}>Gastos comunidad / año</label>
+              <label className={labelClass}>{t('costs.communityAnnual')}</label>
               <input
                 name="community_annual"
                 type="number"
@@ -752,7 +753,7 @@ export function PropertyForm({
               />
             </div>
             <div>
-              <label className={labelClass}>IBI / año</label>
+              <label className={labelClass}>{t('costs.ibiAnnual')}</label>
               <input
                 name="ibi_annual"
                 type="number"
@@ -762,7 +763,7 @@ export function PropertyForm({
               />
             </div>
             <div>
-              <label className={labelClass}>Basura / año</label>
+              <label className={labelClass}>{t('costs.wasteAnnual')}</label>
               <input
                 name="basura_annual"
                 type="number"
@@ -776,8 +777,8 @@ export function PropertyForm({
 
         {/* Publicación en portales + Feeds XML */}
         <section className={sectionClass}>
-          <h2 className={sectionTitle}>🌐 Publicación en portales</h2>
-          <p className={sectionSubtitle}>Marca dónde quieres que se publique. Sooprema viene marcado por defecto.</p>
+          <h2 className={sectionTitle}>🌐 {t('portals.title')}</h2>
+          <p className={sectionSubtitle}>{t('portals.subtitle')}</p>
 
           <div className="grid gap-2.5 sm:grid-cols-3">
             <label className="flex cursor-pointer items-center gap-2.5 rounded-lg border border-white/10 bg-[#1C1C1C] px-3 py-2.5 text-sm text-[#F5F0E8] transition hover:border-[#C9A84C]/40">
@@ -853,7 +854,7 @@ export function PropertyForm({
           disabled={isPending}
           className="w-full rounded-xl border border-white/15 bg-white/5 px-6 py-3.5 text-sm font-bold uppercase tracking-[0.06em] text-[#F5F0E8] transition active:scale-[0.98] hover:bg-white/10 disabled:opacity-50 sm:w-auto sm:flex-1"
         >
-          {isPending ? '⏳ Guardando...' : '💾 Guardar borrador'}
+          {isPending ? `⏳ ${t('form.savingDraft')}` : `💾 ${t('form.saveDraft')}`}
         </button>
         <button
           type="button"
@@ -861,7 +862,7 @@ export function PropertyForm({
           disabled={isPending}
           className="w-full rounded-xl bg-[#C9A84C] px-6 py-3.5 text-sm font-bold uppercase tracking-[0.06em] text-black transition active:scale-[0.98] hover:bg-[#E8C96A] disabled:opacity-50 sm:w-auto sm:flex-[2]"
         >
-          {isPending ? '⏳ Enviando...' : '📨 Enviar propiedad'}
+          {isPending ? `⏳ ${t('form.submitting')}` : `📨 ${t('form.submitProperty')}`}
         </button>
       </div>
     </form>

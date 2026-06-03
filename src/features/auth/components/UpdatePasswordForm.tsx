@@ -43,7 +43,7 @@ export function UpdatePasswordForm() {
               refresh_token: refreshToken,
             })
             if (error) {
-              setBootError('El enlace ha caducado o es inválido. Pide otro reset desde "He olvidado mi contraseña".')
+              setBootError(t('linkExpiredFragment'))
               return
             }
             // Limpiar el hash de la URL (ya no lo necesitamos y por seguridad)
@@ -59,7 +59,7 @@ export function UpdatePasswordForm() {
         if (code) {
           const { error } = await supabase.auth.exchangeCodeForSession(code)
           if (error) {
-            setBootError('El enlace ha caducado o es inválido. Pide otro reset.')
+            setBootError(t('linkExpiredCode'))
             return
           }
           window.history.replaceState(null, '', url.pathname)
@@ -68,9 +68,9 @@ export function UpdatePasswordForm() {
         }
 
         // Caso 4: nada que procesar — usuario llegó manualmente sin link
-        setBootError('Acceso inválido. Solicita un nuevo enlace desde "He olvidado mi contraseña".')
+        setBootError(t('accessInvalid'))
       } catch (err) {
-        const msg = err instanceof Error ? err.message : 'Error desconocido'
+        const msg = err instanceof Error ? err.message : t('unknownError')
         setBootError(msg)
       }
     }

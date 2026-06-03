@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import {
   inputClass,
   labelClass,
@@ -22,6 +23,7 @@ export function EquipmentTab({
 }: {
   initialProperty: Record<string, unknown> | null
 }) {
+  const t = useTranslations('properties')
   const getStr = (k: string): string => {
     const v = initialProperty?.[k]
     return typeof v === 'string' ? v : ''
@@ -29,17 +31,17 @@ export function EquipmentTab({
   const getBool = (k: string): boolean => Boolean(initialProperty?.[k])
 
   const dropdowns: { name: string; label: string; options: string[] }[] = [
-    { name: 'heating_type', label: 'Heating', options: HEATING_OPTIONS },
-    { name: 'pool_type', label: 'Pool', options: POOL_OPTIONS },
-    { name: 'ac_type', label: 'Air Conditioning', options: AC_OPTIONS },
-    { name: 'furniture_status', label: 'Furnitures type', options: FURNITURE_OPTIONS },
+    { name: 'heating_type', label: t('equipment.heating'), options: HEATING_OPTIONS },
+    { name: 'pool_type', label: t('equipment.pool'), options: POOL_OPTIONS },
+    { name: 'ac_type', label: t('equipment.airConditioning'), options: AC_OPTIONS },
+    { name: 'furniture_status', label: t('equipment.furnitureType'), options: FURNITURE_OPTIONS },
   ]
 
   return (
     <div>
-      <h2 className={sectionTitle}>🛠️ Equipment</h2>
+      <h2 className={sectionTitle}>🛠️ {t('equipment.title')}</h2>
       <p className={sectionSubtitle}>
-        Calefacción, piscina, climatización, mobiliario y el resto de equipamiento de la propiedad.
+        {t('equipment.subtitle')}
       </p>
 
       {/* Desplegables */}

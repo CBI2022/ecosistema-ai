@@ -1,3 +1,4 @@
+import { getTranslations } from 'next-intl/server'
 import type { LeaderboardRow } from '@/actions/fub-stats'
 
 interface Props {
@@ -5,19 +6,20 @@ interface Props {
   scope: 'week' | 'month'
 }
 
-export function ActivityLeaderboard({ rows, scope }: Props) {
+export async function ActivityLeaderboard({ rows, scope }: Props) {
+  const t = await getTranslations('fub')
   const max = Math.max(...rows.map((r) => r.score), 1)
 
   return (
     <section className="rounded-2xl border border-[#C9A84C]/20 bg-[#0F0F0F] p-5">
       <header className="mb-4 flex items-baseline justify-between">
-        <h3 className="text-sm font-semibold text-[#F5F0E8]">Activity Leaderboard</h3>
+        <h3 className="text-sm font-semibold text-[#F5F0E8]">{t('leaderboard.title')}</h3>
         <span className="text-[10px] uppercase tracking-[0.18em] text-[#9A9080]">
-          esta {scope === 'week' ? 'semana' : 'mes'}
+          {scope === 'week' ? t('leaderboard.scopeWeek') : t('leaderboard.scopeMonth')}
         </span>
       </header>
       {rows.length === 0 ? (
-        <div className="py-6 text-center text-sm text-[#9A9080]">Sin actividad registrada</div>
+        <div className="py-6 text-center text-sm text-[#9A9080]">{t('leaderboard.empty')}</div>
       ) : (
         <div className="space-y-2">
           {rows.map((r, i) => {
@@ -31,7 +33,7 @@ export function ActivityLeaderboard({ rows, scope }: Props) {
                       <span className="truncate">{r.name}</span>
                       {r.is_admin && (
                         <span className="flex-shrink-0 rounded bg-[#C9A84C]/20 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-[#C9A84C]">
-                          admin
+                          {t('leaderboard.adminBadge')}
                         </span>
                       )}
                     </div>
@@ -47,16 +49,16 @@ export function ActivityLeaderboard({ rows, scope }: Props) {
                     />
                   </div>
                   <div className="mt-1 grid grid-cols-5 gap-1 text-[10px] text-[#9A9080]">
-                    <span title="Llamadas">📞 {r.calls}</span>
-                    <span title="Conversaciones (>60s)">💬 {r.conversations}</span>
-                    <span title="Texts">📱 {r.texts}</span>
-                    <span title="Emails">✉️ {r.emails}</span>
-                    <span title="Citas held">📅 {r.appointments_held}</span>
+                    <span title={t('leaderboard.tipCalls')}>📞 {r.calls}</span>
+                    <span title={t('leaderboard.tipConversations')}>💬 {r.conversations}</span>
+                    <span title={t('leaderboard.tipTexts')}>📱 {r.texts}</span>
+                    <span title={t('leaderboard.tipEmails')}>✉️ {r.emails}</span>
+                    <span title={t('leaderboard.tipAppointmentsHeld')}>📅 {r.appointments_held}</span>
                   </div>
                 </div>
                 <div className="text-right">
                   <div className="text-xs font-bold text-[#F5F0E8]">{r.new_leads}</div>
-                  <div className="text-[9px] uppercase tracking-[0.14em] text-[#9A9080]">leads</div>
+                  <div className="text-[9px] uppercase tracking-[0.14em] text-[#9A9080]">{t('leaderboard.leadsLabel')}</div>
                 </div>
               </div>
             )

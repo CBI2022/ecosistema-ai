@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server'
+
 interface Props {
   threshold_days: number
   people: Array<{
@@ -11,27 +13,31 @@ interface Props {
   }>
 }
 
-function daysAgo(iso: string | null): string {
-  if (!iso) return 'nunca'
+function daysAgo(
+  iso: string | null,
+  t: (key: string, values?: Record<string, string | number>) => string,
+): string {
+  if (!iso) return t('stalled.never')
   const days = Math.floor((Date.now() - new Date(iso).getTime()) / (1000 * 3600 * 24))
-  return `${days}d sin contacto`
+  return t('stalled.daysNoContact', { n: days })
 }
 
-export function StalledLeads({ threshold_days, people }: Props) {
+export async function StalledLeads({ threshold_days, people }: Props) {
+  const t = await getTranslations('fub')
   return (
     <section className="rounded-2xl border border-[#D4A056]/30 bg-gradient-to-br from-[#1A1408] to-[#0F0F0F] p-5">
       <header className="mb-3 flex items-baseline justify-between">
         <h3 className="flex items-center gap-2 text-sm font-semibold text-[#F5F0E8]">
           <span className="text-base">⏱️</span>
-          Stalled — recuperar
+          {t('stalled.title')}
         </h3>
         <span className="text-[10px] uppercase tracking-[0.18em] text-[#D4A056]">
-          ≥ {threshold_days} días
+          {t('stalled.threshold', { n: threshold_days })}
         </span>
       </header>
       {people.length === 0 ? (
         <div className="py-6 text-center text-sm text-[#9A9080]">
-          Sin leads abandonados. Excelente seguimiento.
+          {t('stalled.empty')}
         </div>
       ) : (
         <ul className="space-y-1.5">
@@ -48,17 +54,21 @@ export function StalledLeads({ threshold_days, people }: Props) {
                   </div>
                 </div>
                 <div className="flex-shrink-0 text-right text-[10px] font-medium text-[#D4A056]">
-                  {daysAgo(p.last_activity_at)}
+                  {daysAgo(p.last_activity_at, t)}
                 </div>
               </a>
             </li>
           ))}
           {people.length > 8 && (
             <li className="pt-1 text-center text-[11px] text-[#9A9080]">
-              +{people.length - 8} más en{' '}
-              <a href="/leads?filter=stalled" className="font-medium text-[#C9A84C] hover:underline">
-                /leads
-              </a>
+              {t.rich('stalled.moreInLeads', {
+                n: people.length - 8,
+                link: (chunks) => (
+                  <a href="/leads?filter=stalled" className="font-medium text-[#C9A84C] hover:underline">
+                    {chunks}
+                  </a>
+                ),
+              })}
             </li>
           )}
         </ul>

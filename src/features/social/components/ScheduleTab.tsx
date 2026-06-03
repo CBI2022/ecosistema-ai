@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { useTranslations } from 'next-intl'
 import { cancelScheduledPost, publishNow } from '@/actions/social'
 import type { ScheduledPost, SocialPlatform } from '@/types/database'
 
@@ -14,15 +15,16 @@ const PLATFORM_COLORS: Record<SocialPlatform, string> = {
   tiktok: '#69C9D0',
 }
 
-const STATUS_COLORS: Record<string, { bg: string; text: string; label: string }> = {
-  queued: { bg: 'bg-[#C9A84C]/15', text: 'text-[#C9A84C]', label: 'En cola' },
-  publishing: { bg: 'bg-blue-500/15', text: 'text-blue-400', label: 'Publicando' },
-  published: { bg: 'bg-[#2ECC9A]/15', text: 'text-[#2ECC9A]', label: 'Publicado' },
-  failed: { bg: 'bg-red-500/15', text: 'text-red-400', label: 'Fallido' },
-  cancelled: { bg: 'bg-white/10', text: 'text-[#9A9080]', label: 'Cancelado' },
+const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
+  queued: { bg: 'bg-[#C9A84C]/15', text: 'text-[#C9A84C]' },
+  publishing: { bg: 'bg-blue-500/15', text: 'text-blue-400' },
+  published: { bg: 'bg-[#2ECC9A]/15', text: 'text-[#2ECC9A]' },
+  failed: { bg: 'bg-red-500/15', text: 'text-red-400' },
+  cancelled: { bg: 'bg-white/10', text: 'text-[#9A9080]' },
 }
 
 export function ScheduleTab({ posts: initialPosts }: Props) {
+  const t = useTranslations('social')
   const [posts, setPosts] = useState(initialPosts)
   const [, startTransition] = useTransition()
   const [filter, setFilter] = useState<string>('active')
@@ -36,20 +38,20 @@ export function ScheduleTab({ posts: initialPosts }: Props) {
   }
 
   function handleCancel(postId: string) {
-    if (!window.confirm('¿Cancelar esta publicación programada?')) return
+    if (!window.confirm(t('schedule.confirmCancel'))) return
     updatePost(postId, { status: 'cancelled' })
     startTransition(async () => { await cancelScheduledPost(postId) })
   }
 
   function handlePublishNow(postId: string) {
-    if (!window.confirm('¿Publicar ahora en todas las redes seleccionadas?')) return
+    if (!window.confirm(t('schedule.confirmPublishNow'))) return
     updatePost(postId, { status: 'publishing' })
     startTransition(async () => {
       const res = await publishNow(postId)
       if (res?.success) {
         updatePost(postId, { status: 'published' })
       } else {
-        updatePost(postId, { status: 'failed', error_message: res?.errors?.join(' · ') || 'Error' })
+        updatePost(postId, { status: 'failed', error_message: res?.errors?.join(' · ') || t('schedule.error') })
       }
     })
   }
@@ -58,9 +60,9 @@ export function ScheduleTab({ posts: initialPosts }: Props) {
     <div className="space-y-4">
       <div className="flex gap-2">
         {[
-          { id: 'active', label: 'Activos', count: active.length },
-          { id: 'history', label: 'Historial', count: history.length },
-          { id: 'all', label: 'Todos', count: posts.length },
+          { id: 'active', label: t('schedule.filterActive'), count: active.length },
+          { id: 'history', label: t('schedule.filterHistory'), count: history.length },
+          { id: 'all', label: t('schedule.filterAll'), count: posts.length },
         ].map((f) => (
           <button
             key={f.id}
@@ -80,7 +82,7 @@ export function ScheduleTab({ posts: initialPosts }: Props) {
       {shown.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-white/10 bg-[#131313] p-12 text-center">
           <div className="mb-3 text-4xl opacity-30">📅</div>
-          <p className="text-sm font-semibold text-[#9A9080]">No hay publicaciones en esta vista</p>
+          <p className="text-sm font-semibold text-[#9A9080]">{t('schedule.empty')}</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -104,10 +106,10 @@ export function ScheduleTab({ posts: initialPosts }: Props) {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <p className="truncate font-semibold text-[#F5F0E8]">
-                      {post.clips?.title || 'Clip'}
+                      {post.clips?.title || t('schedule.clipFallback')}
                     </p>
                     <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold uppercase ${status.bg} ${status.text}`}>
-                      {status.label}
+                      {t(`schedule.status.${post.status}`)}
                     </span>
                   </div>
                   <p className="mt-1 line-clamp-1 text-xs text-[#9A9080]">{post.caption}</p>
@@ -153,13 +155,13 @@ export function ScheduleTab({ posts: initialPosts }: Props) {
                       onClick={() => handlePublishNow(post.id)}
                       className="rounded-lg bg-[#2ECC9A]/15 px-3 py-1.5 text-xs font-bold text-[#2ECC9A] transition hover:bg-[#2ECC9A]/25"
                     >
-                      🚀 Publicar ya
+                      🚀 {t('schedule.publishNow')}
                     </button>
                     <button
                       onClick={() => handleCancel(post.id)}
                       className="rounded-lg bg-red-500/10 px-3 py-1.5 text-xs font-bold text-red-400 transition hover:bg-red-500/20"
                     >
-                      ✕ Cancelar
+                      ✕ {t('schedule.cancel')}
                     </button>
                   </div>
                 )}

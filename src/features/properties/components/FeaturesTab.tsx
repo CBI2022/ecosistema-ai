@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import {
   inputClass,
   labelClass,
@@ -25,6 +26,7 @@ export function FeaturesTab({
 }: {
   initialProperty: Record<string, unknown> | null
 }) {
+  const t = useTranslations('properties')
   const getStr = (k: string): string => {
     const v = initialProperty?.[k]
     if (typeof v === 'string') return v
@@ -35,15 +37,15 @@ export function FeaturesTab({
 
   return (
     <div>
-      <h2 className={sectionTitle}>✨ Features</h2>
+      <h2 className={sectionTitle}>✨ {t('features.title')}</h2>
       <p className={sectionSubtitle}>
-        Orientación, terreno, plantas, comunicaciones y distancias a servicios.
+        {t('features.subtitle')}
       </p>
 
       {/* Desplegables */}
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label className={labelClass}>Orientation</label>
+          <label className={labelClass}>{t('features.orientation')}</label>
           <select name="orientation" className={inputClass} defaultValue={getStr('orientation')}>
             <option value="">—</option>
             {ORIENTATION_OPTIONS.map((o) => (
@@ -54,7 +56,7 @@ export function FeaturesTab({
           </select>
         </div>
         <div>
-          <label className={labelClass}>Terrain</label>
+          <label className={labelClass}>{t('features.terrain')}</label>
           <select name="terrain_type" className={inputClass} defaultValue={getStr('terrain_type')}>
             <option value="">—</option>
             {TERRAIN_OPTIONS.map((o) => (
@@ -65,7 +67,7 @@ export function FeaturesTab({
           </select>
         </div>
         <div>
-          <label className={labelClass}>Floors (nº total de plantas)</label>
+          <label className={labelClass}>{t('features.totalFloors')}</label>
           <select name="total_floors" className={inputClass} defaultValue={getStr('total_floors')}>
             <option value="">—</option>
             {FLOORS_OPTIONS.map((o) => (
@@ -76,7 +78,7 @@ export function FeaturesTab({
           </select>
         </div>
         <div>
-          <label className={labelClass}>Floor nº (planta donde está)</label>
+          <label className={labelClass}>{t('features.floorLabel')}</label>
           <select name="floor_label" className={inputClass} defaultValue={getStr('floor_label')}>
             <option value="">—</option>
             {FLOOR_LABEL_OPTIONS.map((o) => (
@@ -87,12 +89,12 @@ export function FeaturesTab({
           </select>
         </div>
         <div className="sm:col-span-2">
-          <label className={labelClass}>Construction type</label>
+          <label className={labelClass}>{t('features.constructionType')}</label>
           <input
             name="construction_type"
             defaultValue={getStr('construction_type')}
             className={inputClass}
-            placeholder="p. ej. Obra nueva, Rústica..."
+            placeholder={t('features.constructionTypePlaceholder')}
           />
         </div>
       </div>

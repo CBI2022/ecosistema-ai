@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { useTranslations } from 'next-intl'
 import {
   syncFubFromZero,
   subscribeFubWebhooks,
@@ -45,15 +46,16 @@ interface Props {
 }
 
 export function FubAdminPanel({ health, webhookLog, mappings, profiles }: Props) {
+  const t = useTranslations('fub')
   const [isPending, startTransition] = useTransition()
   const [message, setMessage] = useState<string | null>(null)
 
   const run = (label: string, fn: () => Promise<unknown>) => {
     startTransition(async () => {
-      setMessage(`${label}…`)
+      setMessage(t('admin.running', { label }))
       try {
         const result = await fn()
-        setMessage(`✅ ${label} OK · ${JSON.stringify(result).slice(0, 200)}`)
+        setMessage(`✅ ${t('admin.ok', { label })} · ${JSON.stringify(result).slice(0, 200)}`)
       } catch (err) {
         setMessage(`❌ ${label} → ${(err as Error).message}`)
       }
@@ -64,7 +66,7 @@ export function FubAdminPanel({ health, webhookLog, mappings, profiles }: Props)
     <div className="space-y-4">
       {/* Health */}
       <section className="rounded-2xl border border-[#C9A84C]/20 bg-[#0F0F0F] p-5">
-        <h3 className="mb-3 text-sm font-semibold text-[#F5F0E8]">Health</h3>
+        <h3 className="mb-3 text-sm font-semibold text-[#F5F0E8]">{t('admin.health')}</h3>
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-6">
           {health?.counts &&
             Object.entries(health.counts).map(([k, v]) => (
@@ -81,7 +83,7 @@ export function FubAdminPanel({ health, webhookLog, mappings, profiles }: Props)
         </div>
         {health?.last_webhook && (
           <div className="mt-3 rounded-lg border border-[#7FB069]/20 bg-[#7FB069]/8 p-3 text-xs text-[#D0C8B8]">
-            <span className="font-medium text-[#F5F0E8]">Último webhook:</span>{' '}
+            <span className="font-medium text-[#F5F0E8]">{t('admin.lastWebhook')}</span>{' '}
             {health.last_webhook.event_type}{' '}
             <span className="text-[#9A9080]">
               · {health.last_webhook.received_at ? new Date(health.last_webhook.received_at).toLocaleString('es-ES') : '—'}
@@ -100,22 +102,22 @@ export function FubAdminPanel({ health, webhookLog, mappings, profiles }: Props)
 
       {/* Actions */}
       <section className="rounded-2xl border border-[#C9A84C]/20 bg-[#0F0F0F] p-5">
-        <h3 className="mb-3 text-sm font-semibold text-[#F5F0E8]">Acciones</h3>
+        <h3 className="mb-3 text-sm font-semibold text-[#F5F0E8]">{t('admin.actions')}</h3>
         <div className="flex flex-wrap gap-2">
-          <PrimaryAction onClick={() => run('Resync 90d', () => syncFubFromZero({ sinceDays: 90 }))} disabled={isPending}>
-            ⚡ Resync forzado (90d)
+          <PrimaryAction onClick={() => run(t('admin.resync90Label'), () => syncFubFromZero({ sinceDays: 90 }))} disabled={isPending}>
+            ⚡ {t('admin.resync90')}
           </PrimaryAction>
-          <SecondaryAction onClick={() => run('Resync 365d', () => syncFubFromZero({ sinceDays: 365 }))} disabled={isPending}>
-            Resync 12 meses
+          <SecondaryAction onClick={() => run(t('admin.resync365Label'), () => syncFubFromZero({ sinceDays: 365 }))} disabled={isPending}>
+            {t('admin.resync365')}
           </SecondaryAction>
-          <SuccessAction onClick={() => run('Subscribe webhooks', () => subscribeFubWebhooks())} disabled={isPending}>
-            ✅ Subscribe webhooks
+          <SuccessAction onClick={() => run(t('admin.subscribeLabel'), () => subscribeFubWebhooks())} disabled={isPending}>
+            ✅ {t('admin.subscribe')}
           </SuccessAction>
-          <SecondaryAction onClick={() => run('Unsubscribe webhooks', () => unsubscribeFubWebhooks())} disabled={isPending}>
-            Unsubscribe webhooks
+          <SecondaryAction onClick={() => run(t('admin.unsubscribeLabel'), () => unsubscribeFubWebhooks())} disabled={isPending}>
+            {t('admin.unsubscribe')}
           </SecondaryAction>
-          <GoldAction onClick={() => run('Link profiles', () => linkProfilesToFub())} disabled={isPending}>
-            🔗 Link profiles ↔ FUB
+          <GoldAction onClick={() => run(t('admin.linkProfilesLabel'), () => linkProfilesToFub())} disabled={isPending}>
+            🔗 {t('admin.linkProfiles')}
           </GoldAction>
         </div>
         {message && (
@@ -127,17 +129,17 @@ export function FubAdminPanel({ health, webhookLog, mappings, profiles }: Props)
 
       {/* User mapping */}
       <section className="rounded-2xl border border-[#C9A84C]/20 bg-[#0F0F0F] p-5">
-        <h3 className="mb-3 text-sm font-semibold text-[#F5F0E8]">User Mapping</h3>
+        <h3 className="mb-3 text-sm font-semibold text-[#F5F0E8]">{t('admin.userMapping')}</h3>
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead className="border-b border-white/8">
               <tr className="text-left text-[10px] uppercase tracking-[0.14em] text-[#9A9080]">
-                <th className="pb-2 pr-3 font-medium">FUB ID</th>
-                <th className="pb-2 pr-3 font-medium">Email FUB</th>
-                <th className="pb-2 pr-3 font-medium">CBI Profile</th>
-                <th className="pb-2 pr-3 font-medium">Rol FUB</th>
-                <th className="pb-2 pr-3 font-medium">Admin?</th>
-                <th className="pb-2 pr-3 font-medium">Activo</th>
+                <th className="pb-2 pr-3 font-medium">{t('admin.colFubId')}</th>
+                <th className="pb-2 pr-3 font-medium">{t('admin.colFubEmail')}</th>
+                <th className="pb-2 pr-3 font-medium">{t('admin.colCbiProfile')}</th>
+                <th className="pb-2 pr-3 font-medium">{t('admin.colFubRole')}</th>
+                <th className="pb-2 pr-3 font-medium">{t('admin.colAdmin')}</th>
+                <th className="pb-2 pr-3 font-medium">{t('admin.colActive')}</th>
               </tr>
             </thead>
             <tbody>
@@ -151,7 +153,7 @@ export function FubAdminPanel({ health, webhookLog, mappings, profiles }: Props)
                       {profile ? (
                         <span className="text-[#7FB069]">{profile.full_name || profile.email}</span>
                       ) : (
-                        <span className="text-[#D4A056]">— sin link</span>
+                        <span className="text-[#D4A056]">{t('admin.noLink')}</span>
                       )}
                     </td>
                     <td className="py-2 pr-3 text-[#D0C8B8]">{m.fub_role}</td>
@@ -172,20 +174,20 @@ export function FubAdminPanel({ health, webhookLog, mappings, profiles }: Props)
       {/* Webhook log */}
       <section className="rounded-2xl border border-[#C9A84C]/20 bg-[#0F0F0F] p-5">
         <h3 className="mb-3 text-sm font-semibold text-[#F5F0E8]">
-          Webhook Log <span className="text-[10px] font-normal text-[#9A9080]">últimos {webhookLog.length}</span>
+          {t('admin.webhookLog')} <span className="text-[10px] font-normal text-[#9A9080]">{t('admin.lastN', { n: webhookLog.length })}</span>
         </h3>
         {webhookLog.length === 0 ? (
-          <div className="py-4 text-center text-xs text-[#9A9080]">Sin webhooks aún</div>
+          <div className="py-4 text-center text-xs text-[#9A9080]">{t('admin.noWebhooks')}</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead className="border-b border-white/8">
                 <tr className="text-left text-[10px] uppercase tracking-[0.14em] text-[#9A9080]">
-                  <th className="pb-2 pr-3 font-medium">Evento</th>
-                  <th className="pb-2 pr-3 font-medium">IDs</th>
-                  <th className="pb-2 pr-3 font-medium">Recibido</th>
-                  <th className="pb-2 pr-3 font-medium">Status</th>
-                  <th className="pb-2 pr-3 font-medium">Error</th>
+                  <th className="pb-2 pr-3 font-medium">{t('admin.colEvent')}</th>
+                  <th className="pb-2 pr-3 font-medium">{t('admin.colIds')}</th>
+                  <th className="pb-2 pr-3 font-medium">{t('admin.colReceived')}</th>
+                  <th className="pb-2 pr-3 font-medium">{t('admin.colStatus')}</th>
+                  <th className="pb-2 pr-3 font-medium">{t('admin.colError')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -278,6 +280,7 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 function ToggleAdmin({ fubUserId, value }: { fubUserId: number; value: boolean }) {
+  const t = useTranslations('fub')
   const [v, setV] = useState(value)
   const [pending, start] = useTransition()
   return (
@@ -298,12 +301,13 @@ function ToggleAdmin({ fubUserId, value }: { fubUserId: number; value: boolean }
           : 'bg-white/6 text-[#9A9080] hover:bg-white/10'
       }`}
     >
-      {v ? 'admin' : 'no'}
+      {v ? t('admin.toggleAdminYes') : t('admin.toggleAdminNo')}
     </button>
   )
 }
 
 function ToggleActive({ fubUserId, value }: { fubUserId: number; value: boolean }) {
+  const t = useTranslations('fub')
   const [v, setV] = useState(value)
   const [pending, start] = useTransition()
   return (
@@ -324,7 +328,7 @@ function ToggleActive({ fubUserId, value }: { fubUserId: number; value: boolean 
           : 'bg-white/6 text-[#9A9080] hover:bg-white/10'
       }`}
     >
-      {v ? 'on' : 'off'}
+      {v ? t('admin.toggleOn') : t('admin.toggleOff')}
     </button>
   )
 }

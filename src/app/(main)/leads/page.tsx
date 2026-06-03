@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { getTranslations } from 'next-intl/server'
 import {
   getAgentPipeline,
   getAgentHotList,
@@ -18,6 +19,7 @@ export default async function LeadsPage({
 }: {
   searchParams: Promise<{ personId?: string; filter?: string }>
 }) {
+  const t = await getTranslations('shell.leads')
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
@@ -41,8 +43,8 @@ export default async function LeadsPage({
     <div className="space-y-5 p-4 lg:p-6">
       <header className="flex items-baseline justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[#F5F0E8]">Leads</h1>
-          <p className="mt-0.5 text-sm text-[#9A9080]">Tu pipeline completo en Follow Up Boss</p>
+          <h1 className="text-2xl font-bold text-[#F5F0E8]">{t('title')}</h1>
+          <p className="mt-0.5 text-sm text-[#9A9080]">{t('subtitle')}</p>
         </div>
       </header>
 

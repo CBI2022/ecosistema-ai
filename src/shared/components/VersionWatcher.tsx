@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useTranslations } from 'next-intl'
 
 // SHA del commit actual, inyectado por Vercel en build time.
 // Si NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA está presente, lo usamos.
@@ -19,6 +20,7 @@ const BUILD_SHA = (process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA || '').slice(0,
  * con botón "Actualizar ahora").
  */
 export function VersionWatcher() {
+  const t = useTranslations('appUpdate')
   const [hasUpdate, setHasUpdate] = useState(false)
 
   useEffect(() => {
@@ -85,7 +87,7 @@ export function VersionWatcher() {
     >
       <button
         type="button"
-        aria-label="Cerrar"
+        aria-label={t('close')}
         onClick={() => setHasUpdate(false)}
         className="absolute inset-0 bg-black/75 backdrop-blur-md [animation:cbi-update-fade_0.2s_ease-out]"
       />
@@ -99,27 +101,27 @@ export function VersionWatcher() {
             </svg>
           </div>
           <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#C9A84C]">
-            Nueva versión
+            {t('eyebrow')}
           </p>
           <h2 id="version-update-title" className="mt-2 text-xl font-bold leading-snug text-[#F5F0E8]">
-            Hay una actualización disponible
+            {t('title')}
           </h2>
           <p className="mt-2 text-sm leading-relaxed text-[#9A9080]">
-            Se han subido cambios nuevos al SaaS. Pulsa Actualizar para verlos al instante.
+            {t('description')}
           </p>
           <button
             type="button"
             onClick={applyUpdate}
             className="mt-6 w-full rounded-2xl bg-[#C9A84C] px-5 py-4 text-sm font-bold uppercase tracking-[0.08em] text-black transition active:scale-[0.98] hover:bg-[#E8C96A]"
           >
-            Actualizar ahora
+            {t('updateNow')}
           </button>
           <button
             type="button"
             onClick={() => setHasUpdate(false)}
             className="mt-2 w-full rounded-xl px-4 py-2.5 text-xs font-medium text-[#9A9080] transition hover:text-[#F5F0E8]"
           >
-            Más tarde
+            {t('later')}
           </button>
         </div>
       </div>

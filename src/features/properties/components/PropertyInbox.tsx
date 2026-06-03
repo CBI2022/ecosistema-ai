@@ -1,8 +1,11 @@
 'use client'
 
 import { useMemo, useState, useTransition } from 'react'
+import { useTranslations } from 'next-intl'
 import type { Property } from '@/types/database'
 import { setPropertyReviewStatus } from '@/actions/properties'
+
+type TFn = ReturnType<typeof useTranslations>
 
 export type InboxItem = Property & { agentName: string }
 
@@ -23,6 +26,7 @@ function fmtPrice(n: number | null): string {
 }
 
 export function PropertyInbox({ items }: { items: InboxItem[] }) {
+  const t = useTranslations('properties')
   const [query, setQuery] = useState('')
   const [filter, setFilter] = useState<Filter>('pending')
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -61,9 +65,9 @@ export function PropertyInbox({ items }: { items: InboxItem[] }) {
       {/* ─── LISTA ─── */}
       <div className={selected ? 'hidden lg:block' : 'block'}>
         <div className="mb-3 flex gap-1.5">
-          <FilterPill label={`Pendientes`} count={counts.pending} active={filter === 'pending'} onClick={() => setFilter('pending')} />
-          <FilterPill label={`Subidas`} count={counts.published} active={filter === 'published'} onClick={() => setFilter('published')} />
-          <FilterPill label={`Todas`} count={list.length} active={filter === 'all'} onClick={() => setFilter('all')} />
+          <FilterPill label={t('inbox.pending')} count={counts.pending} active={filter === 'pending'} onClick={() => setFilter('pending')} />
+          <FilterPill label={t('inbox.uploaded')} count={counts.published} active={filter === 'published'} onClick={() => setFilter('published')} />
+          <FilterPill label={t('inbox.allFilter')} count={list.length} active={filter === 'all'} onClick={() => setFilter('all')} />
         </div>
 
         <div className="mb-3 flex items-center gap-2 rounded-lg border border-white/[0.08] bg-[#131313] px-3 py-2">
@@ -74,7 +78,7 @@ export function PropertyInbox({ items }: { items: InboxItem[] }) {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Buscar por referencia, agente, zona…"
+            placeholder={t('inbox.searchPlaceholder')}
             className="w-full bg-transparent text-[13px] text-[#F5F0E8] placeholder:text-[#6E665A] focus:outline-none"
           />
         </div>
@@ -82,7 +86,7 @@ export function PropertyInbox({ items }: { items: InboxItem[] }) {
         <div className="space-y-2">
           {filtered.length === 0 && (
             <div className="rounded-xl border border-white/[0.06] bg-[#131313] p-8 text-center text-[13px] text-[#7A7263]">
-              No hay propiedades aquí.
+              {t('inbox.noProperties')}
             </div>
           )}
           {filtered.map((p) => {
@@ -103,7 +107,7 @@ export function PropertyInbox({ items }: { items: InboxItem[] }) {
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="truncate text-[13px] font-semibold text-[#F5F0E8]">{p.reference || 'Sin ref.'}</span>
+                    <span className="truncate text-[13px] font-semibold text-[#F5F0E8]">{p.reference || t('inbox.noRef')}</span>
                     <span className="truncate text-[12px] text-[#9A9080]">· {p.zone || '—'}</span>
                   </div>
                   <div className="mt-0.5 truncate text-[12px] text-[#8A8170]">{p.agentName}</div>
@@ -113,7 +117,7 @@ export function PropertyInbox({ items }: { items: InboxItem[] }) {
                     done ? 'bg-[#7FB069]/15 text-[#9CCB86]' : 'bg-[#E8C96A]/15 text-[#E8C96A]'
                   }`}
                 >
-                  {done ? 'Subida' : 'Pendiente'}
+                  {done ? t('inbox.statusUploaded') : t('inbox.statusPending')}
                 </span>
               </button>
             )
@@ -124,10 +128,10 @@ export function PropertyInbox({ items }: { items: InboxItem[] }) {
       {/* ─── DETALLE ─── */}
       <div className={selected ? 'block' : 'hidden lg:block'}>
         {selected ? (
-          <PropertyDetail key={selected.id} p={selected} onBack={() => setSelectedId(null)} onStatus={updateLocal} />
+          <PropertyDetail key={selected.id} p={selected} onBack={() => setSelectedId(null)} onStatus={updateLocal} t={t} />
         ) : (
           <div className="flex h-full min-h-[300px] items-center justify-center rounded-2xl border border-dashed border-white/[0.08] text-[13px] text-[#6E665A]">
-            Selecciona una propiedad para ver sus datos.
+            {t('inbox.selectPrompt')}
           </div>
         )}
       </div>
@@ -155,10 +159,12 @@ function PropertyDetail({
   p,
   onBack,
   onStatus,
+  t,
 }: {
   p: InboxItem
   onBack: () => void
   onStatus: (id: string, status: 'submitted' | 'published') => void
+  t: TFn
 }) {
   const [isPending, startTransition] = useTransition()
   const done = p.review_status === 'published'
@@ -173,30 +179,32 @@ function PropertyDetail({
 
   const features: string[] = []
   const F: [boolean | null, string][] = [
-    [p.has_pool, 'Piscina'], [p.has_garage, 'Garaje'], [p.has_garden, 'Jardín'],
-    [p.has_terrace, 'Terraza'], [p.has_ac, 'Aire acondicionado'], [p.has_sea_view, 'Vistas al mar'],
-    [p.has_fireplace, 'Chimenea'], [p.has_elevator, 'Ascensor'], [p.has_jacuzzi, 'Jacuzzi'],
-    [p.has_alarm, 'Alarma'], [p.has_storage, 'Trastero'],
+    [p.has_pool, t('feat.pool')], [p.has_garage, t('feat.garage')], [p.has_garden, t('feat.garden')],
+    [p.has_terrace, t('feat.terrace')], [p.has_ac, t('feat.ac')], [p.has_sea_view, t('feat.seaView')],
+    [p.has_fireplace, t('feat.fireplace')], [p.has_elevator, t('feat.elevator')], [p.has_jacuzzi, t('feat.jacuzzi')],
+    [p.has_alarm, t('feat.alarm')], [p.has_storage, t('feat.storage')],
   ]
   for (const [v, label] of F) if (v) features.push(label)
 
+  const operationLabel = p.listing_type === 'sale' ? t('inbox.sale') : t('inbox.rent')
+
   const mainText = [
-    `Referencia: ${p.reference || '—'}`,
-    `Tipo: ${p.property_type || '—'}`,
-    `Operación: ${p.listing_type === 'sale' ? 'Venta' : 'Alquiler'}`,
-    `Precio: ${fmtPrice(p.price)}`,
-    `Dormitorios: ${p.bedrooms ?? '—'}`,
-    `Baños: ${p.bathrooms ?? '—'}`,
-    `m² construidos: ${p.build_area_m2 ?? '—'}`,
-    `m² parcela: ${p.plot_area_m2 ?? '—'}`,
-    `Año: ${p.year_built ?? '—'}`,
+    `${t('inbox.fieldReference')}: ${p.reference || '—'}`,
+    `${t('inbox.fieldType')}: ${p.property_type || '—'}`,
+    `${t('inbox.fieldOperation')}: ${operationLabel}`,
+    `${t('inbox.fieldPrice')}: ${fmtPrice(p.price)}`,
+    `${t('inbox.fieldBedrooms')}: ${p.bedrooms ?? '—'}`,
+    `${t('inbox.fieldBathrooms')}: ${p.bathrooms ?? '—'}`,
+    `${t('inbox.fieldBuiltM2')}: ${p.build_area_m2 ?? '—'}`,
+    `${t('inbox.fieldPlotM2')}: ${p.plot_area_m2 ?? '—'}`,
+    `${t('inbox.fieldYear')}: ${p.year_built ?? '—'}`,
   ].join('\n')
 
   const locationText = [
-    `Zona: ${p.zone || '—'}`,
-    `Población: ${p.city || p.location || '—'}`,
-    `Calle: ${p.street_name || '—'} ${p.street_number || ''}`.trim(),
-    `Código postal: ${p.postal_code || '—'}`,
+    `${t('inbox.fieldZone')}: ${p.zone || '—'}`,
+    `${t('inbox.fieldCity')}: ${p.city || p.location || '—'}`,
+    `${t('inbox.fieldStreet')}: ${p.street_name || '—'} ${p.street_number || ''}`.trim(),
+    `${t('inbox.fieldPostalCode')}: ${p.postal_code || '—'}`,
   ].join('\n')
 
   return (
@@ -210,17 +218,17 @@ function PropertyDetail({
         </button>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <h2 className="text-lg font-bold text-[#F5F0E8]">{p.reference || 'Sin referencia'}</h2>
+            <h2 className="text-lg font-bold text-[#F5F0E8]">{p.reference || t('inbox.noReference')}</h2>
             <span
               className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
                 done ? 'bg-[#7FB069]/15 text-[#9CCB86]' : 'bg-[#E8C96A]/15 text-[#E8C96A]'
               }`}
             >
-              {done ? 'Subida' : 'Pendiente'}
+              {done ? t('inbox.statusUploaded') : t('inbox.statusPending')}
             </span>
           </div>
           <p className="mt-0.5 text-[12px] text-[#8A8170]">
-            Subida por <span className="text-[#C9A84C]">{p.agentName}</span> · {fmtDate(p.submitted_at)}
+            {t('inbox.uploadedBy')} <span className="text-[#C9A84C]">{p.agentName}</span> · {fmtDate(p.submitted_at)}
           </p>
         </div>
         <button
@@ -232,37 +240,37 @@ function PropertyDetail({
               : 'bg-[#C9A84C] text-black hover:bg-[#E8C96A]'
           }`}
         >
-          {done ? 'Volver a pendiente' : 'Marcar como subida'}
+          {done ? t('inbox.markPending') : t('inbox.markUploaded')}
         </button>
       </div>
 
       {/* Bloques copiables */}
       <div className="space-y-4 p-4 sm:p-5">
-        <Block title="Datos principales" copyText={mainText}>
+        <Block title={t('inbox.mainData')} copyText={mainText} copyLabel={t('inbox.copy')} copiedLabel={t('inbox.copied')}>
           <Grid>
-            <Field label="Tipo" value={p.property_type} />
-            <Field label="Operación" value={p.listing_type === 'sale' ? 'Venta' : 'Alquiler'} />
-            <Field label="Precio" value={fmtPrice(p.price)} />
-            <Field label="Dormitorios" value={p.bedrooms} />
-            <Field label="Baños" value={p.bathrooms} />
-            <Field label="Aseos" value={p.toilets} />
-            <Field label="m² construidos" value={p.build_area_m2} />
-            <Field label="m² parcela" value={p.plot_area_m2} />
-            <Field label="Año construcción" value={p.year_built} />
+            <Field label={t('inbox.fieldType')} value={p.property_type} />
+            <Field label={t('inbox.fieldOperation')} value={operationLabel} />
+            <Field label={t('inbox.fieldPrice')} value={fmtPrice(p.price)} />
+            <Field label={t('inbox.fieldBedrooms')} value={p.bedrooms} />
+            <Field label={t('inbox.fieldBathrooms')} value={p.bathrooms} />
+            <Field label={t('inbox.fieldToilets')} value={p.toilets} />
+            <Field label={t('inbox.fieldBuiltM2')} value={p.build_area_m2} />
+            <Field label={t('inbox.fieldPlotM2')} value={p.plot_area_m2} />
+            <Field label={t('inbox.fieldYearBuilt')} value={p.year_built} />
           </Grid>
         </Block>
 
-        <Block title="Ubicación" copyText={locationText}>
+        <Block title={t('inbox.locationData')} copyText={locationText} copyLabel={t('inbox.copy')} copiedLabel={t('inbox.copied')}>
           <Grid>
-            <Field label="Zona" value={p.zone} />
-            <Field label="Población" value={p.city || p.location} />
-            <Field label="Calle" value={`${p.street_name || ''} ${p.street_number || ''}`.trim()} />
-            <Field label="Código postal" value={p.postal_code} />
+            <Field label={t('inbox.fieldZone')} value={p.zone} />
+            <Field label={t('inbox.fieldCity')} value={p.city || p.location} />
+            <Field label={t('inbox.fieldStreet')} value={`${p.street_name || ''} ${p.street_number || ''}`.trim()} />
+            <Field label={t('inbox.fieldPostalCode')} value={p.postal_code} />
           </Grid>
         </Block>
 
         {features.length > 0 && (
-          <Block title="Características" copyText={features.join(', ')}>
+          <Block title={t('inbox.featuresData')} copyText={features.join(', ')} copyLabel={t('inbox.copy')} copiedLabel={t('inbox.copied')}>
             <div className="flex flex-wrap gap-1.5">
               {features.map((f) => (
                 <span key={f} className="rounded-full border border-[#C9A84C]/20 bg-[#C9A84C]/[0.06] px-2.5 py-1 text-[12px] text-[#D0C8B8]">
@@ -274,13 +282,13 @@ function PropertyDetail({
         )}
 
         {(p.title_es || p.title_en) && (
-          <Block title="Título" copyText={p.title_es || p.title_en || ''}>
+          <Block title={t('inbox.titleData')} copyText={p.title_es || p.title_en || ''} copyLabel={t('inbox.copy')} copiedLabel={t('inbox.copied')}>
             <p className="text-[13px] leading-relaxed text-[#D0C8B8]">{p.title_es || p.title_en}</p>
           </Block>
         )}
 
         {(p.description_es || p.description_en) && (
-          <Block title="Descripción (ES)" copyText={p.description_es || ''}>
+          <Block title={t('inbox.descriptionEs')} copyText={p.description_es || ''} copyLabel={t('inbox.copy')} copiedLabel={t('inbox.copied')}>
             <p className="whitespace-pre-wrap text-[13px] leading-relaxed text-[#D0C8B8]">
               {p.description_es || p.description_en}
             </p>
@@ -288,7 +296,7 @@ function PropertyDetail({
         )}
 
         {p.description_en && (
-          <Block title="Descripción (EN)" copyText={p.description_en}>
+          <Block title={t('inbox.descriptionEn')} copyText={p.description_en} copyLabel={t('inbox.copy')} copiedLabel={t('inbox.copied')}>
             <p className="whitespace-pre-wrap text-[13px] leading-relaxed text-[#D0C8B8]">{p.description_en}</p>
           </Block>
         )}
@@ -297,7 +305,7 @@ function PropertyDetail({
   )
 }
 
-function Block({ title, copyText, children }: { title: string; copyText: string; children: React.ReactNode }) {
+function Block({ title, copyText, children, copyLabel, copiedLabel }: { title: string; copyText: string; children: React.ReactNode; copyLabel: string; copiedLabel: string }) {
   const [copied, setCopied] = useState(false)
   async function copy() {
     try {
@@ -326,7 +334,7 @@ function Block({ title, copyText, children }: { title: string; copyText: string;
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3">
                 <polyline points="20 6 9 17 4 12" />
               </svg>
-              Copiado
+              {copiedLabel}
             </>
           ) : (
             <>
@@ -334,7 +342,7 @@ function Block({ title, copyText, children }: { title: string; copyText: string;
                 <rect x="9" y="9" width="13" height="13" rx="2" />
                 <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
               </svg>
-              Copiar
+              {copyLabel}
             </>
           )}
         </button>

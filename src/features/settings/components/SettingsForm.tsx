@@ -87,7 +87,7 @@ export function SettingsForm({ profile }: SettingsFormProps) {
         return
       }
       if (password.length < 8) {
-        setToast({ type: 'error', text: 'La contraseña debe tener al menos 8 caracteres' })
+        setToast({ type: 'error', text: t('passwordMinLength') })
         return
       }
     }
@@ -136,7 +136,7 @@ export function SettingsForm({ profile }: SettingsFormProps) {
     if (errors.length > 0) {
       setToast({ type: 'error', text: errors.join(' · ') })
     } else {
-      setToast({ type: 'success', text: '✓ Todos los cambios guardados' })
+      setToast({ type: 'success', text: '✓ ' + t('allChangesSaved') })
     }
   }
 
@@ -170,12 +170,12 @@ export function SettingsForm({ profile }: SettingsFormProps) {
                 </div>
               )}
               <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition group-hover:opacity-100">
-                <span className="text-[10px] font-bold uppercase text-white">Cambiar</span>
+                <span className="text-[10px] font-bold uppercase text-white">{t('changePhoto')}</span>
               </div>
             </button>
             <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
             <div>
-              <p className="text-sm font-medium text-[#F5F0E8]">{profile.full_name || 'Sin nombre'}</p>
+              <p className="text-sm font-medium text-[#F5F0E8]">{profile.full_name || t('noName')}</p>
               <p className="text-xs text-[#9A9080]">{t('photoAutoSaves')}</p>
             </div>
           </div>
@@ -245,7 +245,7 @@ export function SettingsForm({ profile }: SettingsFormProps) {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className={inputClass}
-                placeholder="Dejar vacío para no cambiar"
+                placeholder={t('passwordPlaceholder')}
               />
             </div>
             <div>

@@ -56,7 +56,8 @@ export async function createOwner(formData: FormData) {
 
   if (error) return { error: error.message }
 
-  revalidatePath('/properties')
+  // OJO: NO llamar revalidatePath aquí — reseteaba el form a la pestaña 1 y
+  // perdía el estado. El cliente ya recibe el owner en `data` y actualiza UI.
   return { owner: data }
 }
 

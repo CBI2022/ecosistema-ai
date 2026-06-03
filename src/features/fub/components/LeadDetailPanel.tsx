@@ -1,3 +1,4 @@
+import { getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
 
 interface Props {
@@ -5,6 +6,7 @@ interface Props {
 }
 
 export async function LeadDetailPanel({ personId }: Props) {
+  const t = await getTranslations('fub')
   const supabase = await createClient()
 
   const [
@@ -50,7 +52,7 @@ export async function LeadDetailPanel({ personId }: Props) {
   if (!person) {
     return (
       <div className="rounded-2xl border border-[#C84B45]/30 bg-[#1A0F0E] p-5 text-sm text-[#E8907A]">
-        Lead no encontrado o no tienes acceso.
+        {t('lead.notFound')}
       </div>
     )
   }
@@ -58,7 +60,7 @@ export async function LeadDetailPanel({ personId }: Props) {
   const name =
     [person.first_name, person.last_name].filter(Boolean).join(' ').trim() ||
     person.email ||
-    `Lead #${person.id}`
+    t('lead.fallbackName', { id: person.id })
 
   return (
     <section className="rounded-2xl border border-[#C9A84C]/40 bg-gradient-to-br from-[#1A1408] to-[#0F0F0F] p-5">
@@ -81,22 +83,22 @@ export async function LeadDetailPanel({ personId }: Props) {
           rel="noopener noreferrer"
           className="flex-shrink-0 rounded-md bg-[#C9A84C] px-3 py-1.5 text-xs font-semibold text-black transition hover:bg-[#E8C868] shadow-[0_2px_14px_rgba(201,168,76,0.35)]"
         >
-          Abrir en FUB ↗
+          {t('lead.openInFub')}
         </a>
       </header>
 
       <div className="grid gap-4 lg:grid-cols-2">
         {deals && deals.length > 0 && (
-          <Section title="Deals">
+          <Section title={t('lead.deals')}>
             <ul className="space-y-1.5 text-xs">
               {deals.map((d) => (
                 <li key={d.id} className="rounded border border-white/8 bg-white/4 p-2">
-                  <div className="font-medium text-[#F5F0E8]">{d.name || `Deal #${d.id}`}</div>
+                  <div className="font-medium text-[#F5F0E8]">{d.name || t('lead.dealFallback', { id: d.id })}</div>
                   <div className="mt-0.5 text-[#9A9080]">
                     {d.value_cents
                       ? `€${Math.round(d.value_cents / 100).toLocaleString()}`
-                      : 'sin valor'}{' '}
-                    · pipeline {d.pipeline_id}
+                      : t('lead.noValue')}{' '}
+                    · {t('lead.pipeline', { id: d.pipeline_id })}
                   </div>
                 </li>
               ))}
@@ -105,11 +107,11 @@ export async function LeadDetailPanel({ personId }: Props) {
         )}
 
         {appts && appts.length > 0 && (
-          <Section title="Citas">
+          <Section title={t('lead.appointments')}>
             <ul className="space-y-1.5 text-xs">
               {appts.map((a) => (
                 <li key={a.id} className="rounded border border-white/8 bg-white/4 p-2">
-                  <div className="font-medium text-[#F5F0E8]">{a.title || 'Cita'}</div>
+                  <div className="font-medium text-[#F5F0E8]">{a.title || t('lead.appointmentFallback')}</div>
                   <div className="mt-0.5 text-[#9A9080]">
                     {a.starts_at ? new Date(a.starts_at).toLocaleString('es-ES') : '—'} · {a.status}
                   </div>
@@ -120,7 +122,7 @@ export async function LeadDetailPanel({ personId }: Props) {
         )}
 
         {calls && calls.length > 0 && (
-          <Section title="Llamadas">
+          <Section title={t('lead.calls')}>
             <ul className="space-y-1.5 text-xs">
               {calls.map((c) => (
                 <li key={c.id} className="rounded border border-white/8 bg-white/4 p-2">
@@ -136,13 +138,13 @@ export async function LeadDetailPanel({ personId }: Props) {
         )}
 
         {tasks && tasks.length > 0 && (
-          <Section title="Tareas">
+          <Section title={t('lead.tasks')}>
             <ul className="space-y-1.5 text-xs">
-              {tasks.map((t) => (
-                <li key={t.id} className="rounded border border-white/8 bg-white/4 p-2">
-                  <span className="font-medium text-[#F5F0E8]">{t.description || t.type}</span>
+              {tasks.map((task) => (
+                <li key={task.id} className="rounded border border-white/8 bg-white/4 p-2">
+                  <span className="font-medium text-[#F5F0E8]">{task.description || task.type}</span>
                   <div className="mt-0.5 text-[#9A9080]">
-                    {t.due_at ? new Date(t.due_at).toLocaleString('es-ES') : 'sin fecha'} · {t.status}
+                    {task.due_at ? new Date(task.due_at).toLocaleString('es-ES') : t('lead.noDate')} · {task.status}
                   </div>
                 </li>
               ))}
@@ -151,7 +153,7 @@ export async function LeadDetailPanel({ personId }: Props) {
         )}
 
         {notes && notes.length > 0 && (
-          <Section title="Notas" className="lg:col-span-2">
+          <Section title={t('lead.notes')} className="lg:col-span-2">
             <ul className="space-y-1.5 text-xs">
               {notes.map((n) => (
                 <li key={n.id} className="rounded border border-white/8 bg-white/4 p-2">

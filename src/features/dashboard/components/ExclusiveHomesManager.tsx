@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition, useRef } from 'react'
+import { useTranslations } from 'next-intl'
 import { addExclusiveHome, updateExclusiveHome, deleteExclusiveHome } from '@/actions/exclusive-homes'
 import type { Database } from '@/types/database'
 
@@ -29,6 +30,7 @@ function HomeForm({
   onSave: (fd: FormData) => void
   onCancel: () => void
 }) {
+  const t = useTranslations('dashboard.exclusiveHomesManager')
   const fileRef = useRef<HTMLInputElement>(null)
   const [preview, setPreview] = useState<string | null>(initial?.cover_image ?? null)
 
@@ -38,12 +40,12 @@ function HomeForm({
       className="space-y-4 rounded-2xl border border-white/8 bg-[#131313] p-5"
     >
       <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-[#9A9080]">
-        {initial ? 'Editar Exclusive Home' : 'Nueva Exclusive Home'}
+        {initial ? t('editTitle') : t('newTitle')}
       </p>
 
       {/* Cover image */}
       <div>
-        <label className={labelClass}>Cover Image</label>
+        <label className={labelClass}>{t('coverImage')}</label>
         <div
           onClick={() => fileRef.current?.click()}
           className="relative cursor-pointer overflow-hidden rounded-xl border border-dashed border-white/15 bg-[#0A0A0A] transition hover:border-white/30"
@@ -53,7 +55,7 @@ function HomeForm({
             <img src={preview} alt="" className="h-full w-full object-cover opacity-80" />
           ) : (
             <div className="flex h-full items-center justify-center flex-col gap-2">
-              <p className="text-xs text-[#9A9080]">Click para subir imagen</p>
+              <p className="text-xs text-[#9A9080]">{t('clickToUpload')}</p>
             </div>
           )}
           <input
@@ -72,51 +74,51 @@ function HomeForm({
 
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="sm:col-span-2">
-          <label className={labelClass}>Título *</label>
-          <input type="text" name="title" className={inputClass} defaultValue={initial?.title} required placeholder="Villa Mediterránea con vistas al mar" />
+          <label className={labelClass}>{t('fieldTitle')}</label>
+          <input type="text" name="title" className={inputClass} defaultValue={initial?.title} required placeholder={t('titlePlaceholder')} />
         </div>
         <div>
-          <label className={labelClass}>Ubicación</label>
-          <input type="text" name="location" className={inputClass} defaultValue={initial?.location ?? ''} placeholder="Moraira, Alicante" />
+          <label className={labelClass}>{t('fieldLocation')}</label>
+          <input type="text" name="location" className={inputClass} defaultValue={initial?.location ?? ''} placeholder={t('locationPlaceholder')} />
         </div>
         <div>
-          <label className={labelClass}>Precio €</label>
+          <label className={labelClass}>{t('fieldPrice')}</label>
           <input type="number" name="price" className={inputClass} defaultValue={initial?.price ?? ''} placeholder="1500000" />
         </div>
         <div>
-          <label className={labelClass}>Dormitorios</label>
+          <label className={labelClass}>{t('fieldBedrooms')}</label>
           <input type="number" name="bedrooms" className={inputClass} defaultValue={initial?.bedrooms ?? ''} placeholder="4" />
         </div>
         <div>
-          <label className={labelClass}>Baños</label>
+          <label className={labelClass}>{t('fieldBathrooms')}</label>
           <input type="number" name="bathrooms" className={inputClass} defaultValue={initial?.bathrooms ?? ''} placeholder="3" />
         </div>
         <div>
-          <label className={labelClass}>Superficie m²</label>
+          <label className={labelClass}>{t('fieldArea')}</label>
           <input type="number" name="area_m2" className={inputClass} defaultValue={initial?.area_m2 ?? ''} placeholder="350" />
         </div>
         <div className="sm:col-span-2">
-          <label className={labelClass}>Características (separadas por coma)</label>
+          <label className={labelClass}>{t('fieldFeatures')}</label>
           <input
             type="text"
             name="features"
             className={inputClass}
             defaultValue={initial?.features?.join(', ') ?? ''}
-            placeholder="Piscina infinita, Vistas al mar, Garaje doble"
+            placeholder={t('featuresPlaceholder')}
           />
         </div>
         <div className="sm:col-span-2">
-          <label className={labelClass}>Descripción</label>
-          <textarea name="description" rows={2} className={inputClass} defaultValue={initial?.description ?? ''} placeholder="Descripción confidencial para el equipo..." />
+          <label className={labelClass}>{t('fieldDescription')}</label>
+          <textarea name="description" rows={2} className={inputClass} defaultValue={initial?.description ?? ''} placeholder={t('descriptionPlaceholder')} />
         </div>
       </div>
 
       <div className="flex gap-3">
         <button type="submit" className="flex-1 rounded-xl bg-[#C9A84C] py-2.5 text-sm font-bold text-black hover:bg-[#E8C96A]">
-          {initial ? 'Guardar cambios' : 'Añadir'}
+          {initial ? t('saveChanges') : t('add')}
         </button>
         <button type="button" onClick={onCancel} className="rounded-xl border border-white/10 px-5 py-2.5 text-sm font-bold text-[#9A9080] hover:text-[#F5F0E8]">
-          Cancelar
+          {t('cancel')}
         </button>
       </div>
     </form>
@@ -124,6 +126,7 @@ function HomeForm({
 }
 
 export function ExclusiveHomesManager({ homes: initial, canManage }: ExclusiveHomesManagerProps) {
+  const t = useTranslations('dashboard.exclusiveHomesManager')
   const [homes, setHomes] = useState(initial)
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -144,7 +147,7 @@ export function ExclusiveHomesManager({ homes: initial, canManage }: ExclusiveHo
   }
 
   function handleDelete(id: string) {
-    if (!confirm('¿Eliminar esta Exclusive Home?')) return
+    if (!confirm(t('confirmDelete'))) return
     startTransition(async () => {
       await deleteExclusiveHome(id)
       setHomes((prev) => prev.filter((h) => h.id !== id))
@@ -155,15 +158,15 @@ export function ExclusiveHomesManager({ homes: initial, canManage }: ExclusiveHo
     <div className="mb-5 rounded-2xl border border-white/8 bg-[#131313] p-5">
       <div className="mb-5 flex items-center justify-between">
         <div>
-          <p className="text-sm font-bold text-[#F5F0E8]">Exclusive Homes</p>
-          <p className="text-[11px] text-[#9A9080]/70">Off-market · Private listings · Handle with discretion</p>
+          <p className="text-sm font-bold text-[#F5F0E8]">{t('title')}</p>
+          <p className="text-[11px] text-[#9A9080]/70">{t('subtitle')}</p>
         </div>
         {canManage && !showForm && (
           <button
             onClick={() => setShowForm(true)}
             className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-bold text-[#F5F0E8] transition hover:bg-white/10"
           >
-            ＋ Añadir
+            ＋ {t('add')}
           </button>
         )}
       </div>
@@ -175,7 +178,7 @@ export function ExclusiveHomesManager({ homes: initial, canManage }: ExclusiveHo
       )}
 
       {homes.length === 0 && !showForm ? (
-        <div className="py-8 text-center text-sm text-[#9A9080]/50">No exclusive homes añadidas.</div>
+        <div className="py-8 text-center text-sm text-[#9A9080]/50">{t('empty')}</div>
       ) : (
         <div className="space-y-3">
           {homes.map((home) =>
@@ -206,8 +209,8 @@ export function ExclusiveHomesManager({ homes: initial, canManage }: ExclusiveHo
                     {home.location && <p className="text-xs text-[#9A9080]">{home.location}</p>}
                     <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-[#9A9080]">
                       {home.price && <span className="font-bold text-[#F5F0E8]">{fmt(home.price)}</span>}
-                      {home.bedrooms && <span>{home.bedrooms} bed</span>}
-                      {home.bathrooms && <span>{home.bathrooms} bath</span>}
+                      {home.bedrooms && <span>{t('bed', { n: home.bedrooms })}</span>}
+                      {home.bathrooms && <span>{t('bath', { n: home.bathrooms })}</span>}
                       {home.area_m2 && <span>{home.area_m2}m²</span>}
                     </div>
                   </div>
@@ -218,14 +221,14 @@ export function ExclusiveHomesManager({ homes: initial, canManage }: ExclusiveHo
                         onClick={() => setEditingId(home.id)}
                         className="rounded border border-white/10 px-2 py-1 text-[10px] text-[#9A9080] hover:text-[#F5F0E8]"
                       >
-                        Editar
+                        {t('edit')}
                       </button>
                       <button
                         onClick={() => handleDelete(home.id)}
                         disabled={isPending}
                         className="rounded border border-red-500/20 px-2 py-1 text-[10px] text-red-400 hover:border-red-500/40"
                       >
-                        Borrar
+                        {t('deleteBtn')}
                       </button>
                     </div>
                   )}

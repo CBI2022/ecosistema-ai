@@ -1,13 +1,15 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import { useState, useTransition } from 'react'
 import { saveAgentState } from '../actions'
 
 export function CommitmentScreen({ agentName, onComplete }: { agentName: string; onComplete: () => void }) {
+  const t = useTranslations('training')
   const [step, setStep] = useState(0)
   const [said, setSaid] = useState(false)
   const [pending, start] = useTransition()
-  const stmt = `I am ${agentName}. I am a top-performing property agent on the Costa Blanca. I find listings that others miss. I close deals that others don't. In 90 days I will make my first sale. I commit to showing up every day, knocking every door, and doing the work — no matter what.`
+  const stmt = t('commitmentStatement', { name: agentName })
 
   const commit = () => {
     if (!said || pending) return
@@ -26,26 +28,26 @@ export function CommitmentScreen({ agentName, onComplete }: { agentName: string;
       {step === 0 && (
         <div style={{ maxWidth: 480, width: '100%', textAlign: 'center' }}>
           <div style={{ fontSize: 52, marginBottom: 20 }}>🔑</div>
-          <div style={{ fontSize: 11, letterSpacing: '0.35em', color: '#D4A853', textTransform: 'uppercase', marginBottom: 14 }}>Before you begin</div>
-          <h1 style={{ fontSize: 28, color: '#EEE5D5', fontWeight: 800, lineHeight: 1.3, marginBottom: 16 }}>Your 90-day journey starts right now.</h1>
-          <p style={{ fontSize: 15, color: '#6A6070', lineHeight: 1.85, marginBottom: 32 }}>This is not a training programme. This is a commitment to yourself. The agents who follow this plan get their first sale. The ones who don&apos;t — don&apos;t. It&apos;s that simple.</p>
-          {btn(true, () => setStep(1), "I'm ready →")}
+          <div style={{ fontSize: 11, letterSpacing: '0.35em', color: '#D4A853', textTransform: 'uppercase', marginBottom: 14 }}>{t('beforeYouBegin')}</div>
+          <h1 style={{ fontSize: 28, color: '#EEE5D5', fontWeight: 800, lineHeight: 1.3, marginBottom: 16 }}>{t('journeyStartsNow')}</h1>
+          <p style={{ fontSize: 15, color: '#6A6070', lineHeight: 1.85, marginBottom: 32 }}>{t('commitmentIntro')}</p>
+          {btn(true, () => setStep(1), t('imReady'))}
         </div>
       )}
       {step === 1 && (
         <div style={{ maxWidth: 540, width: '100%', textAlign: 'center' }}>
-          <div style={{ fontSize: 11, letterSpacing: '0.3em', color: '#D4A853', textTransform: 'uppercase', marginBottom: 14 }}>Your Commitment, {agentName}</div>
+          <div style={{ fontSize: 11, letterSpacing: '0.3em', color: '#D4A853', textTransform: 'uppercase', marginBottom: 14 }}>{t('yourCommitment', { name: agentName })}</div>
           <div style={{ background: '#100F14', border: '1px solid #D4A85335', borderRadius: 16, padding: '28px 24px', marginBottom: 18, textAlign: 'left' }}>
             <p style={{ fontSize: 17, color: '#D4A853', lineHeight: 1.95, fontWeight: 500 }}>{stmt}</p>
           </div>
-          <p style={{ fontSize: 13, color: '#4A4050', marginBottom: 14 }}>Read this out loud. Not in your head. Out loud.</p>
+          <p style={{ fontSize: 13, color: '#4A4050', marginBottom: 14 }}>{t('readOutLoud')}</p>
           <div onClick={() => setSaid(true)} style={{ display: 'flex', alignItems: 'center', gap: 12, background: said ? '#0E1410' : '#100F14', border: `1px solid ${said ? '#6BAE9450' : '#1A1820'}`, borderRadius: 12, padding: '14px 18px', cursor: 'pointer', transition: 'all 0.2s' }}>
             <div style={{ width: 22, height: 22, borderRadius: 6, border: `2px solid ${said ? '#6BAE94' : '#2A2430'}`, background: said ? '#6BAE94' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 0.2s' }}>
               {said && <span style={{ color: '#09080A', fontSize: 12, fontWeight: 800 }}>✓</span>}
             </div>
-            <span style={{ fontSize: 14, color: said ? '#6BAE94' : '#4A4050' }}>I said it out loud. I mean it.</span>
+            <span style={{ fontSize: 14, color: said ? '#6BAE94' : '#4A4050' }}>{t('saidItOutLoud')}</span>
           </div>
-          {btn(said && !pending, commit, pending ? 'Starting…' : 'I commit — Start Day 1 →')}
+          {btn(said && !pending, commit, pending ? t('starting') : t('iCommitStartDay1'))}
         </div>
       )}
     </div>

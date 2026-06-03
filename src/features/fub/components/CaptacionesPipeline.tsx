@@ -1,3 +1,5 @@
+import { getTranslations } from 'next-intl/server'
+
 interface Props {
   columns: Array<{
     stage_id: number | null
@@ -22,7 +24,8 @@ const STAGE_COLORS_SELLERS: Record<string, string> = {
   Closed: '#7FB069',
 }
 
-export function CaptacionesPipeline({ columns }: Props) {
+export async function CaptacionesPipeline({ columns }: Props) {
+  const t = await getTranslations('fub')
   const totalCount = columns.reduce((s, c) => s + c.count, 0)
   const totalValue = columns.reduce((s, c) => s + c.total_value_eur, 0)
 
@@ -30,19 +33,19 @@ export function CaptacionesPipeline({ columns }: Props) {
     <section className="rounded-2xl border border-[#C9A84C]/20 bg-[#0F0F0F] p-5">
       <header className="mb-4 flex items-baseline justify-between">
         <div>
-          <h3 className="text-sm font-semibold text-[#F5F0E8]">Captaciones Pipeline</h3>
-          <div className="mt-0.5 text-[10px] text-[#9A9080]">Pipeline Sellers · Follow Up Boss</div>
+          <h3 className="text-sm font-semibold text-[#F5F0E8]">{t('captaciones.title')}</h3>
+          <div className="mt-0.5 text-[10px] text-[#9A9080]">{t('captaciones.subtitle')}</div>
         </div>
         <div className="text-right">
           <div className="text-lg font-bold text-[#C9A84C]">{fmtEur(totalValue)}</div>
           <div className="text-[10px] uppercase tracking-[0.18em] text-[#9A9080]">
-            {totalCount} captaciones
+            {t('captaciones.count', { count: totalCount })}
           </div>
         </div>
       </header>
       {columns.length === 0 ? (
         <div className="py-6 text-center text-sm text-[#9A9080]">
-          Sin deals en pipeline Sellers
+          {t('captaciones.empty')}
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-6">

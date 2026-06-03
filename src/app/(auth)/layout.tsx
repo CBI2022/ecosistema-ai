@@ -1,8 +1,11 @@
-export default function AuthLayout({
+import { getTranslations } from 'next-intl/server'
+
+export default async function AuthLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const t = await getTranslations('auth')
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-[#0A0A0A] px-4 py-12">
       {/* Logo */}
@@ -21,7 +24,7 @@ export default function AuthLayout({
 
       {/* Footer */}
       <p className="mt-8 text-[11px] text-[#F5F0E8]/20">
-        Plataforma interna exclusiva — acceso restringido
+        {t('platformNote')}
       </p>
     </div>
   )

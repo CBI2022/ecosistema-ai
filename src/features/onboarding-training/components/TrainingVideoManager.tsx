@@ -1,17 +1,18 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import { useEffect, useState, useTransition } from 'react'
 import { PHASE_COLORS, TRAINING_VIDEOS } from '../data/constants'
 import { deleteWeekVideo, getWeekVideos, saveWeekVideo } from '../actions'
 
-const WEEK_LABELS = [
-  'Week 1 — Prospecting Start', 'Week 2 — Prospecting Intensity', 'Week 3 — First Appointment',
-  'Week 4 — Getting Signatures', 'Week 5 — Buyer Leads', 'Week 6 — First Viewings',
-  'Week 7 — Pipeline Management', 'Week 8 — Urgency & Offers', 'Week 9 — Viewing Volume',
-  'Week 10 — Negotiation', 'Week 11 — Closing', 'Week 12 — Graduation',
-]
-
 export function TrainingVideoManager({ onClose }: { onClose: () => void }) {
+  const t = useTranslations('training')
+  const WEEK_LABELS = [
+    t('weekLabel1'), t('weekLabel2'), t('weekLabel3'),
+    t('weekLabel4'), t('weekLabel5'), t('weekLabel6'),
+    t('weekLabel7'), t('weekLabel8'), t('weekLabel9'),
+    t('weekLabel10'), t('weekLabel11'), t('weekLabel12'),
+  ]
   const [urls, setUrls] = useState<Record<string, string>>({})
   const [inputs, setInputs] = useState<Record<string, string>>({})
   const [editing, setEditing] = useState<Record<string, boolean>>({})
@@ -34,7 +35,7 @@ export function TrainingVideoManager({ onClose }: { onClose: () => void }) {
       setUrls(p => ({ ...p, [videoId]: url }))
       setEditing(p => ({ ...p, [videoId]: false }))
       setInputs(p => ({ ...p, [videoId]: '' }))
-      setSuccess('Video saved')
+      setSuccess(t('videoSaved'))
       setSaving(null)
       setTimeout(() => setSuccess(''), 2000)
     })
@@ -54,11 +55,11 @@ export function TrainingVideoManager({ onClose }: { onClose: () => void }) {
       <div style={{ maxWidth: 750, margin: '0 auto' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
           <div>
-            <div style={{ fontSize: 11, color: '#D4A853', letterSpacing: '0.25em', textTransform: 'uppercase', marginBottom: 4 }}>Training Videos</div>
-            <div style={{ fontSize: 22, color: '#EEE5D5', fontWeight: 800 }}>Agent Weekly Videos</div>
-            <div style={{ fontSize: 12, color: '#3A3040', marginTop: 4 }}>{totalAdded}/24 videos added</div>
+            <div style={{ fontSize: 11, color: '#D4A853', letterSpacing: '0.25em', textTransform: 'uppercase', marginBottom: 4 }}>{t('trainingVideos')}</div>
+            <div style={{ fontSize: 22, color: '#EEE5D5', fontWeight: 800 }}>{t('agentWeeklyVideos')}</div>
+            <div style={{ fontSize: 12, color: '#3A3040', marginTop: 4 }}>{t('videosAddedCount', { added: totalAdded })}</div>
           </div>
-          <button onClick={onClose} style={{ background: '#1A1820', border: '1px solid #2A2430', color: '#6A6070', borderRadius: 10, padding: '8px 16px', cursor: 'pointer', fontSize: 13 }}>Close</button>
+          <button onClick={onClose} style={{ background: '#1A1820', border: '1px solid #2A2430', color: '#6A6070', borderRadius: 10, padding: '8px 16px', cursor: 'pointer', fontSize: 13 }}>{t('close')}</button>
         </div>
 
         {success && <div style={{ background: '#0A1A10', border: '1px solid #205A30', borderRadius: 10, padding: '10px 14px', color: '#6BAE94', fontSize: 13, marginBottom: 16 }}>{success}</div>}
@@ -81,7 +82,7 @@ export function TrainingVideoManager({ onClose }: { onClose: () => void }) {
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
                 <div style={{ fontSize: 12, color: ac, fontWeight: 700 }}>{WEEK_LABELS[weekIdx]}</div>
                 <div style={{ fontSize: 11, color: weekAdded === 2 ? '#6BAE94' : '#3A3040' }}>
-                  {weekAdded === 2 ? '✓ Both added' : `${weekAdded}/2 added`}
+                  {weekAdded === 2 ? `✓ ${t('bothAdded')}` : t('nOf2Added', { count: weekAdded })}
                 </div>
               </div>
 
@@ -104,13 +105,13 @@ export function TrainingVideoManager({ onClose }: { onClose: () => void }) {
                         <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
                           {hasUrl && !isEditing && (
                             <>
-                              <a href={urls[v.id]} target="_blank" rel="noopener noreferrer" style={{ background: '#6BAE9420', border: '1px solid #6BAE9440', color: '#6BAE94', borderRadius: 8, padding: '6px 10px', fontSize: 11, textDecoration: 'none', cursor: 'pointer' }}>Watch</a>
-                              <button onClick={() => removeUrl(v.id)} style={{ background: 'transparent', border: '1px solid #3A1A1A', color: '#E07B6A', borderRadius: 8, padding: '6px 10px', cursor: 'pointer', fontSize: 11 }}>Remove</button>
+                              <a href={urls[v.id]} target="_blank" rel="noopener noreferrer" style={{ background: '#6BAE9420', border: '1px solid #6BAE9440', color: '#6BAE94', borderRadius: 8, padding: '6px 10px', fontSize: 11, textDecoration: 'none', cursor: 'pointer' }}>{t('watch')}</a>
+                              <button onClick={() => removeUrl(v.id)} style={{ background: 'transparent', border: '1px solid #3A1A1A', color: '#E07B6A', borderRadius: 8, padding: '6px 10px', cursor: 'pointer', fontSize: 11 }}>{t('remove')}</button>
                             </>
                           )}
                           {!isEditing && (
                             <button onClick={() => { setEditing(p => ({ ...p, [v.id]: true })); setInputs(p => ({ ...p, [v.id]: urls[v.id] ?? '' })) }} style={{ background: hasUrl ? '#2A2430' : ac, color: hasUrl ? '#6A6070' : '#09080A', border: 'none', borderRadius: 8, padding: '6px 12px', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
-                              {hasUrl ? 'Change' : 'Add Loom Link'}
+                              {hasUrl ? t('change') : t('addLoomLink')}
                             </button>
                           )}
                         </div>
@@ -121,14 +122,14 @@ export function TrainingVideoManager({ onClose }: { onClose: () => void }) {
                           <input
                             value={inputs[v.id] ?? ''}
                             onChange={e => setInputs(p => ({ ...p, [v.id]: e.target.value }))}
-                            placeholder="Paste Loom link (https://www.loom.com/share/...)"
+                            placeholder={t('pasteLoomLink')}
                             autoFocus
                             style={{ flex: 1, background: '#100F14', border: '1px solid #2A2430', borderRadius: 10, padding: '10px 14px', fontSize: 13, color: '#EEE5D5', outline: 'none' }}
                           />
                           <button onClick={() => saveUrl(v.id)} disabled={isSaving || !(inputs[v.id] ?? '').trim()} style={{ background: '#D4A853', color: '#09080A', border: 'none', borderRadius: 10, padding: '10px 16px', cursor: 'pointer', fontSize: 13, fontWeight: 700 }}>
-                            {isSaving ? '...' : 'Save'}
+                            {isSaving ? '...' : t('save')}
                           </button>
-                          <button onClick={() => setEditing(p => ({ ...p, [v.id]: false }))} style={{ background: 'transparent', border: '1px solid #2A2430', color: '#6A6070', borderRadius: 10, padding: '10px 14px', cursor: 'pointer', fontSize: 13 }}>Cancel</button>
+                          <button onClick={() => setEditing(p => ({ ...p, [v.id]: false }))} style={{ background: 'transparent', border: '1px solid #2A2430', color: '#6A6070', borderRadius: 10, padding: '10px 14px', cursor: 'pointer', fontSize: 13 }}>{t('cancel')}</button>
                         </div>
                       )}
                     </div>

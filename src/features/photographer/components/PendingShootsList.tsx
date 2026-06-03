@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { useTranslations } from 'next-intl'
 import { confirmShoot, rejectShoot, rescheduleShoot } from '@/actions/photo-shoots'
 import { TIME_SLOTS } from '@/features/photographer/lib/shoot-rules'
 
@@ -26,6 +27,7 @@ function formatES(dateIso: string) {
 }
 
 export function PendingShootsList({ shoots }: Props) {
+  const t = useTranslations('photographer.pendingShoots')
   const [pending, startTransition] = useTransition()
   const [openReject, setOpenReject] = useState<string | null>(null)
   const [openReschedule, setOpenReschedule] = useState<string | null>(null)
@@ -59,7 +61,7 @@ export function PendingShootsList({ shoots }: Props) {
   function handleReschedule(id: string) {
     setError(null)
     if (!newDate || !newTime) {
-      setError('Selecciona fecha y hora')
+      setError(t('errorSelectDateTime'))
       return
     }
     startTransition(async () => {
@@ -81,7 +83,7 @@ export function PendingShootsList({ shoots }: Props) {
       <div className="mb-4 flex items-center gap-2">
         <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#C9A84C]/15 text-base">🔔</span>
         <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#C9A84C]">
-          Solicitudes pendientes ({shoots.length})
+          {t('title', { count: shoots.length })}
         </p>
       </div>
 
@@ -104,10 +106,10 @@ export function PendingShootsList({ shoots }: Props) {
             <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-bold text-[#F5F0E8]">
-                  {s.property_address || s.property_reference || 'Sin dirección'}
+                  {s.property_address || s.property_reference || t('noAddress')}
                 </p>
                 <p className="mt-0.5 text-xs text-[#9A9080]">
-                  👤 {s.agent_name ?? 'Agente'}
+                  👤 {s.agent_name ?? t('agent')}
                   {s.agent_phone ? ` · ${s.agent_phone}` : ''}
                 </p>
                 <p className={`mt-1 text-xs ${s.is_extraordinary ? 'text-purple-300' : 'text-[#C9A84C]'}`}>
@@ -117,11 +119,11 @@ export function PendingShootsList({ shoots }: Props) {
               <div className="flex shrink-0 flex-col items-end gap-1">
                 {s.is_extraordinary && (
                   <span className="rounded-full bg-purple-500/20 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider text-purple-300">
-                    ⚠️ Extraordinaria
+                    ⚠️ {t('extraordinary')}
                   </span>
                 )}
                 <span className="rounded-full bg-[#C9A84C]/15 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider text-[#C9A84C]">
-                  Pendiente
+                  {t('pending')}
                 </span>
               </div>
             </div>
@@ -139,7 +141,7 @@ export function PendingShootsList({ shoots }: Props) {
                 onClick={() => handleConfirm(s.id)}
                 className="rounded-lg bg-[#2ECC9A] px-3 py-2.5 text-xs font-bold uppercase tracking-wide text-black transition active:scale-95 hover:bg-[#3DD9A8] disabled:opacity-50"
               >
-                ✓ Confirmar
+                ✓ {t('confirm')}
               </button>
               <button
                 disabled={pending}
@@ -151,7 +153,7 @@ export function PendingShootsList({ shoots }: Props) {
                 }}
                 className="rounded-lg border border-[#C9A84C]/40 bg-[#C9A84C]/10 px-3 py-2.5 text-xs font-bold uppercase tracking-wide text-[#C9A84C] transition active:scale-95 hover:bg-[#C9A84C]/20 disabled:opacity-50"
               >
-                ↻ Reprogramar
+                ↻ {t('reschedule')}
               </button>
               <button
                 disabled={pending}
@@ -161,7 +163,7 @@ export function PendingShootsList({ shoots }: Props) {
                 }}
                 className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2.5 text-xs font-bold uppercase tracking-wide text-red-400 transition active:scale-95 hover:bg-red-500/20 disabled:opacity-50"
               >
-                ✕ Rechazar
+                ✕ {t('reject')}
               </button>
             </div>
 
@@ -169,7 +171,7 @@ export function PendingShootsList({ shoots }: Props) {
             {openReschedule === s.id && (
               <div className="mt-3 space-y-2 rounded-lg border border-[#C9A84C]/20 bg-[#0A0A0A] p-3">
                 <p className="text-[10px] font-bold uppercase tracking-wider text-[#C9A84C]">
-                  Nueva fecha y hora
+                  {t('newDateTime')}
                 </p>
                 <div className="grid grid-cols-2 gap-2">
                   <input
@@ -193,7 +195,7 @@ export function PendingShootsList({ shoots }: Props) {
                   onClick={() => handleReschedule(s.id)}
                   className="w-full rounded-lg bg-[#C9A84C] px-3 py-2 text-xs font-bold uppercase tracking-wide text-black transition active:scale-95 hover:bg-[#E8C96A] disabled:opacity-50"
                 >
-                  {pending ? 'Guardando...' : 'Confirmar nueva fecha'}
+                  {pending ? t('saving') : t('confirmNewDate')}
                 </button>
               </div>
             )}
@@ -202,12 +204,12 @@ export function PendingShootsList({ shoots }: Props) {
             {openReject === s.id && (
               <div className="mt-3 space-y-2 rounded-lg border border-red-500/20 bg-[#0A0A0A] p-3">
                 <p className="text-[10px] font-bold uppercase tracking-wider text-red-400">
-                  Motivo (opcional)
+                  {t('reasonOptional')}
                 </p>
                 <textarea
                   value={rejectReason}
                   onChange={(e) => setRejectReason(e.target.value)}
-                  placeholder="Ej: Estoy de viaje ese día"
+                  placeholder={t('reasonPlaceholder')}
                   rows={2}
                   className="w-full rounded-lg border border-white/10 bg-[#131313] px-3 py-2 text-sm text-[#F5F0E8] outline-none focus:border-red-500/60 placeholder-[#6A6070]"
                 />
@@ -216,7 +218,7 @@ export function PendingShootsList({ shoots }: Props) {
                   onClick={() => handleReject(s.id)}
                   className="w-full rounded-lg bg-red-500 px-3 py-2 text-xs font-bold uppercase tracking-wide text-white transition active:scale-95 hover:bg-red-600 disabled:opacity-50"
                 >
-                  {pending ? 'Rechazando...' : 'Confirmar rechazo'}
+                  {pending ? t('rejecting') : t('confirmReject')}
                 </button>
               </div>
             )}

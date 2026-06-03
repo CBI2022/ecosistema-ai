@@ -1,14 +1,15 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import type { Roadmap, RoadmapStatus, ScreenKind } from '../data/roadmaps'
 import { ShareButton } from './ShareButton'
 
-const STATUS_META: Record<RoadmapStatus, { label: string; dot: string; text: string; ring: string }> = {
-  pending_approval: { label: 'Pendiente de aprobación', dot: '#E8C96A', text: '#E8C96A', ring: 'rgba(232,201,106,0.25)' },
-  approved: { label: 'Aprobado', dot: '#7FB069', text: '#9CCB86', ring: 'rgba(127,176,105,0.25)' },
-  in_progress: { label: 'En construcción', dot: '#C9A84C', text: '#C9A84C', ring: 'rgba(201,168,76,0.3)' },
-  done: { label: 'Completado', dot: '#6BA8C9', text: '#8FC2DC', ring: 'rgba(107,168,201,0.25)' },
+const STATUS_META: Record<RoadmapStatus, { labelKey: string; dot: string; text: string; ring: string }> = {
+  pending_approval: { labelKey: 'statusPendingApproval', dot: '#E8C96A', text: '#E8C96A', ring: 'rgba(232,201,106,0.25)' },
+  approved: { labelKey: 'statusApproved', dot: '#7FB069', text: '#9CCB86', ring: 'rgba(127,176,105,0.25)' },
+  in_progress: { labelKey: 'statusInProgress', dot: '#C9A84C', text: '#C9A84C', ring: 'rgba(201,168,76,0.3)' },
+  done: { labelKey: 'statusDone', dot: '#6BA8C9', text: '#8FC2DC', ring: 'rgba(107,168,201,0.25)' },
 }
 
 export function RoadmapsView({ roadmaps }: { roadmaps: Roadmap[] }) {
@@ -35,10 +36,11 @@ export function RoadmapsView({ roadmaps }: { roadmaps: Roadmap[] }) {
 /* ─────────────────────────────  ÍNDICE (fichas)  ───────────────────────────── */
 
 function RoadmapIndex({ roadmaps, onOpen }: { roadmaps: Roadmap[]; onOpen: (id: string) => void }) {
+  const t = useTranslations('roadmaps')
   if (roadmaps.length === 0) {
     return (
       <div className="rounded-2xl border border-[#C9A84C]/15 bg-[#131313] p-10 text-center text-[#9A9080]">
-        Aún no hay roadmaps. Cuando aprobemos uno, aparecerá aquí.
+        {t('emptyIndex')}
       </div>
     )
   }
@@ -77,7 +79,7 @@ function RoadmapIndex({ roadmaps, onOpen }: { roadmaps: Roadmap[]; onOpen: (id: 
                   style={{ color: status.text, boxShadow: `inset 0 0 0 1px ${status.ring}` }}
                 >
                   <span className="h-1.5 w-1.5 rounded-full" style={{ background: status.dot }} />
-                  {status.label}
+                  {t(status.labelKey)}
                 </span>
               </div>
 
@@ -88,7 +90,7 @@ function RoadmapIndex({ roadmaps, onOpen }: { roadmaps: Roadmap[]; onOpen: (id: 
               <div className="mt-5 flex items-center justify-between border-t border-white/[0.06] pt-4">
                 <ShareButton path={`/r/${r.id}`} />
                 <span className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-[#C9A84C] transition group-hover:gap-2.5">
-                  Ver roadmap
+                  {t('viewRoadmap')}
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5">
                     <line x1="5" y1="12" x2="19" y2="12" />
                     <polyline points="12 5 19 12 12 19" />
@@ -106,6 +108,7 @@ function RoadmapIndex({ roadmaps, onOpen }: { roadmaps: Roadmap[]; onOpen: (id: 
 /* ─────────────────────────────  DETALLE  ───────────────────────────── */
 
 export function RoadmapDetail({ rm, onBack }: { rm: Roadmap; onBack?: () => void }) {
+  const t = useTranslations('roadmaps')
   const status = STATUS_META[rm.status]
 
   return (
@@ -119,7 +122,7 @@ export function RoadmapDetail({ rm, onBack }: { rm: Roadmap; onBack?: () => void
             <line x1="19" y1="12" x2="5" y2="12" />
             <polyline points="12 19 5 12 12 5" />
           </svg>
-          Todos los RoadMaps
+          {t('allRoadmaps')}
         </button>
       )}
 
@@ -140,10 +143,10 @@ export function RoadmapDetail({ rm, onBack }: { rm: Roadmap; onBack?: () => void
               style={{ color: status.text, boxShadow: `inset 0 0 0 1px ${status.ring}` }}
             >
               <span className="h-1.5 w-1.5 rounded-full" style={{ background: status.dot }} />
-              {status.label}
+              {t(status.labelKey)}
             </span>
             <div className="sm:ml-auto">
-              <ShareButton path={`/r/${rm.id}`} variant="solid" label="Compartir enlace" />
+              <ShareButton path={`/r/${rm.id}`} variant="solid" label={t('shareLink')} />
             </div>
           </div>
 
@@ -153,15 +156,15 @@ export function RoadmapDetail({ rm, onBack }: { rm: Roadmap; onBack?: () => void
           <p className="mt-4 max-w-2xl text-[15px] leading-relaxed text-[#B8AE9C] sm:text-lg">{rm.summary}</p>
 
           <div className="mt-7 flex flex-wrap gap-2.5">
-            <MetaChip label="Inicio" value={rm.startDate} />
-            <MetaChip label="Prueba" value={rm.testWindow} />
-            <MetaChip label="Objetivo" value={rm.targetDate} />
+            <MetaChip label={t('metaStart')} value={rm.startDate} />
+            <MetaChip label={t('metaTest')} value={rm.testWindow} />
+            <MetaChip label={t('metaTarget')} value={rm.targetDate} />
           </div>
         </div>
       </header>
 
       {/* El recorrido */}
-      <Section title="El recorrido" caption="Qué sucede, paso a paso" delay={0.08}>
+      <Section title={t('journeyTitle')} caption={t('journeyCaption')} delay={0.08}>
         <ol className="relative ml-1 mt-2 space-y-6 sm:space-y-7">
           <span
             aria-hidden
@@ -183,7 +186,7 @@ export function RoadmapDetail({ rm, onBack }: { rm: Roadmap; onBack?: () => void
       </Section>
 
       {/* Qué ve cada persona (teléfonos) */}
-      <Section title="Qué ve cada persona" caption="Las pantallas, desde el teléfono" delay={0.1}>
+      <Section title={t('screensTitle')} caption={t('screensCaption')} delay={0.1}>
         <div className="mt-3 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
           {rm.screens.map((s, i) => (
             <figure key={i} className="cbi-rm-up flex flex-col items-center" style={{ animationDelay: `${0.18 + i * 0.1}s` }}>
@@ -196,12 +199,12 @@ export function RoadmapDetail({ rm, onBack }: { rm: Roadmap; onBack?: () => void
           ))}
         </div>
         <p className="mt-6 text-center text-[11px] italic text-[#5A5345]">
-          Vista de teléfono — se sustituye por la captura real a medida que se construye cada pantalla.
+          {t('phonePreviewNote')}
         </p>
       </Section>
 
       {/* Orden de construcción */}
-      <Section title="Orden de construcción" caption="En qué orden se levanta" delay={0.12}>
+      <Section title={t('buildOrderTitle')} caption={t('buildOrderCaption')} delay={0.12}>
         <div className="mt-2 grid gap-2.5 sm:grid-cols-2">
           {rm.buildOrder.map((item, i) => (
             <div
@@ -219,7 +222,7 @@ export function RoadmapDetail({ rm, onBack }: { rm: Roadmap; onBack?: () => void
       </Section>
 
       {/* Lo que esperamos */}
-      <Section title="Lo que esperamos" caption="Cómo sabemos que está hecho" delay={0.14}>
+      <Section title={t('expectationsTitle')} caption={t('expectationsCaption')} delay={0.14}>
         <div className="mt-2 rounded-2xl border border-[#7FB069]/20 bg-[#7FB069]/[0.04] p-5 sm:p-6">
           <ul className="space-y-3">
             {rm.expectations.map((e, i) => (
@@ -313,26 +316,27 @@ function FieldRow({ label, value }: { label: string; value?: string }) {
 }
 
 function AgentFormScreen() {
+  const t = useTranslations('roadmaps')
   return (
     <div className="flex h-full flex-col">
       <div className="mb-2 flex items-center justify-between">
         <span className="text-[8px] font-bold uppercase tracking-[0.2em] text-[#C9A84C]">CBI</span>
       </div>
-      <div className="text-[12px] font-bold text-[#F5F0E8]">Subir propiedad</div>
+      <div className="text-[12px] font-bold text-[#F5F0E8]">{t('mockUploadProperty')}</div>
       <div className="mt-3 grid grid-cols-2 gap-1.5">
-        <FieldRow label="Referencia" value="A-046" />
-        <FieldRow label="Tipo" value="Villa" />
-        <FieldRow label="Precio" value="€ 850.000" />
-        <FieldRow label="Zona" value="Altea" />
-        <FieldRow label="Dormitorios" value="4" />
-        <FieldRow label="Baños" value="3" />
+        <FieldRow label={t('mockReference')} value="A-046" />
+        <FieldRow label={t('mockType')} value="Villa" />
+        <FieldRow label={t('mockPrice')} value="€ 850.000" />
+        <FieldRow label={t('mockZone')} value="Altea" />
+        <FieldRow label={t('mockBedrooms')} value="4" />
+        <FieldRow label={t('mockBathrooms')} value="3" />
       </div>
       <div className="mt-1.5">
-        <FieldRow label="Ubicación" value="Carrer del Mar, 12" />
+        <FieldRow label={t('mockLocation')} value="Carrer del Mar, 12" />
       </div>
       <div className="mt-auto pt-3">
         <div className="rounded-lg bg-[#C9A84C] py-2 text-center text-[10px] font-bold text-black shadow-[0_4px_14px_rgba(201,168,76,0.3)]">
-          Enviar propiedad
+          {t('mockSendProperty')}
         </div>
       </div>
     </div>
@@ -340,6 +344,7 @@ function AgentFormScreen() {
 }
 
 function InboxRow({ ref_, agent, done }: { ref_: string; agent: string; done?: boolean }) {
+  const t = useTranslations('roadmaps')
   return (
     <div className="flex items-center gap-2 rounded-md border border-white/[0.06] bg-white/[0.02] px-2 py-1.5">
       <div className="flex h-6 w-6 flex-none items-center justify-center rounded bg-[#C9A84C]/12 text-[8px] font-bold text-[#C9A84C]">
@@ -354,26 +359,27 @@ function InboxRow({ ref_, agent, done }: { ref_: string; agent: string; done?: b
           done ? 'bg-[#7FB069]/15 text-[#9CCB86]' : 'bg-[#E8C96A]/15 text-[#E8C96A]'
         }`}
       >
-        {done ? 'Subida' : 'Pendiente'}
+        {done ? t('mockUploaded') : t('mockPending')}
       </span>
     </div>
   )
 }
 
 function OfficeInboxScreen() {
+  const t = useTranslations('roadmaps')
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-center justify-between">
-        <span className="text-[12px] font-bold text-[#F5F0E8]">Propiedades</span>
+        <span className="text-[12px] font-bold text-[#F5F0E8]">{t('mockProperties')}</span>
         <span className="rounded-full bg-[#C9A84C]/15 px-1.5 py-0.5 text-[8px] font-bold text-[#C9A84C]">8</span>
       </div>
-      <div className="mt-0.5 text-[8px] text-[#8A8170]">Recibidas de los agentes</div>
+      <div className="mt-0.5 text-[8px] text-[#8A8170]">{t('mockReceivedFromAgents')}</div>
       <div className="mt-2 flex items-center gap-1 rounded-md border border-white/[0.07] bg-white/[0.02] px-2 py-1 text-[8px] text-[#6E665A]">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className="h-2.5 w-2.5">
           <circle cx="11" cy="11" r="7" />
           <line x1="21" y1="21" x2="16.65" y2="16.65" />
         </svg>
-        Buscar…
+        {t('mockSearch')}
       </div>
       <div className="mt-2 space-y-1.5">
         <InboxRow ref_="A-046" agent="María García" />
@@ -387,27 +393,28 @@ function OfficeInboxScreen() {
 }
 
 function AdminHomeScreen() {
+  const t = useTranslations('roadmaps')
   return (
     <div className="flex h-full flex-col">
       <div className="mb-2 flex gap-1.5">
-        <span className="flex-1 rounded-md bg-[#C9A84C] py-1 text-center text-[8px] font-bold text-black">Admin ▾</span>
+        <span className="flex-1 rounded-md bg-[#C9A84C] py-1 text-center text-[8px] font-bold text-black">{t('mockAdmin')} ▾</span>
         <span className="flex-1 rounded-md border border-[#C9A84C]/35 py-1 text-center text-[8px] font-semibold text-[#E8C96A]">
-          Opciones antiguas ▾
+          {t('mockLegacyOptions')} ▾
         </span>
       </div>
-      <div className="text-[12px] font-bold text-[#F5F0E8]">Subir propiedad</div>
+      <div className="text-[12px] font-bold text-[#F5F0E8]">{t('mockUploadProperty')}</div>
       <div className="mt-2 grid grid-cols-2 gap-1.5">
-        <FieldRow label="Referencia" value="A-047" />
-        <FieldRow label="Tipo" value="Ático" />
-        <FieldRow label="Precio" value="€ 620.000" />
-        <FieldRow label="Zona" value="Calpe" />
+        <FieldRow label={t('mockReference')} value="A-047" />
+        <FieldRow label={t('mockType')} value="Ático" />
+        <FieldRow label={t('mockPrice')} value="€ 620.000" />
+        <FieldRow label={t('mockZone')} value="Calpe" />
       </div>
       <div className="mt-1.5">
-        <FieldRow label="Ubicación" value="Av. Europa, 8" />
+        <FieldRow label={t('mockLocation')} value="Av. Europa, 8" />
       </div>
       <div className="mt-auto pt-3">
         <div className="rounded-lg bg-[#C9A84C] py-2 text-center text-[10px] font-bold text-black shadow-[0_4px_14px_rgba(201,168,76,0.3)]">
-          Enviar propiedad
+          {t('mockSendProperty')}
         </div>
       </div>
     </div>

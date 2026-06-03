@@ -3,15 +3,20 @@
  * Pantalla completa con spinner dorado animado + logo CBI pulsante.
  * Usar cuando el usuario inicia una acción que tarda (login, signup, etc.).
  */
+import { useTranslations } from 'next-intl'
+
 interface LoadingOverlayProps {
   title?: string
   subtitle?: string
 }
 
 export function LoadingOverlay({
-  title = 'Cargando...',
-  subtitle = 'Un momento por favor',
+  title,
+  subtitle,
 }: LoadingOverlayProps = {}) {
+  const t = useTranslations('auth')
+  const resolvedTitle = title ?? t('loading')
+  const resolvedSubtitle = subtitle ?? t('oneMoment')
   return (
     <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/90 backdrop-blur-md">
       <div className="flex flex-col items-center gap-6">
@@ -29,8 +34,8 @@ export function LoadingOverlay({
         <img src="/logo-cbi.png" alt="CBI" className="h-8 w-auto animate-pulse opacity-70" />
 
         <div className="text-center">
-          <p className="font-['Maharlika',serif] text-lg text-[#F5F0E8]">{title}</p>
-          <p className="mt-1 text-xs uppercase tracking-[0.2em] text-[#9A9080]">{subtitle}</p>
+          <p className="font-['Maharlika',serif] text-lg text-[#F5F0E8]">{resolvedTitle}</p>
+          <p className="mt-1 text-xs uppercase tracking-[0.2em] text-[#9A9080]">{resolvedSubtitle}</p>
         </div>
 
         {/* Puntos bounce */}

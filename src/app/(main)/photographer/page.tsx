@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
+import { getTranslations } from 'next-intl/server'
 import { PhotoSetsManager } from '@/features/photographer/components/PhotoSetsManager'
 import { PendingShootsList } from '@/features/photographer/components/PendingShootsList'
 import { PhotographerBlocksManager } from '@/features/photographer/components/PhotographerBlocksManager'
@@ -42,6 +43,7 @@ export default async function PhotographerPage({
 }: {
   searchParams: Promise<{ google?: string; reason?: string }>
 }) {
+  const t = await getTranslations('shell.photographer')
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
@@ -253,22 +255,22 @@ export default async function PhotographerPage({
     <div className="space-y-5 sm:space-y-6">
       {/* Header */}
       <div>
-        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#C9A84C]">Mi calendario</p>
+        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#C9A84C]">{t('eyebrow')}</p>
         <h1 className="mt-1 text-2xl font-bold text-[#F5F0E8] sm:text-3xl">
-          Hola Jelle 👋
+          {t('greeting', { name: 'Jelle' })} 👋
         </h1>
         <p className="mt-1 text-sm text-[#9A9080]">
-          Aquí ves todas las solicitudes y shoots confirmados.
+          {t('subtitle')}
         </p>
       </div>
 
       {/* Stats — 4 tarjetas mobile-first */}
       <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-3">
         {[
-          { label: 'Pendientes', value: pendingShoots.length, color: '#C9A84C', highlight: pendingShoots.length > 0 },
-          { label: 'Este mes', value: confirmedThisMonth, color: '#2ECC9A' },
-          { label: 'Fotos subidas', value: totalPhotos ?? 0, color: '#8B5CF6' },
-          { label: 'Completados', value: totalShoots ?? 0, color: '#F5F0E8' },
+          { label: t('statPending'), value: pendingShoots.length, color: '#C9A84C', highlight: pendingShoots.length > 0 },
+          { label: t('statThisMonth'), value: confirmedThisMonth, color: '#2ECC9A' },
+          { label: t('statPhotosUploaded'), value: totalPhotos ?? 0, color: '#8B5CF6' },
+          { label: t('statCompleted'), value: totalShoots ?? 0, color: '#F5F0E8' },
         ].map((s) => (
           <div
             key={s.label}
@@ -310,7 +312,7 @@ export default async function PhotographerPage({
             href="/photographer/upload"
             className="rounded-lg bg-[#C9A84C] px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-black transition active:scale-95 hover:bg-[#E8C96A]"
           >
-            + Subir fotos
+            {t('uploadPhotos')}
           </a>
         </div>
 
@@ -362,9 +364,9 @@ export default async function PhotographerPage({
                       <div
                         key={s.id}
                         className={`truncate rounded px-1 py-0.5 text-[9px] font-semibold leading-tight ${color}`}
-                        title={`${s.shoot_time?.slice(0, 5)} · ${s.profiles?.full_name ?? 'Agente'} · ${s.property_address ?? ''}`}
+                        title={`${s.shoot_time?.slice(0, 5)} · ${s.profiles?.full_name ?? t('agentFallback')} · ${s.property_address ?? ''}`}
                       >
-                        {s.shoot_time?.slice(0, 5)} {s.profiles?.full_name?.split(' ')[0] ?? 'Agente'}
+                        {s.shoot_time?.slice(0, 5)} {s.profiles?.full_name?.split(' ')[0] ?? t('agentFallback')}
                       </div>
                     )
                   })}
@@ -386,19 +388,19 @@ export default async function PhotographerPage({
         <div className="mt-4 flex flex-wrap gap-3 border-t border-white/6 pt-3 text-[10px] text-[#9A9080]">
           <span className="flex items-center gap-1.5">
             <span className="h-2.5 w-2.5 rounded-full bg-[#C9A84C]" />
-            Pendiente
+            {t('legendPending')}
           </span>
           <span className="flex items-center gap-1.5">
             <span className="h-2.5 w-2.5 rounded-full bg-[#2ECC9A]" />
-            Confirmado
+            {t('legendConfirmed')}
           </span>
           <span className="flex items-center gap-1.5">
             <span className="h-2.5 w-2.5 rounded-full bg-[#9A9080]" />
-            Completado
+            {t('legendCompleted')}
           </span>
           <span className="flex items-center gap-1.5">
             <span className="h-2.5 w-2.5 rounded-full bg-blue-400" />
-            Bloqueado
+            {t('legendBlocked')}
           </span>
         </div>
       </div>
@@ -411,10 +413,10 @@ export default async function PhotographerPage({
         <div className="mb-3 flex items-center justify-between">
           <div>
             <h2 className="flex items-center gap-2 text-base font-bold text-[#F5F0E8]">
-              📤 Entregar fotos al agente
+              📤 {t('deliverTitle')}
             </h2>
             <p className="mt-1 text-[11px] text-[#9A9080]">
-              Sube las fotos a una carpeta de Drive como siempre, pega aquí el link público y el agente recibe aviso.
+              {t('deliverDesc')}
             </p>
           </div>
         </div>

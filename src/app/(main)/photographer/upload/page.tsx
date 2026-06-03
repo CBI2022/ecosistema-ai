@@ -1,9 +1,11 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
+import { getTranslations } from 'next-intl/server'
 import { PhotographerUpload } from '@/features/photographer/components/PhotographerUpload'
 
 export default async function PhotographerUploadPage() {
+  const t = await getTranslations('shell.photographerUpload')
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
@@ -34,9 +36,9 @@ export default async function PhotographerUploadPage() {
   return (
     <div className="max-w-2xl">
       <div className="mb-6">
-        <h1 className="text-xl font-bold text-[#F5F0E8]">Upload Photos</h1>
+        <h1 className="text-xl font-bold text-[#F5F0E8]">{t('title')}</h1>
         <p className="mt-1 text-sm text-[#9A9080]">
-          Associate photos with a property reference and agent
+          {t('subtitle')}
         </p>
       </div>
       <PhotographerUpload agents={agents || []} shoots={shoots || []} photographerId={user.id} />

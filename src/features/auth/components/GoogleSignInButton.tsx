@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { createClient } from '@/lib/supabase/client'
 
 interface GoogleSignInButtonProps {
@@ -10,9 +11,11 @@ interface GoogleSignInButtonProps {
 
 export function GoogleSignInButton({
   redirectTo = '/',
-  label = 'Continuar con Google',
+  label,
 }: GoogleSignInButtonProps) {
+  const t = useTranslations('auth')
   const [loading, setLoading] = useState(false)
+  const buttonLabel = label ?? t('continueWithGoogle')
 
   async function handleGoogleSignIn() {
     setLoading(true)
@@ -60,7 +63,7 @@ export function GoogleSignInButton({
           fill="#EA4335"
         />
       </svg>
-      {loading ? 'Redirigiendo...' : label}
+      {loading ? t('redirecting') : buttonLabel}
     </button>
   )
 }

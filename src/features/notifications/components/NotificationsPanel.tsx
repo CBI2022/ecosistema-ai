@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { useTranslations } from 'next-intl'
 import { approveUser, rejectUser } from '@/actions/auth'
 import { markNotificationRead, markAllRead } from '@/actions/notifications'
 
@@ -37,6 +38,7 @@ const ROLE_COLORS: Record<string, string> = {
 }
 
 export function NotificationsPanel({ pendingUsers: initialPending, notifications: initialNotifs, compact = false, onChange }: NotificationsPanelProps) {
+  const t = useTranslations('notifications')
   const [pendingUsers, setPendingUsers] = useState(initialPending)
   const [notifications, setNotifications] = useState(initialNotifs)
   const [rejectingId, setRejectingId] = useState<string | null>(null)
@@ -93,7 +95,7 @@ export function NotificationsPanel({ pendingUsers: initialPending, notifications
           onClick={() => setActiveTab('registrations')}
           className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2.5 text-sm font-bold transition ${activeTab === 'registrations' ? 'bg-[#C9A84C] text-black' : 'text-[#9A9080] hover:text-[#F5F0E8]'}`}
         >
-          👥 New Registrations
+          👥 {t('newRegistrations')}
           {pendingUsers.length > 0 && (
             <span className={`rounded-full px-1.5 py-0.5 text-[10px] ${activeTab === 'registrations' ? 'bg-black/20' : 'bg-red-500/20 text-red-400'}`}>
               {pendingUsers.length}
@@ -104,7 +106,7 @@ export function NotificationsPanel({ pendingUsers: initialPending, notifications
           onClick={() => setActiveTab('activity')}
           className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2.5 text-sm font-bold transition ${activeTab === 'activity' ? 'bg-[#C9A84C] text-black' : 'text-[#9A9080] hover:text-[#F5F0E8]'}`}
         >
-          🔔 Activity
+          🔔 {t('activity')}
           {unreadCount > 0 && (
             <span className={`rounded-full px-1.5 py-0.5 text-[10px] ${activeTab === 'activity' ? 'bg-black/20' : 'bg-red-500/20 text-red-400'}`}>
               {unreadCount}
@@ -119,8 +121,8 @@ export function NotificationsPanel({ pendingUsers: initialPending, notifications
           {pendingUsers.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-white/10 bg-[#131313] p-12 text-center">
               <div className="mb-3 text-4xl opacity-30">✅</div>
-              <p className="text-sm font-semibold text-[#9A9080]">No pending registrations</p>
-              <p className="mt-1 text-xs text-[#9A9080]/60">All accounts are reviewed</p>
+              <p className="text-sm font-semibold text-[#9A9080]">{t('noPendingRegistrations')}</p>
+              <p className="mt-1 text-xs text-[#9A9080]/60">{t('allAccountsReviewed')}</p>
             </div>
           ) : (
             pendingUsers.map((u) => (
@@ -132,7 +134,7 @@ export function NotificationsPanel({ pendingUsers: initialPending, notifications
                         {(u.full_name || u.email).charAt(0).toUpperCase()}
                       </div>
                       <div className="min-w-0">
-                        <p className="truncate font-semibold text-[#F5F0E8]">{u.full_name || 'Unnamed'}</p>
+                        <p className="truncate font-semibold text-[#F5F0E8]">{u.full_name || t('unnamed')}</p>
                         <p className="truncate text-xs text-[#9A9080]">{u.email}</p>
                       </div>
                     </div>
@@ -155,25 +157,25 @@ export function NotificationsPanel({ pendingUsers: initialPending, notifications
                       disabled={isPending}
                       className="flex h-11 flex-1 items-center justify-center gap-1 rounded-xl bg-[#2ECC9A]/15 px-3 text-sm font-bold text-[#2ECC9A] transition active:scale-95 hover:bg-[#2ECC9A]/25 disabled:opacity-50 sm:h-auto sm:flex-none sm:rounded-lg sm:py-1.5 sm:text-xs"
                     >
-                      ✓ Approve
+                      ✓ {t('approve')}
                     </button>
                     <button
                       onClick={() => setRejectingId(rejectingId === u.id ? null : u.id)}
                       className="flex h-11 flex-1 items-center justify-center gap-1 rounded-xl bg-red-500/10 px-3 text-sm font-bold text-red-400 transition active:scale-95 hover:bg-red-500/20 sm:h-auto sm:flex-none sm:rounded-lg sm:py-1.5 sm:text-xs"
                     >
-                      ✕ Reject
+                      ✕ {t('reject')}
                     </button>
                   </div>
                 </div>
 
                 {rejectingId === u.id && (
                   <div className="mt-4 border-t border-white/8 pt-4">
-                    <p className="mb-2 text-xs font-bold uppercase tracking-wider text-[#9A9080]">Rejection reason (optional)</p>
+                    <p className="mb-2 text-xs font-bold uppercase tracking-wider text-[#9A9080]">{t('rejectionReason')}</p>
                     <div className="flex flex-col gap-2 sm:flex-row">
                       <input
                         type="text"
                         className="flex-1 rounded-lg border border-white/10 bg-[#1C1C1C] px-3 py-3 text-sm text-[#F5F0E8] outline-none focus:border-red-500/40 placeholder-[#9A9080] sm:py-2"
-                        placeholder="e.g. Not a CBI team member"
+                        placeholder={t('rejectionPlaceholder')}
                         value={rejectReason}
                         onChange={(e) => setRejectReason(e.target.value)}
                       />
@@ -183,13 +185,13 @@ export function NotificationsPanel({ pendingUsers: initialPending, notifications
                           disabled={isPending}
                           className="h-11 flex-1 rounded-xl bg-red-500 px-4 text-sm font-bold text-white transition active:scale-95 hover:bg-red-600 disabled:opacity-50 sm:h-auto sm:flex-none sm:rounded-lg sm:py-2 sm:text-xs"
                         >
-                          Confirm
+                          {t('confirm')}
                         </button>
                         <button
                           onClick={() => { setRejectingId(null); setRejectReason('') }}
                           className="h-11 flex-1 rounded-xl border border-white/10 px-3 text-sm text-[#9A9080] active:scale-95 hover:text-[#F5F0E8] sm:h-auto sm:flex-none sm:rounded-lg sm:py-2 sm:text-xs"
                         >
-                          Cancel
+                          {t('cancel')}
                         </button>
                       </div>
                     </div>
@@ -210,13 +212,13 @@ export function NotificationsPanel({ pendingUsers: initialPending, notifications
               disabled={isPending}
               className="ml-auto block rounded-lg border border-white/10 px-4 py-2 text-xs font-bold text-[#9A9080] transition hover:text-[#F5F0E8]"
             >
-              Mark all as read
+              {t('markAllRead')}
             </button>
           )}
           {notifications.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-white/10 bg-[#131313] p-12 text-center">
               <div className="mb-3 text-4xl opacity-30">🔔</div>
-              <p className="text-sm font-semibold text-[#9A9080]">No notifications yet</p>
+              <p className="text-sm font-semibold text-[#9A9080]">{t('noNotificationsYet')}</p>
             </div>
           ) : (
             notifications.map((notif) => (
@@ -239,7 +241,7 @@ export function NotificationsPanel({ pendingUsers: initialPending, notifications
                       onClick={() => handleMarkRead(notif.id)}
                       className="shrink-0 rounded-lg border border-white/10 px-2.5 py-1.5 text-[10px] text-[#9A9080] hover:text-[#F5F0E8]"
                     >
-                      Read
+                      {t('read')}
                     </button>
                   )}
                 </div>

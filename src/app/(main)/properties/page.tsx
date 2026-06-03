@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
+import { getTranslations } from 'next-intl/server'
 import { PropertyForm } from '@/features/properties/components/PropertyForm'
 import { PropertyList } from '@/features/properties/components/PropertyList'
 
@@ -16,6 +17,7 @@ interface PropertiesPageProps {
 }
 
 export default async function PropertiesPage({ searchParams }: PropertiesPageProps) {
+  const t = await getTranslations('shell.properties')
   const supabase = await createClient()
   const {
     data: { user },
@@ -87,12 +89,10 @@ export default async function PropertiesPage({ searchParams }: PropertiesPagePro
     <div className="space-y-8">
       <div>
         <h1 className="text-xl font-bold text-[#F5F0E8]">
-          {editProp ? 'Editar propiedad' : 'Subir propiedad'}
+          {editProp ? t('editTitle') : t('newTitle')}
         </h1>
         <p className="mt-1 text-sm text-[#9A9080]">
-          {editProp
-            ? 'Modifica los datos y vuelve a enviar a la oficina'
-            : 'Rellena los datos y envía la propiedad a la oficina'}
+          {editProp ? t('editSubtitle') : t('newSubtitle')}
         </p>
       </div>
 
@@ -117,7 +117,7 @@ export default async function PropertiesPage({ searchParams }: PropertiesPagePro
         <PropertyList
           properties={properties}
           agentsMap={agentsMap}
-          listTitle={isElevated ? 'Propiedades' : 'My Properties'}
+          listTitle={isElevated ? t('listTitleAll') : t('listTitleMine')}
         />
       )}
     </div>

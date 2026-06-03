@@ -46,7 +46,7 @@ export function SignupForm() {
             required
             autoComplete="name"
             className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm text-[#F5F0E8] placeholder-[#F5F0E8]/20 outline-none transition focus:border-[#C9A84C]/60"
-            placeholder="Bruno Felipe"
+            placeholder={t('fullNamePlaceholder')}
           />
         </div>
 

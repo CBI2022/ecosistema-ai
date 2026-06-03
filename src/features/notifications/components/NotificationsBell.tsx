@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { useTranslations } from 'next-intl'
 import { createPortal } from 'react-dom'
 import { getNotificationsData } from '@/actions/notifications'
 import { NotificationsPanel } from './NotificationsPanel'
@@ -10,6 +11,7 @@ interface NotificationsBellProps {
 }
 
 export function NotificationsBell({ initialCount }: NotificationsBellProps) {
+  const t = useTranslations('notifications')
   const [open, setOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -69,8 +71,8 @@ export function NotificationsBell({ initialCount }: NotificationsBellProps) {
     <div ref={dropdownRef} className="relative">
       <button
         onClick={toggle}
-        title="Notificaciones"
-        aria-label="Notificaciones"
+        title={t('title')}
+        aria-label={t('title')}
         className="relative flex h-9 w-9 items-center justify-center rounded-full border border-white/8 bg-white/4 text-[#9A9080] transition active:scale-95 hover:border-[#C9A84C]/40 hover:text-[#F5F0E8] md:h-8 md:w-8"
       >
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -88,18 +90,18 @@ export function NotificationsBell({ initialCount }: NotificationsBellProps) {
       {open && (
         <div className="absolute right-0 top-10 z-50 hidden w-[420px] max-w-[calc(100vw-2rem)] rounded-2xl border border-white/10 bg-[#131313] shadow-2xl md:block">
           <div className="flex items-center justify-between border-b border-white/8 px-4 py-3">
-            <h3 className="text-sm font-bold text-[#F5F0E8]">Notificaciones</h3>
+            <h3 className="text-sm font-bold text-[#F5F0E8]">{t('title')}</h3>
             <button
               onClick={() => setOpen(false)}
               className="text-xs text-[#9A9080] hover:text-[#F5F0E8]"
-              aria-label="Cerrar"
+              aria-label={t('close')}
             >
               ✕
             </button>
           </div>
           <div className="max-h-[70vh] overflow-y-auto p-4">
             {loading && (
-              <div className="py-10 text-center text-xs text-[#9A9080]">Cargando...</div>
+              <div className="py-10 text-center text-xs text-[#9A9080]">{t('loading')}</div>
             )}
             {!loading && data && (
               <NotificationsPanel
@@ -122,7 +124,7 @@ export function NotificationsBell({ initialCount }: NotificationsBellProps) {
           aria-modal="true"
         >
           <button
-            aria-label="Cerrar"
+            aria-label={t('close')}
             onClick={() => setOpen(false)}
             className="absolute inset-0 bg-black/70 backdrop-blur-sm"
           />
@@ -134,11 +136,11 @@ export function NotificationsBell({ initialCount }: NotificationsBellProps) {
 
             {/* Header */}
             <div className="flex shrink-0 items-center justify-between px-5 py-3">
-              <h3 className="text-base font-bold text-[#F5F0E8]">🔔 Notificaciones</h3>
+              <h3 className="text-base font-bold text-[#F5F0E8]">🔔 {t('title')}</h3>
               <button
                 onClick={() => setOpen(false)}
                 className="flex h-9 w-9 items-center justify-center rounded-full bg-white/5 text-[#9A9080] transition active:scale-95"
-                aria-label="Cerrar"
+                aria-label={t('close')}
               >
                 ✕
               </button>
@@ -147,7 +149,7 @@ export function NotificationsBell({ initialCount }: NotificationsBellProps) {
             {/* Scrollable content */}
             <div className="pb-safe flex-1 overflow-y-auto px-4 pb-4">
               {loading && (
-                <div className="py-12 text-center text-sm text-[#9A9080]">Cargando…</div>
+                <div className="py-12 text-center text-sm text-[#9A9080]">{t('loading')}</div>
               )}
               {!loading && data && (
                 <NotificationsPanel

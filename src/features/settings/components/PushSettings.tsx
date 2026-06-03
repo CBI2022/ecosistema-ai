@@ -56,7 +56,7 @@ export function PushSettings() {
       // Suscribirse
       const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
       if (!vapidKey) {
-        setToast('Error: VAPID key no configurada')
+        setToast('Error: ' + t('pushVapidNotConfigured'))
         setLoading(false)
         return
       }
@@ -68,7 +68,7 @@ export function PushSettings() {
 
       const subObj = sub.toJSON() as { endpoint?: string; keys?: { p256dh?: string; auth?: string } }
       if (!subObj.endpoint || !subObj.keys?.p256dh || !subObj.keys?.auth) {
-        setToast('Error: suscripción inválida')
+        setToast('Error: ' + t('pushInvalidSubscription'))
         setLoading(false)
         return
       }
@@ -82,10 +82,10 @@ export function PushSettings() {
         setToast('Error: ' + res.error)
       } else {
         setSubscribed(true)
-        setToast('✓ Notificaciones activadas')
+        setToast('✓ ' + t('pushEnabledToast'))
       }
     } catch (err) {
-      setToast('Error activando notificaciones')
+      setToast('Error: ' + t('pushEnableError'))
     } finally {
       setLoading(false)
     }
@@ -101,9 +101,9 @@ export function PushSettings() {
         await sub.unsubscribe()
       }
       setSubscribed(false)
-      setToast('Notificaciones desactivadas')
+      setToast(t('pushDisabledToast'))
     } catch {
-      setToast('Error desactivando')
+      setToast('Error: ' + t('pushDisableError'))
     } finally {
       setLoading(false)
     }
@@ -114,7 +114,7 @@ export function PushSettings() {
     const res = await sendTestPush()
     setLoading(false)
     if (res && 'error' in res && res.error) setToast('Error: ' + res.error)
-    else if (res && 'skipped' in res) setToast('No hay suscripciones activas')
+    else if (res && 'skipped' in res) setToast(t('pushNoActiveSubscriptions'))
     else setToast(t('testSent'))
   }
 
