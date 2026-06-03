@@ -22,5 +22,7 @@ export default async function HomePage() {
   if (profile?.role === 'photographer') redirect('/photographer')
   if (profile?.role === 'secretary') redirect('/inbox')
   if (profile?.role === 'agent' || profile?.role === 'admin') redirect('/properties')
+  // Director Comercial: rol sin definir todavía → solo su cuenta.
+  if (profile?.role === 'dc') redirect('/settings')
   redirect('/dashboard')
 }

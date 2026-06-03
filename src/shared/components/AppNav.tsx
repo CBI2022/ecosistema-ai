@@ -295,16 +295,10 @@ export function AppNav({ role }: AppNavProps) {
     { type: 'group', key: 'admin-group', label: t('admin'), icon: 'shield', items: ADMIN_SUBITEMS },
   ]
 
+  // Secretaria (Chloe): solo su bandeja de propiedades recibidas. Nada de las
+  // secciones de admin (dashboard, equipo, tareas, KPI…) — esas son solo admin.
   const SECRETARY_TABS: NavEntry[] = [
     { href: '/inbox', label: t('properties'), icon: 'inbox' },
-    { href: '/dashboard', label: t('dashboard'), icon: 'home' },
-    { href: '/admin', label: t('team'), icon: 'users' },
-    { href: '/properties', label: t('properties'), icon: 'building' },
-    { href: '/tasks', label: t('tasks'), icon: 'check' },
-    { href: '/kpi', label: t('kpi'), icon: 'chart' },
-    { href: '/competitors', label: t('competitors'), icon: 'target' },
-    { href: '/training', label: t('training'), icon: 'book' },
-    { href: '/contracts', label: t('contracts'), icon: 'signature' },
   ]
 
   // Jelle solo necesita su calendario y subir fotos. Notificaciones y ajustes
@@ -314,13 +308,8 @@ export function AppNav({ role }: AppNavProps) {
     { href: '/photographer/upload', label: t('uploadPhotos'), icon: 'cameraPlus' },
   ]
 
-  const DC_TABS: NavEntry[] = [
-    { href: '/dashboard', label: t('dashboard'), icon: 'home' },
-    { href: '/admin', label: t('team'), icon: 'users' },
-    { href: '/kpi', label: t('kpi'), icon: 'chart' },
-    { href: '/tasks', label: t('tasks'), icon: 'check' },
-    { href: '/training', label: t('training'), icon: 'book' },
-  ]
+  // Director Comercial: rol aún SIN definir. De momento, sin ninguna sección.
+  const DC_TABS: NavEntry[] = []
 
   const tabs: NavEntry[] =
     role === 'photographer'

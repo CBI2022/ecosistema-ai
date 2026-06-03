@@ -14,7 +14,7 @@ const HOME: Record<ViewRole, string> = {
   agent: '/properties',
   secretary: '/inbox',
   photographer: '/photographer',
-  dc: '/dashboard',
+  dc: '/settings',
 }
 
 export function ViewAsBar({ current }: { current: ViewRole }) {
