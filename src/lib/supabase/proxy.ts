@@ -40,7 +40,8 @@ export async function updateSession(request: NextRequest) {
   }
 
   if (isAuthRoute && user) {
-    return NextResponse.redirect(new URL('/dashboard', request.url))
+    // '/' aplica el redirect por rol (agente/admin→propiedades, Chloe→inbox…)
+    return NextResponse.redirect(new URL('/', request.url))
   }
 
   return supabaseResponse

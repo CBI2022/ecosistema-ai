@@ -516,6 +516,113 @@ export async function saveProperty(formData: FormData, publish = false) {
   return { success: true, propertyId: result.id }
 }
 
+// ──────────────────────────────────────────────────────────────────────
+// FASE 1 — Flujo manual: el agente ENVÍA la propiedad a la oficina.
+// NO dispara el robot Sooprema (suprema_jobs / automation): queda dormido.
+// Reutiliza saveProperty(publish=false) para persistir TODO el formulario
+// y luego marca review_status='submitted' + notifica a las secretarías.
+// ──────────────────────────────────────────────────────────────────────
+
+export async function submitProperty(formData: FormData) {
+  // Persistir el formulario completo SIN automation (publish=false → sin suprema_jobs)
+  const saved = await saveProperty(formData, false)
+  if ('error' in saved && saved.error) return saved
+  const propertyId = (saved as { propertyId?: string }).propertyId
+  if (!propertyId) return { error: 'No se pudo enviar la propiedad' }
+
+  const adminClient = createAdminClient()
+
+  // Marcar como enviada a la oficina
+  const { data: prop } = await adminClient
+    .from('properties')
+    .update({ review_status: 'submitted', submitted_at: new Date().toISOString() })
+    .eq('id', propertyId)
+    .select('reference, agent_id')
+    .single()
+
+  const reference: string = prop?.reference || ''
+
+  // Nombre del agente que la subió (para que la oficina vea quién es)
+  let agentName = 'Un agente'
+  if (prop?.agent_id) {
+    const { data: agent } = await adminClient
+      .from('profiles')
+      .select('full_name, first_name, email')
+      .eq('id', prop.agent_id)
+      .single()
+    agentName = agent?.full_name || agent?.first_name || agent?.email || agentName
+  }
+
+  // Notificar a todas las secretarías (a Chloe le llega dentro de la app)
+  const { data: secretaries } = await adminClient
+    .from('profiles')
+    .select('id')
+    .eq('role', 'secretary')
+
+  if (secretaries && secretaries.length > 0) {
+    await adminClient.from('notifications').insert(
+      secretaries.map((s) => ({
+        type: 'property_submitted',
+        title: '🏠 Nueva propiedad para subir',
+        message: `${agentName} envió la propiedad ${reference}. Ya la puedes subir a Sooprema.`,
+        target_user_id: s.id,
+        is_read: false,
+      }))
+    )
+  }
+
+  // Confirmación al propio agente
+  if (prop?.agent_id) {
+    await adminClient.from('notifications').insert({
+      type: 'property_submitted',
+      title: '✅ Propiedad enviada',
+      message: `Tu propiedad ${reference} se envió a la oficina. Te avisaremos cuando esté publicada.`,
+      target_user_id: prop.agent_id,
+      is_read: false,
+    })
+  }
+
+  revalidatePath('/properties')
+  revalidatePath('/inbox')
+  return { success: true, propertyId }
+}
+
+/**
+ * La oficina (secretary/admin) cambia el estado de revisión de una propiedad:
+ * 'published' = ya subida a Sooprema a mano | 'submitted' = de vuelta a pendiente.
+ */
+export async function setPropertyReviewStatus(
+  propertyId: string,
+  status: 'submitted' | 'published'
+) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'No autenticado' }
+
+  const adminClient = createAdminClient()
+  const { data: callerProfile } = await adminClient
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+  if (callerProfile?.role !== 'secretary' && callerProfile?.role !== 'admin') {
+    return { error: 'No autorizado' }
+  }
+
+  const { error } = await adminClient
+    .from('properties')
+    .update({
+      review_status: status,
+      published_to_suprema_at: status === 'published' ? new Date().toISOString() : null,
+    })
+    .eq('id', propertyId)
+
+  if (error) return { error: error.message }
+
+  revalidatePath('/inbox')
+  return { success: true }
+}
+
 export async function generateDescription(formData: FormData) {
   const type = formData.get('property_type') as string
   const zone = formData.get('zone') as string

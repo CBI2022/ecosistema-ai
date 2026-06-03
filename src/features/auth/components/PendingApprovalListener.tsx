@@ -23,7 +23,7 @@ export function PendingApprovalListener() {
         .single()
 
       if (profile?.status === 'approved') {
-        router.replace('/dashboard')
+        router.replace('/')
         return
       }
       if (profile?.status === 'rejected') {
@@ -44,7 +44,7 @@ export function PendingApprovalListener() {
           },
           (payload) => {
             const next = payload.new as { status?: string }
-            if (next.status === 'approved') router.replace('/dashboard')
+            if (next.status === 'approved') router.replace('/')
             else if (next.status === 'rejected') router.replace('/account-rejected')
           }
         )

@@ -27,6 +27,8 @@ type IconName =
   | 'brain'
   | 'crm'
   | 'map'
+  | 'inbox'
+  | 'archive'
 
 interface NavTab {
   href: string
@@ -202,6 +204,21 @@ function Icon({ name, className = 'h-5 w-5' }: { name: IconName; className?: str
           <circle cx="18" cy="5" r="3" />
         </svg>
       )
+    case 'inbox':
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+          <path d="M22 12h-6l-2 3h-4l-2-3H2" />
+          <path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" />
+        </svg>
+      )
+    case 'archive':
+      return (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+          <rect x="2" y="3" width="20" height="5" rx="1" />
+          <path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8" />
+          <path d="M10 12h4" />
+        </svg>
+      )
   }
 }
 
@@ -212,10 +229,10 @@ export function AppNav({ role }: AppNavProps) {
   const [isPending, startTransition] = useTransition()
   const [clickedHref, setClickedHref] = useState<string | null>(null)
   const [moreOpen, setMoreOpen] = useState(false)
-  const [adminOpen, setAdminOpen] = useState(false)
-  const [groupSheetOpen, setGroupSheetOpen] = useState(false)
+  const [openGroupKey, setOpenGroupKey] = useState<string | null>(null)
+  const [openSheetKey, setOpenSheetKey] = useState<string | null>(null)
   const [mounted, setMounted] = useState(false)
-  const adminRef = useRef<HTMLDivElement | null>(null)
+  const desktopNavRef = useRef<HTMLElement | null>(null)
 
   useEffect(() => {
     setMounted(true)
@@ -224,14 +241,14 @@ export function AppNav({ role }: AppNavProps) {
   // Cerrar dropdown Admin al hacer click fuera (desktop). Sin esto, sin hover
   // el dropdown se quedaría abierto si el usuario decide no seleccionar nada.
   useEffect(() => {
-    if (!adminOpen) return
+    if (!openGroupKey) return
     function onPointerDown(e: PointerEvent) {
-      if (adminRef.current && !adminRef.current.contains(e.target as Node)) {
-        setAdminOpen(false)
+      if (desktopNavRef.current && !desktopNavRef.current.contains(e.target as Node)) {
+        setOpenGroupKey(null)
       }
     }
     function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') setAdminOpen(false)
+      if (e.key === 'Escape') setOpenGroupKey(null)
     }
     document.addEventListener('pointerdown', onPointerDown)
     document.addEventListener('keydown', onKey)
@@ -239,11 +256,12 @@ export function AppNav({ role }: AppNavProps) {
       document.removeEventListener('pointerdown', onPointerDown)
       document.removeEventListener('keydown', onKey)
     }
-  }, [adminOpen])
+  }, [openGroupKey])
 
   // Subsecciones DENTRO del dropdown Admin▾ (solo admin las ve)
   const ADMIN_SUBITEMS: NavTab[] = [
     { href: '/admin/roadmaps', label: 'RoadMaps', icon: 'map' },
+    { href: '/inbox', label: 'Propiedades recibidas', icon: 'inbox' },
     { href: '/admin', label: t('team'), icon: 'users' },
     { href: '/tasks', label: t('tasks'), icon: 'check' },
     { href: '/kpi', label: t('kpi'), icon: 'chart' },
@@ -253,11 +271,16 @@ export function AppNav({ role }: AppNavProps) {
     { href: '/admin/knowledge', label: t('knowledge'), icon: 'brain' },
   ]
 
+  // Fase 1: el agente solo ve la pantalla de subir propiedad. El resto de
+  // secciones siguen existiendo (no se borran) pero se ocultan de su nav.
   const AGENT_TABS: NavEntry[] = [
+    { href: '/properties', label: 'Subir propiedad', icon: 'building' },
+  ]
+
+  // Secciones que aún NO rediseñamos — accesibles solo para admin en el menú
+  // "Opciones antiguas". No se borran, solo se agrupan aquí.
+  const LEGACY_SUBITEMS: NavTab[] = [
     { href: '/dashboard', label: t('dashboard'), icon: 'home' },
-    { href: '/properties', label: t('properties'), icon: 'building' },
-    { href: '/kpi', label: t('kpi'), icon: 'chart' },
-    { href: '/tasks', label: t('tasks'), icon: 'check' },
     { href: '/valuation', label: t('valuation'), icon: 'file' },
     { href: '/contracts', label: t('contracts'), icon: 'signature' },
     { href: '/invoice', label: t('invoice'), icon: 'receipt' },
@@ -265,18 +288,16 @@ export function AppNav({ role }: AppNavProps) {
     { href: '/competitors', label: t('competitors'), icon: 'target' },
   ]
 
+  // Admin: al entrar ve lo mismo que la gente (subir propiedad) + dos menús:
+  // "Opciones antiguas" (secciones aparcadas) y "Admin" (intacto).
   const ADMIN_TABS: NavEntry[] = [
-    { href: '/dashboard', label: t('dashboard'), icon: 'home' },
-    { href: '/properties', label: t('properties'), icon: 'building' },
-    { href: '/valuation', label: t('valuation'), icon: 'file' },
-    { href: '/contracts', label: t('contracts'), icon: 'signature' },
-    { href: '/invoice', label: t('invoice'), icon: 'receipt' },
-    { href: '/training', label: t('training'), icon: 'book' },
-    { href: '/competitors', label: t('competitors'), icon: 'target' },
+    { href: '/properties', label: 'Subir propiedad', icon: 'building' },
+    { type: 'group', key: 'legacy-group', label: 'Opciones antiguas', icon: 'archive', items: LEGACY_SUBITEMS },
     { type: 'group', key: 'admin-group', label: t('admin'), icon: 'shield', items: ADMIN_SUBITEMS },
   ]
 
   const SECRETARY_TABS: NavEntry[] = [
+    { href: '/inbox', label: 'Propiedades', icon: 'inbox' },
     { href: '/dashboard', label: t('dashboard'), icon: 'home' },
     { href: '/admin', label: t('team'), icon: 'users' },
     { href: '/properties', label: t('properties'), icon: 'building' },
@@ -317,13 +338,18 @@ export function AppNav({ role }: AppNavProps) {
   // Separamos el grupo (Admin) de los tabs sueltos. El grupo, si existe,
   // ocupa siempre uno de los 4 slots fijos del bottom nav (slot 4) — no se
   // mete dentro del "Más" porque queremos que el admin vea Admin a un toque.
-  const mobileGroup = tabs.find(isGroup) as NavGroup | undefined
+  // Soporta N grupos (ej. admin: "Opciones antiguas" + "Admin"). Cada grupo
+  // ocupa un slot fijo en el bottom-nav; el resto se reparte entre tabs sueltos
+  // y, si no caben, un botón "Más" con overflow.
+  const mobileGroups = tabs.filter(isGroup) as NavGroup[]
   const mobileFlatTabs = tabs.filter((e): e is NavTab => !isGroup(e))
 
-  // Si hay grupo: 3 primaryTabs + grupo + resto en overflow
-  // Si no hay grupo: 4 primaryTabs + resto en overflow
-  const primaryTabs = mobileGroup ? mobileFlatTabs.slice(0, 3) : mobileFlatTabs.slice(0, 4)
-  const overflowTabs = mobileGroup ? mobileFlatTabs.slice(3) : mobileFlatTabs.slice(4)
+  const SLOTS = 5
+  const availableForFlat = Math.max(1, SLOTS - mobileGroups.length)
+  const needsOverflow = mobileFlatTabs.length > availableForFlat
+  const primaryCount = needsOverflow ? Math.max(1, availableForFlat - 1) : availableForFlat
+  const primaryTabs = mobileFlatTabs.slice(0, primaryCount)
+  const overflowTabs = needsOverflow ? mobileFlatTabs.slice(primaryCount) : []
   const hasOverflow = overflowTabs.length > 0
 
   function isActive(href: string): boolean {
@@ -351,13 +377,13 @@ export function AppNav({ role }: AppNavProps) {
 
   // Lock scroll when sheet open
   useEffect(() => {
-    if (!moreOpen && !groupSheetOpen) return
+    if (!moreOpen && !openSheetKey) return
     const prev = document.body.style.overflow
     document.body.style.overflow = 'hidden'
     return () => {
       document.body.style.overflow = prev
     }
-  }, [moreOpen, groupSheetOpen])
+  }, [moreOpen, openSheetKey])
 
   return (
     <>
@@ -372,27 +398,28 @@ export function AppNav({ role }: AppNavProps) {
       )}
 
       {/* ───────── DESKTOP: top tab bar ───────── */}
-      <nav className="sticky top-[73px] z-40 hidden items-center justify-center gap-0.5 border-b border-[#C9A84C]/12 bg-[#0A0A0A]/98 px-6 py-2 backdrop-blur-xl md:flex">
+      <nav ref={desktopNavRef} className="sticky top-[73px] z-40 hidden items-center justify-center gap-0.5 border-b border-[#C9A84C]/12 bg-[#0A0A0A]/98 px-6 py-2 backdrop-blur-xl md:flex">
         {tabs.map((entry) => {
           if (isGroup(entry)) {
             const groupActive = entry.items.some((it) => isActive(it.href))
+            const isOpen = openGroupKey === entry.key
             return (
-              <div key={entry.key} ref={adminRef} className="relative">
+              <div key={entry.key} className="relative">
                 <button
                   type="button"
-                  onClick={() => setAdminOpen((v) => !v)}
+                  onClick={() => setOpenGroupKey(isOpen ? null : entry.key)}
                   className={`relative inline-flex items-center gap-1.5 whitespace-nowrap rounded-md px-4 py-2 text-[11px] font-medium transition-all ${
-                    groupActive || adminOpen
+                    groupActive || isOpen
                       ? 'bg-[#C9A84C] font-bold tracking-[0.06em] text-black shadow-[0_2px_14px_rgba(201,168,76,0.35)]'
                       : 'text-[#9A9080] hover:bg-[#C9A84C]/8 hover:text-[#F5F0E8]'
                   }`}
                   aria-haspopup="menu"
-                  aria-expanded={adminOpen}
+                  aria-expanded={isOpen}
                 >
                   <Icon name={entry.icon} className="h-3.5 w-3.5" />
                   {entry.label}
                   <svg
-                    className={`h-3 w-3 transition-transform ${adminOpen ? 'rotate-180' : ''}`}
+                    className={`h-3 w-3 transition-transform ${isOpen ? 'rotate-180' : ''}`}
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
@@ -403,7 +430,7 @@ export function AppNav({ role }: AppNavProps) {
                     <polyline points="6 9 12 15 18 9" />
                   </svg>
                 </button>
-                {adminOpen && (
+                {isOpen && (
                   <div
                     role="menu"
                     className="absolute right-0 top-full z-50 mt-1 min-w-[220px] overflow-hidden rounded-xl border border-[#C9A84C]/30 bg-[#0A0A0A] p-1.5 shadow-[0_16px_50px_rgba(0,0,0,0.85)] ring-1 ring-black/40"
@@ -418,7 +445,7 @@ export function AppNav({ role }: AppNavProps) {
                           prefetch
                           onClick={(e) => {
                             handleNavClick(e, sub.href)
-                            setAdminOpen(false)
+                            setOpenGroupKey(null)
                           }}
                           className={`flex items-center gap-2.5 rounded-md px-3 py-2 text-[12px] font-medium transition ${
                             subActive
@@ -515,31 +542,32 @@ export function AppNav({ role }: AppNavProps) {
             )
           })}
 
-          {mobileGroup && (() => {
-            const groupActive = mobileGroup.items.some((it) => isActive(it.href))
+          {mobileGroups.map((g) => {
+            const groupActive = g.items.some((it) => isActive(it.href))
             return (
               <button
-                onClick={() => setGroupSheetOpen(true)}
+                key={g.key}
+                onClick={() => setOpenSheetKey(g.key)}
                 className="group flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 transition active:scale-95"
-                aria-label={mobileGroup.label}
+                aria-label={g.label}
               >
                 <div
                   className={`flex h-7 items-center justify-center transition ${
                     groupActive ? 'text-[#C9A84C]' : 'text-[#9A9080] group-active:text-[#F5F0E8]'
                   }`}
                 >
-                  <Icon name={mobileGroup.icon} className="h-6 w-6" />
+                  <Icon name={g.icon} className="h-6 w-6" />
                 </div>
                 <span
-                  className={`text-[10px] leading-none transition ${
+                  className={`max-w-full truncate text-[10px] leading-none transition ${
                     groupActive ? 'font-semibold text-[#C9A84C]' : 'font-medium text-[#9A9080]'
                   }`}
                 >
-                  {mobileGroup.label}
+                  {g.label}
                 </span>
               </button>
             )
-          })()}
+          })}
 
           {hasOverflow && (
             <button
@@ -638,64 +666,68 @@ export function AppNav({ role }: AppNavProps) {
         document.body,
       )}
 
-      {/* ───────── MOBILE: sheet del grupo (Admin) ───────── */}
-      {groupSheetOpen && mobileGroup && mounted && createPortal(
-        <div className="fixed inset-0 z-[60] md:hidden" role="dialog" aria-modal="true">
-          <button
-            aria-label="Cerrar"
-            onClick={() => setGroupSheetOpen(false)}
-            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-          />
-          <div className="pb-safe absolute inset-x-0 bottom-0 animate-slide-up rounded-t-3xl border-t border-[#C9A84C]/30 bg-[#0A0A0A] shadow-[0_-8px_32px_rgba(0,0,0,0.6)]">
-            <div className="flex justify-center pt-3">
-              <div className="h-1.5 w-10 rounded-full bg-white/15" />
-            </div>
-            <div className="flex items-center justify-between px-5 py-3">
-              <h3 className="flex items-center gap-2 text-base font-bold text-[#F5F0E8]">
-                <Icon name={mobileGroup.icon} className="h-5 w-5 text-[#C9A84C]" />
-                {mobileGroup.label}
-              </h3>
-              <button
-                onClick={() => setGroupSheetOpen(false)}
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-white/5 text-[#9A9080] transition active:scale-95"
-                aria-label="Cerrar"
-              >
-                ✕
-              </button>
-            </div>
-            <div className="grid grid-cols-3 gap-2 p-4 pt-2">
-              {mobileGroup.items.map((sub) => {
-                const subActive = isActive(sub.href)
-                return (
-                  <Link
-                    key={sub.href}
-                    href={sub.href}
-                    prefetch
-                    onClick={() => setGroupSheetOpen(false)}
-                    className={`flex min-h-[92px] flex-col items-center justify-center gap-2 rounded-2xl border px-2 py-3 transition active:scale-95 ${
-                      subActive
-                        ? 'border-[#C9A84C]/60 bg-[#C9A84C]/10 text-[#C9A84C]'
-                        : 'border-white/8 bg-white/4 text-[#F5F0E8]'
-                    }`}
-                  >
-                    <div
-                      className={`flex h-11 w-11 items-center justify-center rounded-full ${
-                        subActive ? 'bg-[#C9A84C]/20 text-[#C9A84C]' : 'bg-white/6 text-[#F5F0E8]'
+      {/* ───────── MOBILE: sheet del grupo abierto (Admin / Opciones antiguas) ───────── */}
+      {openSheetKey && mounted && (() => {
+        const g = mobileGroups.find((x) => x.key === openSheetKey)
+        if (!g) return null
+        return createPortal(
+          <div className="fixed inset-0 z-[60] md:hidden" role="dialog" aria-modal="true">
+            <button
+              aria-label="Cerrar"
+              onClick={() => setOpenSheetKey(null)}
+              className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+            />
+            <div className="pb-safe absolute inset-x-0 bottom-0 animate-slide-up rounded-t-3xl border-t border-[#C9A84C]/30 bg-[#0A0A0A] shadow-[0_-8px_32px_rgba(0,0,0,0.6)]">
+              <div className="flex justify-center pt-3">
+                <div className="h-1.5 w-10 rounded-full bg-white/15" />
+              </div>
+              <div className="flex items-center justify-between px-5 py-3">
+                <h3 className="flex items-center gap-2 text-base font-bold text-[#F5F0E8]">
+                  <Icon name={g.icon} className="h-5 w-5 text-[#C9A84C]" />
+                  {g.label}
+                </h3>
+                <button
+                  onClick={() => setOpenSheetKey(null)}
+                  className="flex h-9 w-9 items-center justify-center rounded-full bg-white/5 text-[#9A9080] transition active:scale-95"
+                  aria-label="Cerrar"
+                >
+                  ✕
+                </button>
+              </div>
+              <div className="grid grid-cols-3 gap-2 p-4 pt-2">
+                {g.items.map((sub) => {
+                  const subActive = isActive(sub.href)
+                  return (
+                    <Link
+                      key={sub.href}
+                      href={sub.href}
+                      prefetch
+                      onClick={() => setOpenSheetKey(null)}
+                      className={`flex min-h-[92px] flex-col items-center justify-center gap-2 rounded-2xl border px-2 py-3 transition active:scale-95 ${
+                        subActive
+                          ? 'border-[#C9A84C]/60 bg-[#C9A84C]/10 text-[#C9A84C]'
+                          : 'border-white/8 bg-white/4 text-[#F5F0E8]'
                       }`}
                     >
-                      <Icon name={sub.icon} className="h-5 w-5" />
-                    </div>
-                    <span className="text-center text-[11px] font-medium leading-tight">
-                      {sub.label}
-                    </span>
-                  </Link>
-                )
-              })}
+                      <div
+                        className={`flex h-11 w-11 items-center justify-center rounded-full ${
+                          subActive ? 'bg-[#C9A84C]/20 text-[#C9A84C]' : 'bg-white/6 text-[#F5F0E8]'
+                        }`}
+                      >
+                        <Icon name={sub.icon} className="h-5 w-5" />
+                      </div>
+                      <span className="text-center text-[11px] font-medium leading-tight">
+                        {sub.label}
+                      </span>
+                    </Link>
+                  )
+                })}
+              </div>
             </div>
-          </div>
-        </div>,
-        document.body,
-      )}
+          </div>,
+          document.body,
+        )
+      })()}
 
       <style>{`
         @keyframes cbi-progress-bar {

@@ -240,6 +240,12 @@ export interface Property {
   sooprema_external_id: string | null
   sooprema_public_url: string | null
 
+  // Fase 1 — revisión humana (agente → oficina). Eje independiente del robot Sooprema (dormido).
+  // submitted: enviada por el agente, pendiente en la oficina | published: Chloe ya la subió a mano | null: borrador
+  review_status: 'submitted' | 'published' | null
+  submitted_at: string | null
+  published_to_suprema_at: string | null
+
   created_at: string
   updated_at: string
 }

@@ -15,6 +15,12 @@ export default async function HomePage() {
     .eq('id', user.id)
     .single()
 
+  // Fase 1: el inicio ya no es el dashboard.
+  //  - agente y admin → directos a subir propiedad
+  //  - secretaría (Chloe) → su bandeja de propiedades recibidas
+  //  - fotógrafo → su calendario  ·  resto (dc) → dashboard
   if (profile?.role === 'photographer') redirect('/photographer')
+  if (profile?.role === 'secretary') redirect('/inbox')
+  if (profile?.role === 'agent' || profile?.role === 'admin') redirect('/properties')
   redirect('/dashboard')
 }

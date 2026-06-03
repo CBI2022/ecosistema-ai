@@ -9,7 +9,7 @@ interface GoogleSignInButtonProps {
 }
 
 export function GoogleSignInButton({
-  redirectTo = '/dashboard',
+  redirectTo = '/',
   label = 'Continuar con Google',
 }: GoogleSignInButtonProps) {
   const [loading, setLoading] = useState(false)

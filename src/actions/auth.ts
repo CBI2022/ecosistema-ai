@@ -41,8 +41,10 @@ export async function login(formData: FormData) {
   }
 
   revalidatePath('/', 'layout')
-  // El fotógrafo (Jelle) tiene su propia vista — no necesita el dashboard del agente.
+  // Fase 1: el inicio ya no es el dashboard.
   if (profile?.role === 'photographer') redirect('/photographer')
+  if (profile?.role === 'secretary') redirect('/inbox')
+  if (profile?.role === 'agent' || profile?.role === 'admin') redirect('/properties')
   redirect('/dashboard')
 }
 
@@ -165,7 +167,7 @@ export async function updatePassword(formData: FormData) {
   }
 
   revalidatePath('/', 'layout')
-  redirect('/dashboard')
+  redirect('/')
 }
 
 export async function updateProfile(formData: FormData) {

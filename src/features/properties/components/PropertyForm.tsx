@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useTransition, useEffect, useMemo } from 'react'
-import { saveProperty } from '@/actions/properties'
+import { saveProperty, submitProperty } from '@/actions/properties'
 import { OwnerPicker } from './OwnerPicker'
 import { AddressPicker } from './AddressPicker'
 import { TitleAndDescriptionEditor } from './TitleAndDescriptionEditor'
@@ -207,40 +207,41 @@ export function PropertyForm({
     startTransition(async () => {
       const res = await saveProperty(fd, false)
       if (res?.error) setError(res.error)
-      else setSuccess('💾 Borrador guardado. Puedes seguir editando — solo tú lo ves hasta que pulses "Subir a Sooprema".')
+      else setSuccess('💾 Borrador guardado. Puedes seguir editando — solo tú lo ves hasta que pulses "Enviar propiedad".')
     })
   }
 
   /**
-   * Subir a Sooprema: valida título y descripción antes.
+   * Enviar propiedad a la oficina: valida título y descripción antes.
+   * NO dispara el robot Sooprema — le llega a la oficina (Chloe) para subirla a mano.
    */
   function handleSubmit() {
     setError(null)
     setSuccess(null)
 
-    const fd = buildFormData('published')
+    const fd = buildFormData('hidden')
     if (!fd) return
 
     const titleVal = String(fd.get('title_headline') || '').trim()
     const descVal = String(fd.get('description_es') || '').trim()
 
     if (!titleVal) {
-      setError('Falta el título de la propiedad. Si no lo incluyes, no aparecerá en la web.')
+      setError('Falta el título de la propiedad. Si no lo incluyes, la oficina no tendrá ese dato.')
       setActiveTab('texts')
       document.getElementById('section-title')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
       return
     }
     if (!descVal) {
-      setError('Falta la descripción de la propiedad. Escribe al menos un párrafo en cualquier idioma — Sooprema la traducirá automáticamente.')
+      setError('Falta la descripción de la propiedad. Escribe al menos un párrafo en cualquier idioma.')
       setActiveTab('texts')
       document.getElementById('section-title')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
       return
     }
 
     startTransition(async () => {
-      const res = await saveProperty(fd, true)
-      if (res?.error) setError(res.error)
-      else setSuccess('🚀 Propiedad guardada y enviada a Sooprema. Recibirás un aviso cuando termine la publicación.')
+      const res = await submitProperty(fd)
+      if (res && 'error' in res && res.error) setError(res.error)
+      else setSuccess('✅ Propiedad enviada a la oficina. Te avisaremos cuando esté publicada.')
     })
   }
 
@@ -1067,7 +1068,7 @@ export function PropertyForm({
           disabled={isPending}
           className="w-full rounded-xl bg-[#C9A84C] px-6 py-3.5 text-sm font-bold uppercase tracking-[0.06em] text-black transition active:scale-[0.98] hover:bg-[#E8C96A] disabled:opacity-50 sm:w-auto sm:flex-[2]"
         >
-          {isPending ? '⏳ Subiendo a Sooprema...' : '🚀 Subir a Sooprema'}
+          {isPending ? '⏳ Enviando...' : '📨 Enviar propiedad'}
         </button>
       </div>
     </form>
