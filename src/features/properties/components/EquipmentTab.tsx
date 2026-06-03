@@ -6,6 +6,7 @@ import {
   labelClass,
   sectionTitle,
   sectionSubtitle,
+  slug,
   HEATING_OPTIONS,
   POOL_OPTIONS,
   AC_OPTIONS,
@@ -30,11 +31,11 @@ export function EquipmentTab({
   }
   const getBool = (k: string): boolean => Boolean(initialProperty?.[k])
 
-  const dropdowns: { name: string; label: string; options: string[] }[] = [
-    { name: 'heating_type', label: t('equipment.heating'), options: HEATING_OPTIONS },
-    { name: 'pool_type', label: t('equipment.pool'), options: POOL_OPTIONS },
-    { name: 'ac_type', label: t('equipment.airConditioning'), options: AC_OPTIONS },
-    { name: 'furniture_status', label: t('equipment.furnitureType'), options: FURNITURE_OPTIONS },
+  const dropdowns: { name: string; label: string; group: string; options: string[] }[] = [
+    { name: 'heating_type', label: t('equipment.heating'), group: 'heating', options: HEATING_OPTIONS },
+    { name: 'pool_type', label: t('equipment.pool'), group: 'pool', options: POOL_OPTIONS },
+    { name: 'ac_type', label: t('equipment.airConditioning'), group: 'ac', options: AC_OPTIONS },
+    { name: 'furniture_status', label: t('equipment.furnitureType'), group: 'furniture', options: FURNITURE_OPTIONS },
   ]
 
   return (
@@ -53,7 +54,7 @@ export function EquipmentTab({
               <option value="">—</option>
               {d.options.map((o) => (
                 <option key={o} value={o}>
-                  {o}
+                  {t(`opt.${d.group}.${slug(o)}`)}
                 </option>
               ))}
             </select>
@@ -74,7 +75,7 @@ export function EquipmentTab({
               defaultChecked={getBool(c.name)}
               className="h-4 w-4 accent-[#C9A84C]"
             />
-            {c.label}
+            {t(`opt.equipment.${c.name}`)}
           </label>
         ))}
       </div>

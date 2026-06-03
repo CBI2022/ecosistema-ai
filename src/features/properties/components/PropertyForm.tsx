@@ -13,6 +13,7 @@ import {
   sectionClass,
   sectionTitle,
   sectionSubtitle,
+  slug,
   ZONES,
   PROPERTY_TYPES,
   PLOT_OPTIONAL_TYPES,
@@ -363,9 +364,9 @@ export function PropertyForm({
                 onChange={(e) => setPropertyType(e.target.value)}
                 className={inputClass}
               >
-                {PROPERTY_TYPES.map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.label}
+                {PROPERTY_TYPES.map((pt) => (
+                  <option key={pt.id} value={pt.id}>
+                    {t(`opt.propertyType.${pt.id}`)}
                   </option>
                 ))}
               </select>
@@ -378,7 +379,7 @@ export function PropertyForm({
                 <option value="">—</option>
                 {VIEWS_OPTIONS.map((v) => (
                   <option key={v} value={v}>
-                    {v}
+                    {t(`opt.views.${slug(v)}`)}
                   </option>
                 ))}
               </select>
@@ -487,7 +488,7 @@ export function PropertyForm({
                   <option value="">—</option>
                   {KITCHEN_TYPES.map((k) => (
                     <option key={k} value={k}>
-                      {k}
+                      {t(`opt.kitchen.${slug(k)}`)}
                     </option>
                   ))}
                 </select>

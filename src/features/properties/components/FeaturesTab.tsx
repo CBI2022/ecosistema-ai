@@ -6,6 +6,8 @@ import {
   labelClass,
   sectionTitle,
   sectionSubtitle,
+  slug,
+  floorNthMatch,
   ORIENTATION_OPTIONS,
   TERRAIN_OPTIONS,
   FLOORS_OPTIONS,
@@ -50,7 +52,7 @@ export function FeaturesTab({
             <option value="">—</option>
             {ORIENTATION_OPTIONS.map((o) => (
               <option key={o} value={o}>
-                {o}
+                {t(`opt.orientation.${slug(o)}`)}
               </option>
             ))}
           </select>
@@ -61,7 +63,7 @@ export function FeaturesTab({
             <option value="">—</option>
             {TERRAIN_OPTIONS.map((o) => (
               <option key={o} value={o}>
-                {o}
+                {t(`opt.terrain.${slug(o)}`)}
               </option>
             ))}
           </select>
@@ -81,11 +83,14 @@ export function FeaturesTab({
           <label className={labelClass}>{t('features.floorLabel')}</label>
           <select name="floor_label" className={inputClass} defaultValue={getStr('floor_label')}>
             <option value="">—</option>
-            {FLOOR_LABEL_OPTIONS.map((o) => (
-              <option key={o} value={o}>
-                {o}
-              </option>
-            ))}
+            {FLOOR_LABEL_OPTIONS.map((o) => {
+              const nth = floorNthMatch(o)
+              return (
+                <option key={o} value={o}>
+                  {nth !== null ? t('opt.floor.nth', { n: nth }) : t(`opt.floor.${slug(o)}`)}
+                </option>
+              )
+            })}
           </select>
         </div>
         <div className="sm:col-span-2">
@@ -112,7 +117,7 @@ export function FeaturesTab({
               defaultChecked={getBool(c.name)}
               className="h-4 w-4 accent-[#C9A84C]"
             />
-            {c.label}
+            {t(`opt.feature.${c.name}`)}
           </label>
         ))}
       </div>
@@ -121,7 +126,7 @@ export function FeaturesTab({
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
         {FEATURE_TEXT_FIELDS.map((f) => (
           <div key={f.name}>
-            <label className={labelClass}>{f.label}</label>
+            <label className={labelClass}>{t(`opt.featureField.${f.name}`)}</label>
             <input
               name={f.name}
               defaultValue={getStr(f.name)}

@@ -12,6 +12,17 @@ export const sectionClass = 'rounded-2xl border border-white/8 bg-[#131313] p-5 
 export const sectionTitle = 'mb-1 text-base font-bold text-[#F5F0E8] sm:text-lg'
 export const sectionSubtitle = 'mb-5 text-xs text-[#9A9080]'
 
+// Convierte el VALOR de una opción en una clave i18n estable (sin tocar el value real).
+// Ej: 'Storage heaters' -> 'storage_heaters'. El value que se guarda NO cambia.
+export const slug = (s: string): string =>
+  s.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '')
+
+// Detecta las opciones "Nª Planta" (1ª..50ª) para traducir con interpolación.
+export const floorNthMatch = (s: string): number | null => {
+  const m = s.match(/^(\d+)ª Planta$/)
+  return m ? Number(m[1]) : null
+}
+
 // ── Información general ──
 export const ZONES = [
   'Altea', 'Albir', 'Calpe', 'Javea', 'Moraira', 'Benissa',
