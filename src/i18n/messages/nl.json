@@ -530,7 +530,19 @@
     "allChangesSaved": "Alle wijzigingen opgeslagen",
     "changePhoto": "Wijzigen",
     "noName": "Geen naam",
-    "passwordPlaceholder": "Laat leeg om niet te wijzigen"
+    "passwordPlaceholder": "Laat leeg om niet te wijzigen",
+    "roleValue": {
+      "admin": "Beheerder",
+      "agent": "Agent",
+      "secretary": "Secretaresse",
+      "photographer": "Fotograaf",
+      "dc": "Verkoopdirecteur"
+    },
+    "statusValue": {
+      "pending": "In afwachting",
+      "approved": "Goedgekeurd",
+      "rejected": "Afgewezen"
+    }
   },
   "languageSelector": {
     "label": "Taal",

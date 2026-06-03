@@ -530,7 +530,19 @@
     "allChangesSaved": "All changes saved",
     "changePhoto": "Change",
     "noName": "No name",
-    "passwordPlaceholder": "Leave empty to keep current"
+    "passwordPlaceholder": "Leave empty to keep current",
+    "roleValue": {
+      "admin": "Admin",
+      "agent": "Agent",
+      "secretary": "Secretary",
+      "photographer": "Photographer",
+      "dc": "Sales Director"
+    },
+    "statusValue": {
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected"
+    }
   },
   "languageSelector": {
     "label": "Language",

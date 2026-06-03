@@ -530,7 +530,19 @@
     "allChangesSaved": "Todos los cambios guardados",
     "changePhoto": "Cambiar",
     "noName": "Sin nombre",
-    "passwordPlaceholder": "Dejar vacío para no cambiar"
+    "passwordPlaceholder": "Dejar vacío para no cambiar",
+    "roleValue": {
+      "admin": "Administrador",
+      "agent": "Agente",
+      "secretary": "Secretaria",
+      "photographer": "Fotógrafo",
+      "dc": "Director comercial"
+    },
+    "statusValue": {
+      "pending": "Pendiente",
+      "approved": "Aprobado",
+      "rejected": "Rechazado"
+    }
   },
   "languageSelector": {
     "label": "Idioma",

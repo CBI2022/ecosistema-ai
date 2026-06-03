@@ -272,11 +272,11 @@ export function SettingsForm({ profile }: SettingsFormProps) {
           <div className="grid gap-3 sm:grid-cols-3">
             <div>
               <p className="text-[10px] uppercase tracking-wider text-[#9A9080]">{t('role')}</p>
-              <p className="mt-1 text-sm font-medium capitalize text-[#F5F0E8]">{profile.role}</p>
+              <p className="mt-1 text-sm font-medium text-[#F5F0E8]">{t(`roleValue.${profile.role}`)}</p>
             </div>
             <div>
               <p className="text-[10px] uppercase tracking-wider text-[#9A9080]">{t('status')}</p>
-              <p className="mt-1 text-sm font-medium capitalize text-[#2ECC9A]">{profile.status}</p>
+              <p className="mt-1 text-sm font-medium text-[#2ECC9A]">{t(`statusValue.${profile.status}`)}</p>
             </div>
             <div>
               <p className="text-[10px] uppercase tracking-wider text-[#9A9080]">{t('memberSince')}</p>
