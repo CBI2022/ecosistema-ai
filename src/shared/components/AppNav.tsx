@@ -329,6 +329,9 @@ export function AppNav({ role }: AppNavProps) {
   function isActive(href: string): boolean {
     if (href === '/dashboard') return pathname === '/dashboard'
     if (href === '/photographer') return pathname === '/photographer'
+    // '/admin' (Equipo) es exacto: si no, se marcaría activo en /admin/roadmaps,
+    // /admin/fub, /admin/sooprema, /admin/knowledge (todas empiezan por /admin).
+    if (href === '/admin') return pathname === '/admin'
     return pathname.startsWith(href)
   }
 

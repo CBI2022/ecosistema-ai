@@ -1,7 +1,8 @@
 // ──────────────────────────────────────────────────────────────────────
 // RoadMaps — registro visual de los planes de acción de CBI.
 // Cada roadmap que el equipo apruebe se añade a este array y se muestra
-// de forma visual en /admin/roadmaps (solo admin).
+// como una ficha en /admin/roadmaps (solo admin). Al clicar la ficha se
+// entra al detalle visual del roadmap.
 // ──────────────────────────────────────────────────────────────────────
 
 export type RoadmapStatus = 'pending_approval' | 'approved' | 'in_progress' | 'done'
@@ -11,15 +12,18 @@ export interface RoadmapStep {
   detail: string
 }
 
+/** Tipo de pantalla de teléfono que se dibuja como ejemplo visual */
+export type ScreenKind = 'agent-form' | 'office-inbox' | 'admin-home'
+
 export interface RoadmapScreen {
-  /** A quién pertenece esta pantalla (Agente, Oficina, Administrador) */
+  /** A quién pertenece esta pantalla */
   who: string
   /** Etiqueta de rol corta */
   badge: string
-  /** Lo que se ve en la pantalla, en líneas */
-  lines: string[]
-  /** Pie de la pantalla (acción principal) */
-  action?: string
+  /** Qué teléfono-maqueta se dibuja */
+  kind: ScreenKind
+  /** Pie corto de la pantalla */
+  note: string
 }
 
 export interface Roadmap {
@@ -28,22 +32,24 @@ export interface Roadmap {
   phase: string
   title: string
   status: RoadmapStatus
-  /** Una frase que resume el roadmap */
+  /** Una frase que resume el roadmap (se ve en la ficha) */
   summary: string
-  /** Tiempo estimado de construcción */
-  timeline: string
+  /** Fecha de inicio (texto legible) */
+  startDate: string
+  /** Ventana de prueba estimada */
+  testWindow: string
+  /** Fecha objetivo de fin de prueba (texto legible) */
+  targetDate: string
   /** Última actualización (texto legible) */
   updated: string
   /** El recorrido: qué sucede cuando se usa */
   flow: RoadmapStep[]
-  /** Las pantallas: qué ve cada persona */
+  /** Las pantallas: qué ve cada persona (maquetas de teléfono) */
   screens: RoadmapScreen[]
   /** Orden en que se construye */
   buildOrder: string[]
   /** Qué esperamos / criterios de "hecho" */
   expectations: string[]
-  /** Lo que NO entra ahora */
-  outOfScope: string[]
 }
 
 export const ROADMAPS: Roadmap[] = [
@@ -54,79 +60,65 @@ export const ROADMAPS: Roadmap[] = [
     status: 'pending_approval',
     summary:
       'El agente entra, sube una propiedad y le llega a la oficina dentro de la app. Una sola cosa, funcionando perfecto.',
-    timeline: '1 semana',
+    startDate: 'Miércoles 3 de junio de 2026',
+    testWindow: '7 días hábiles de prueba',
+    targetDate: 'Viernes 12 de junio de 2026',
     updated: 'Junio 2026',
     flow: [
       {
         title: 'El agente entra a la app',
-        detail: 'Lo primero que ve es la pantalla de subir una propiedad. Sin menús, sin dashboard.',
+        detail: 'Lo primero que ve, desde el teléfono, es la pantalla para subir una propiedad. Sin menús, sin dashboard.',
       },
       {
         title: 'Rellena y envía',
-        detail: 'Completa el formulario de la propiedad y pulsa “Enviar propiedad”. Recibe confirmación.',
+        detail: 'Completa los datos de la propiedad y pulsa “Enviar propiedad”. Recibe confirmación de que se envió.',
       },
       {
         title: 'Le llega a la oficina',
-        detail: 'A Chloe le entra una notificación dentro de la app y la propiedad aparece en su bandeja.',
+        detail: 'A Chloe le entra una notificación y la propiedad aparece en su sección, con el nombre del agente que la subió.',
       },
       {
-        title: 'Chloe la procesa',
-        detail: 'Abre la propiedad, ve toda la información lista para copiar y la sube a Sooprema a mano.',
+        title: 'Chloe la gestiona',
+        detail: 'Tiene todas las propiedades recibidas organizadas como una base de datos. Entra en cada una y ve todo el registro.',
       },
       {
-        title: 'Se marca como publicada',
-        detail: 'Cuando Chloe termina, la marca como “publicada” y desaparece de sus pendientes.',
+        title: 'Marca el estado',
+        detail: 'Chloe la sube a Sooprema a mano y marca cada propiedad como “subida” o “pendiente”.',
       },
     ],
     screens: [
       {
         who: 'El agente',
         badge: 'Comercial',
-        lines: [
-          'Una sola pantalla: subir propiedad',
-          'Formulario con todos los campos',
-          'Sin menús ni distracciones',
-        ],
-        action: 'Enviar propiedad',
+        kind: 'agent-form',
+        note: 'Una sola pantalla para subir la propiedad, desde el teléfono.',
       },
       {
         who: 'La oficina',
         badge: 'Chloe',
-        lines: [
-          'Notificación al llegar una propiedad',
-          'Bandeja de pendientes',
-          'Información lista para copiar a Sooprema',
-        ],
-        action: 'Marcar como publicada',
+        kind: 'office-inbox',
+        note: 'Todas las propiedades recibidas, organizadas, con el agente y su estado.',
       },
       {
         who: 'El administrador',
         badge: 'Nosotros',
-        lines: [
-          'Misma pantalla de subir propiedad',
-          'Botón Admin (Knowledge, Tareas, CRM…)',
-          'Botón Opciones antiguas (todo lo demás)',
-        ],
-        action: 'Acceso total',
+        kind: 'admin-home',
+        note: 'Lo mismo que ve la gente, más los botones Admin y Opciones antiguas.',
       },
     ],
     buildOrder: [
-      'Marcar cada propiedad como “enviada” o “publicada”.',
-      'Botón “Enviar propiedad” que avisa a la oficina.',
-      'Bandeja de la oficina con la información lista para copiar.',
-      'App del agente reducida a la pantalla de subir propiedad.',
+      'Que en cada propiedad aparezca el nombre del agente que la subió.',
+      'Botón “Enviar propiedad” que avisa a la oficina con una notificación.',
+      'Sección de Chloe: todas las propiedades recibidas, organizadas como base de datos, con buscador.',
+      'Dentro de cada propiedad: registro completo, quién la subió y estado (subida / pendiente).',
+      'App del agente reducida a la pantalla de subir propiedad, desde el teléfono.',
       'Vista de administrador con los botones Admin + Opciones antiguas.',
       'Prueba completa de principio a fin.',
     ],
     expectations: [
       'Subir una propiedad y que le llegue a la oficina funciona de forma impecable.',
+      'Chloe tiene su sección ordenada y dinámica: el estado de cada propiedad y quién la subió.',
       'Ninguna sección actual se borra: lo que no se ve queda accesible para los administradores.',
-      'Los administradores conservan acceso total a todo en todo momento.',
-    ],
-    outOfScope: [
-      'El robot que publicaba en Sooprema automáticamente (queda apagado, no se usa).',
-      'Dictar la propiedad por voz para que se rellene sola (idea para más adelante).',
-      'Los tres botones del agente: enviar · clientes · facturación (ahora solo enviar).',
     ],
   },
 ]
