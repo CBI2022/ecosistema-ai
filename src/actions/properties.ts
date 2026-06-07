@@ -517,6 +517,7 @@ export async function submitProperty(formData: FormData) {
         message: `${agentName} envió la propiedad ${reference}. Ya la puedes subir a Sooprema.`,
         target_user_id: s.id,
         is_read: false,
+        url: '/inbox',
       }))
     )
   }
@@ -529,6 +530,7 @@ export async function submitProperty(formData: FormData) {
       message: `Tu propiedad ${reference} se envió a la oficina. Te avisaremos cuando esté publicada.`,
       target_user_id: prop.agent_id,
       is_read: false,
+      url: '/properties/mine',
     })
   }
 

@@ -872,7 +872,11 @@
     "cancel": "Annuleren",
     "markAllRead": "Alles als gelezen markeren",
     "noNotificationsYet": "Nog geen meldingen",
-    "read": "Gelezen"
+    "read": "Gelezen",
+    "filterUnread": "Ongelezen",
+    "filterAll": "Alle",
+    "empty": "Geen meldingen",
+    "markReadAria": "Markeer als gelezen"
   },
   "invoiceForm": {
     "invoiceInfo": "Factuurgegevens",

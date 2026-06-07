@@ -872,7 +872,11 @@
     "cancel": "Cancelar",
     "markAllRead": "Marcar todo como leído",
     "noNotificationsYet": "Aún no hay notificaciones",
-    "read": "Leído"
+    "read": "Leído",
+    "filterUnread": "Sin leer",
+    "filterAll": "Todas",
+    "empty": "No tienes notificaciones",
+    "markReadAria": "Marcar como leída"
   },
   "invoiceForm": {
     "invoiceInfo": "Datos de la factura",

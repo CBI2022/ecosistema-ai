@@ -105,6 +105,7 @@ export async function signup(formData: FormData) {
         message: `${fullName ?? email} ha solicitado acceso como ${role}. Apruébalo desde /admin.`,
         target_user_id: a.id,
         is_read: false,
+        url: '/admin',
       })),
     )
   }

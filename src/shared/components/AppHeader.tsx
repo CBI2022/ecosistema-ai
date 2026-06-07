@@ -6,16 +6,20 @@ import { useTranslations, useLocale } from 'next-intl'
 import { signout } from '@/actions/auth'
 import { uploadAvatar } from '@/actions/profile'
 import { NotificationsBell } from '@/features/notifications/components/NotificationsBell'
+import type { NotificationRow } from '@/actions/notifications'
 import { LanguageSelector } from '@/shared/components/LanguageSelector'
+import { ViewAsMenu } from '@/shared/components/ViewAsMenu'
 import { MobileUserMenu } from '@/shared/components/MobileUserMenu'
-import type { Profile } from '@/types/database'
+import type { Profile, UserRole } from '@/types/database'
 
 interface AppHeaderProps {
   profile: Profile
   notifCount?: number
+  initialNotifications?: NotificationRow[]
+  viewAs?: UserRole
 }
 
-export function AppHeader({ profile, notifCount = 0 }: AppHeaderProps) {
+export function AppHeader({ profile, notifCount = 0, initialNotifications = [], viewAs }: AppHeaderProps) {
   const t = useTranslations('header')
   const locale = useLocale()
   const dateLocale = locale === 'es' ? 'es-ES' : locale === 'nl' ? 'nl-NL' : 'en-GB'
@@ -63,7 +67,8 @@ export function AppHeader({ profile, notifCount = 0 }: AppHeaderProps) {
         </Link>
 
         <div className="flex items-center gap-1.5">
-          <NotificationsBell initialCount={notifCount} />
+          {profile.role === 'admin' && viewAs && <ViewAsMenu current={viewAs} />}
+          <NotificationsBell initialCount={notifCount} initialNotifications={initialNotifications} />
 
           <MobileUserMenu
             profile={profile}
@@ -102,8 +107,9 @@ export function AppHeader({ profile, notifCount = 0 }: AppHeaderProps) {
         <div className="flex items-center gap-5">
           <span className="hidden text-[11px] text-[#9A9080] lg:block">{today}</span>
 
+          {profile.role === 'admin' && viewAs && <ViewAsMenu current={viewAs} />}
           <LanguageSelector />
-          <NotificationsBell initialCount={notifCount} />
+          <NotificationsBell initialCount={notifCount} initialNotifications={initialNotifications} />
 
           <Link
             href="/settings"

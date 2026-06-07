@@ -4,7 +4,6 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { AppHeader } from '@/shared/components/AppHeader'
 import { AppNav } from '@/shared/components/AppNav'
-import { ViewAsBar } from '@/shared/components/ViewAsBar'
 import { VIEW_AS_COOKIE, PREVIEWABLE_ROLES } from '@/lib/view-as'
 import { RouteTransitionOverlay } from '@/shared/components/RouteTransitionOverlay'
 import { FirstLoginModal } from '@/features/auth/components/FirstLoginModal'
@@ -45,19 +44,16 @@ export default async function MainLayout({
   //   if (!goals) redirect('/onboarding')
   // }
 
-  // Unread notifications badge — admins ven globales, el resto las suyas propias
-  let notifCount = 0
-  {
-    const query = admin
-      .from('notifications')
-      .select('*', { count: 'exact', head: true })
-      .eq('is_read', false)
-    const { count } =
-      profile.role === 'admin'
-        ? await query
-        : await query.eq('target_user_id', user.id)
-    notifCount = count ?? 0
-  }
+  // Notificaciones del propio usuario (una sola lista). Se pasan al header para
+  // que la campana se vea al instante (sin esperar a una consulta al abrirla).
+  const { data: notifRows } = await admin
+    .from('notifications')
+    .select('id, type, title, message, is_read, url, created_at')
+    .eq('target_user_id', user.id)
+    .order('created_at', { ascending: false })
+    .limit(40)
+  const initialNotifications = notifRows ?? []
+  const notifCount = initialNotifications.filter((n) => !n.is_read).length
 
   // "Ver como": un admin puede previsualizar la app con la vista de otro rol.
   // No cambia permisos ni datos: solo la navegación/aterrizaje que ve el admin.
@@ -70,8 +66,7 @@ export default async function MainLayout({
 
   return (
     <div className="min-h-screen bg-[#0A0A0A]">
-      <AppHeader profile={profile} notifCount={notifCount} />
-      {isAdmin && <ViewAsBar current={effectiveRole} />}
+      <AppHeader profile={profile} notifCount={notifCount} initialNotifications={initialNotifications} viewAs={isAdmin ? effectiveRole : undefined} />
       <AppNav role={effectiveRole} notifCount={notifCount} />
       <main className="mx-auto max-w-[1400px] px-3 py-4 pb-bottom-nav sm:px-6 sm:py-6 md:pb-6 lg:px-8">
         {children}

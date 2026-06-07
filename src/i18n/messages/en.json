@@ -872,7 +872,11 @@
     "cancel": "Cancel",
     "markAllRead": "Mark all as read",
     "noNotificationsYet": "No notifications yet",
-    "read": "Read"
+    "read": "Read",
+    "filterUnread": "Unread",
+    "filterAll": "All",
+    "empty": "No notifications",
+    "markReadAria": "Mark as read"
   },
   "invoiceForm": {
     "invoiceInfo": "Invoice Info",
