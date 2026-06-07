@@ -772,20 +772,19 @@ export function PropertyForm({
         </p>
       )}
 
-      {/* Barra de acción FLOTANTE — márgenes en todos los lados, estilo nativo.
-          El contenedor exterior no captura clics (deja pasar al contenido); solo
-          la píldora es interactiva. Se alinea al ancho del contenido. */}
-      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 px-4 pb-[calc(var(--cbi-nav-h,64px)+env(safe-area-inset-bottom)+1rem)] sm:px-6 md:pb-[calc(env(safe-area-inset-bottom)+1rem)] lg:px-8">
-        <div className="pointer-events-auto mx-auto max-w-xl">
+      {/* Sticky inferior — barra sólida anclada. El contenido va alineado al
+          MISMO ancho/margen que las tarjetas del formulario (px del contenedor). */}
+      <div className="fixed inset-x-0 bottom-[calc(var(--cbi-nav-h,64px)+env(safe-area-inset-bottom))] z-40 border-t border-white/10 bg-[#0C0C0C]/95 backdrop-blur-xl md:bottom-0">
+        <div className="mx-auto max-w-[1400px] px-3 py-3 sm:px-6 lg:px-8">
           {!canSubmit && (
-            <p className="mb-2 text-center text-[11.5px] text-[#9A9080]">{t('form.fillAll')}</p>
+            <p className="mb-2.5 text-center text-[12px] text-[#9A9080]">{t('form.fillAll')}</p>
           )}
-          <div className="flex overflow-hidden rounded-2xl border border-white/12 bg-[#141414] shadow-[0_8px_28px_-6px_rgba(0,0,0,0.7)]">
+          <div className="flex gap-2.5">
             <button
               type="button"
               onClick={handleSaveDraft}
               disabled={isPending}
-              className="flex-1 px-4 py-3.5 text-[13px] font-semibold text-[#9A9080] transition active:scale-[0.99] hover:bg-white/[0.04] hover:text-[#F5F0E8] disabled:opacity-50"
+              className="rounded-xl border border-white/12 px-5 py-3 text-[13px] font-semibold text-[#9A9080] transition active:scale-[0.98] hover:bg-white/[0.04] hover:text-[#F5F0E8] disabled:opacity-50"
             >
               {isPending ? t('form.savingDraft') : t('form.draftShort')}
             </button>
@@ -793,7 +792,7 @@ export function PropertyForm({
               type="button"
               onClick={handleSubmit}
               disabled={isPending || !canSubmit}
-              className="flex-[1.6] border-l border-white/10 px-4 py-3.5 text-[13px] font-bold text-black transition active:scale-[0.99] disabled:cursor-not-allowed bg-[#C9A84C] hover:bg-[#E8C96A] disabled:border-l-white/[0.06] disabled:bg-transparent disabled:text-[#5A5345]"
+              className="flex-1 rounded-xl bg-[#C9A84C] px-5 py-3 text-[13px] font-bold text-black transition active:scale-[0.98] hover:bg-[#E8C96A] disabled:cursor-not-allowed disabled:bg-white/[0.05] disabled:text-[#6E665A]"
             >
               {isPending ? t('form.submitting') : t('form.submitProperty')}
             </button>
