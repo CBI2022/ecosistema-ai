@@ -447,6 +447,29 @@ export async function saveProperty(formData: FormData, publish = false) {
 // ──────────────────────────────────────────────────────────────────────
 
 export async function submitProperty(formData: FormData) {
+  // Propietario inline: si se escribió un nombre, se crea/guarda en el listado
+  // de propietarios (CRM) y se vincula a esta propiedad. Sin buscador.
+  const ownerName = String(formData.get('owner_name') || '').trim()
+  if (ownerName) {
+    const supabaseAuth = await createClient()
+    const { data: { user } } = await supabaseAuth.auth.getUser()
+    if (user) {
+      const ownersClient = createAdminClient()
+      const { data: newOwner } = await ownersClient
+        .from('owners')
+        .insert({
+          full_name: ownerName,
+          first_name: ownerName,
+          phone: String(formData.get('owner_phone') || '').trim() || null,
+          email: String(formData.get('owner_email') || '').trim() || null,
+          created_by: user.id,
+        })
+        .select('id')
+        .single()
+      if (newOwner?.id) formData.set('owner_id', newOwner.id)
+    }
+  }
+
   // Persistir el formulario completo SIN automation (publish=false → sin suprema_jobs)
   const saved = await saveProperty(formData, false)
   if ('error' in saved && saved.error) return saved

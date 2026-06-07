@@ -12,8 +12,6 @@ import {
   TERRAIN_OPTIONS,
   FLOORS_OPTIONS,
   FLOOR_LABEL_OPTIONS,
-  FEATURE_CHECKBOXES,
-  FEATURE_TEXT_FIELDS,
 } from './property-form-constants'
 
 /**
@@ -35,7 +33,6 @@ export function FeaturesTab({
     if (typeof v === 'number') return String(v)
     return ''
   }
-  const getBool = (k: string): boolean => Boolean(initialProperty?.[k])
 
   return (
     <div>
@@ -93,48 +90,6 @@ export function FeaturesTab({
             })}
           </select>
         </div>
-        <div className="sm:col-span-2">
-          <label className={labelClass}>{t('features.constructionType')}</label>
-          <input
-            name="construction_type"
-            defaultValue={getStr('construction_type')}
-            className={inputClass}
-            placeholder={t('features.constructionTypePlaceholder')}
-          />
-        </div>
-      </div>
-
-      {/* Checkboxes */}
-      <div className="mt-6 grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
-        {FEATURE_CHECKBOXES.map((c) => (
-          <label
-            key={c.name}
-            className="flex cursor-pointer items-center gap-2.5 rounded-lg border border-white/10 bg-[#1C1C1C] px-3 py-2.5 text-sm text-[#F5F0E8] transition hover:border-[#C9A84C]/40"
-          >
-            <input
-              type="checkbox"
-              name={c.name}
-              defaultChecked={getBool(c.name)}
-              className="h-4 w-4 accent-[#C9A84C]"
-            />
-            {t(`opt.feature.${c.name}`)}
-          </label>
-        ))}
-      </div>
-
-      {/* Campos de texto (distancias / servicios) */}
-      <div className="mt-6 grid gap-4 sm:grid-cols-2">
-        {FEATURE_TEXT_FIELDS.map((f) => (
-          <div key={f.name}>
-            <label className={labelClass}>{t(`opt.featureField.${f.name}`)}</label>
-            <input
-              name={f.name}
-              defaultValue={getStr(f.name)}
-              className={inputClass}
-              placeholder="—"
-            />
-          </div>
-        ))}
       </div>
     </div>
   )

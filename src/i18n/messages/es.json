@@ -1134,7 +1134,12 @@
       "language": "Idioma",
       "notes": "Notas",
       "creating": "Creando…",
-      "create": "Crear propietario"
+      "create": "Crear propietario",
+      "title": "Propietario",
+      "subtitle": "Datos del propietario. Se guardan y quedan vinculados a esta propiedad.",
+      "name": "Nombre",
+      "namePlaceholder": "Nombre y apellidos",
+      "email": "Email"
     },
     "tabs": {
       "general": "Información general",
@@ -1225,7 +1230,7 @@
     },
     "portals": {
       "title": "Publicación en portales",
-      "subtitle": "Marca dónde quieres que se publique. Sooprema viene marcado por defecto."
+      "subtitle": "Marca si esta propiedad debe publicarse en Idealista."
     },
     "inbox": {
       "pending": "Pendientes",
@@ -1593,7 +1598,9 @@
       "editSubtitle": "Modifica los datos y vuelve a enviar a la oficina",
       "newSubtitle": "Rellena los datos y envía la propiedad a la oficina",
       "listTitleAll": "Propiedades",
-      "listTitleMine": "Mis propiedades"
+      "listTitleMine": "Mis propiedades",
+      "myPropertiesLink": "Mis propiedades",
+      "emptyMine": "Aún no has subido ninguna propiedad."
     },
     "social": {
       "title": "Centro de control de redes sociales",
@@ -1964,5 +1971,9 @@
     "photographer": "Fotógrafo",
     "dc": "Director comercial",
     "backToAdmin": "Volver a Admin"
+  },
+  "dc": {
+    "title": "Rol en construcción",
+    "description": "El rol de Director Comercial todavía no está definido. Pronto añadiremos aquí lo que necesites ver."
   }
 }

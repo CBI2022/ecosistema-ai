@@ -1134,7 +1134,12 @@
       "language": "Taal",
       "notes": "Notities",
       "creating": "Aanmaken…",
-      "create": "Eigenaar aanmaken"
+      "create": "Eigenaar aanmaken",
+      "title": "Eigenaar",
+      "subtitle": "Gegevens van de eigenaar. Worden opgeslagen en gekoppeld aan dit pand.",
+      "name": "Naam",
+      "namePlaceholder": "Volledige naam",
+      "email": "E-mail"
     },
     "tabs": {
       "general": "Algemene informatie",
@@ -1225,7 +1230,7 @@
     },
     "portals": {
       "title": "Publicatie op portalen",
-      "subtitle": "Geef aan waar je het wilt publiceren. Sooprema is standaard aangevinkt."
+      "subtitle": "Vink aan als dit pand op Idealista gepubliceerd moet worden."
     },
     "inbox": {
       "pending": "In behandeling",
@@ -1593,7 +1598,9 @@
       "editSubtitle": "Bewerk de gegevens en stuur ze opnieuw naar kantoor",
       "newSubtitle": "Vul de gegevens in en stuur het eigendom naar kantoor",
       "listTitleAll": "Eigendommen",
-      "listTitleMine": "Mijn eigendommen"
+      "listTitleMine": "Mijn eigendommen",
+      "myPropertiesLink": "Mijn panden",
+      "emptyMine": "Je hebt nog geen panden geüpload."
     },
     "social": {
       "title": "Social Media Command Center",
@@ -1964,5 +1971,9 @@
     "photographer": "Fotograaf",
     "dc": "Verkoopdirecteur",
     "backToAdmin": "Terug naar Admin"
+  },
+  "dc": {
+    "title": "Rol in opbouw",
+    "description": "De rol van Verkoopdirecteur is nog niet gedefinieerd. Binnenkort voegen we hier toe wat je nodig hebt."
   }
 }

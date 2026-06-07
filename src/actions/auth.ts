@@ -45,7 +45,7 @@ export async function login(formData: FormData) {
   if (profile?.role === 'photographer') redirect('/photographer')
   if (profile?.role === 'secretary') redirect('/inbox')
   if (profile?.role === 'agent' || profile?.role === 'admin') redirect('/properties')
-  if (profile?.role === 'dc') redirect('/settings')
+  if (profile?.role === 'dc') redirect('/dc')
   redirect('/dashboard')
 }
 

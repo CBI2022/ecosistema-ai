@@ -1134,7 +1134,12 @@
       "language": "Language",
       "notes": "Notes",
       "creating": "Creating…",
-      "create": "Create owner"
+      "create": "Create owner",
+      "title": "Owner",
+      "subtitle": "Owner details. Saved and linked to this property.",
+      "name": "Name",
+      "namePlaceholder": "Full name",
+      "email": "Email"
     },
     "tabs": {
       "general": "General information",
@@ -1225,7 +1230,7 @@
     },
     "portals": {
       "title": "Publication on portals",
-      "subtitle": "Mark where you want it published. Sooprema is checked by default."
+      "subtitle": "Tick if this property should be published on Idealista."
     },
     "inbox": {
       "pending": "Pending",
@@ -1593,7 +1598,9 @@
       "editSubtitle": "Edit the data and resend it to the office",
       "newSubtitle": "Fill in the data and send the property to the office",
       "listTitleAll": "Properties",
-      "listTitleMine": "My Properties"
+      "listTitleMine": "My Properties",
+      "myPropertiesLink": "My properties",
+      "emptyMine": "You haven't uploaded any properties yet."
     },
     "social": {
       "title": "Social Media Command Center",
@@ -1964,5 +1971,9 @@
     "photographer": "Photographer",
     "dc": "Sales Director",
     "backToAdmin": "Back to Admin"
+  },
+  "dc": {
+    "title": "Role under construction",
+    "description": "The Sales Director role is not defined yet. We'll soon add here what you need to see."
   }
 }

@@ -3,7 +3,6 @@
 import { useState, useTransition, useEffect, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
 import { saveProperty, submitProperty } from '@/actions/properties'
-import { OwnerPicker } from './OwnerPicker'
 import { AddressPicker } from './AddressPicker'
 import { EquipmentTab } from './EquipmentTab'
 import { FeaturesTab } from './FeaturesTab'
@@ -78,29 +77,15 @@ function NumberSelect({
   )
 }
 
-type TabId = 'general' | 'equipment' | 'features' | 'location' | 'costs'
-
-const TABS: { id: TabId; emoji: string; labelKey: string }[] = [
-  { id: 'general', emoji: '🏠', labelKey: 'tabs.general' },
-  { id: 'equipment', emoji: '🛠️', labelKey: 'tabs.equipment' },
-  { id: 'features', emoji: '✨', labelKey: 'tabs.features' },
-  { id: 'location', emoji: '📍', labelKey: 'tabs.location' },
-  { id: 'costs', emoji: '💶', labelKey: 'tabs.costs' },
-]
-
 export function PropertyForm({
   initialProperty = null,
-  agentOptions = null,
-  defaultAgentId = null,
 }: PropertyFormProps = {}) {
   const t = useTranslations('properties')
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
-  const [activeTab, setActiveTab] = useState<TabId>('general')
 
   const isEditing = !!initialProperty?.id
-  const canPickAgent = !!agentOptions && agentOptions.length > 0
 
   const ipAny = initialProperty as Record<string, unknown> | null
   const getStr = (k: string) => (ipAny?.[k] as string | null | undefined) ?? ''
@@ -110,9 +95,6 @@ export function PropertyForm({
   }
 
   // ── Estado controlado mínimo ──
-  const [selectedAgentId, setSelectedAgentId] = useState<string>(
-    initialProperty?.agent_id ?? defaultAgentId ?? (agentOptions?.[0]?.id ?? ''),
-  )
   const [zone, setZone] = useState<string>(initialProperty?.zone ?? 'Altea')
   const [propertyType, setPropertyType] = useState<string>(initialProperty?.property_type ?? 'villa')
   const [hasGuestApt, setHasGuestApt] = useState<boolean>(Boolean(ipAny?.has_guest_apartment))
@@ -137,10 +119,6 @@ export function PropertyForm({
     const ownerReceives = salePrice - commission
     return { commission, ownerReceives }
   }, [salePrice, commissionPct])
-
-
-  // Owner
-  const [ownerId, setOwnerId] = useState<string | null>(initialProperty?.owner_id ?? null)
 
 
   useEffect(() => {
@@ -174,12 +152,6 @@ export function PropertyForm({
       fd.set('commission_percentage', String(commissionPct))
       fd.set('commission_amount', String(calculation.commission))
     }
-
-    if (canPickAgent && selectedAgentId) {
-      fd.set('agent_id', selectedAgentId)
-    }
-
-    if (ownerId) fd.set('owner_id', ownerId)
 
     return fd
   }
@@ -219,10 +191,8 @@ export function PropertyForm({
     })
   }
 
-  const hide = (tab: TabId) => (activeTab === tab ? '' : 'hidden')
-
   return (
-    <form id="propForm" onSubmit={(e) => e.preventDefault()} className="space-y-5">
+    <form id="propForm" onSubmit={(e) => e.preventDefault()} className="space-y-4">
       {initialProperty?.id && <input type="hidden" name="id" value={initialProperty.id} />}
 
       {/* Banner edición */}
@@ -243,50 +213,8 @@ export function PropertyForm({
         </div>
       )}
 
-      {/* Selector de agente (admin/secretary) */}
-      {canPickAgent && (
-        <div className="rounded-xl border border-[#8B7CF6]/30 bg-[#8B7CF6]/8 px-4 py-3">
-          <label className={`${labelClass} text-[#8B7CF6]`}>{t('form.agentOwner')} *</label>
-          <select
-            name="agent_id"
-            value={selectedAgentId}
-            onChange={(e) => setSelectedAgentId(e.target.value)}
-            className={inputClass}
-          >
-            {agentOptions!.map((a) => (
-              <option key={a.id} value={a.id}>
-                {a.full_name || a.email}
-              </option>
-            ))}
-          </select>
-          <p className="mt-1.5 text-[10px] text-[#9A9080]">{t('form.agentOwnerHint')}</p>
-        </div>
-      )}
-
-      {/* ═══ Barra de pestañas (scroll horizontal en móvil) ═══ */}
-      <div className="sticky top-0 z-20 -mx-4 border-b border-white/8 bg-[#0A0A0A]/95 px-4 py-2 backdrop-blur-xl sm:mx-0 sm:rounded-xl sm:border sm:border-white/8 sm:px-3">
-        <div className="flex gap-1.5 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {TABS.map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setActiveTab(tab.id)}
-              className={`shrink-0 whitespace-nowrap rounded-lg px-3.5 py-2 text-xs font-bold transition ${
-                activeTab === tab.id
-                  ? 'bg-[#C9A84C] text-black'
-                  : 'bg-white/5 text-[#9A9080] hover:bg-white/10 hover:text-[#F5F0E8]'
-              }`}
-            >
-              {tab.emoji} {t(tab.labelKey)}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* ════════════════════════════════════════════════════════════ */}
-      {/* PESTAÑA 1 — INFORMACIÓN GENERAL                                */}
-      {/* ════════════════════════════════════════════════════════════ */}
-      <div className={`space-y-5 ${hide('general')}`}>
+      {/* ─── Una sola pantalla: todas las secciones en scroll vertical ─── */}
+      <div className="space-y-4">
         {/* Precio (PRIMER campo) + calculadora de comisión */}
         <section className={sectionClass}>
           <h2 className={sectionTitle}>
@@ -610,7 +538,7 @@ export function PropertyForm({
       {/* ════════════════════════════════════════════════════════════ */}
       {/* PESTAÑA 2 — EQUIPMENT                                          */}
       {/* ════════════════════════════════════════════════════════════ */}
-      <div className={hide('equipment')}>
+      <div>
         <section className={sectionClass}>
           <EquipmentTab initialProperty={ipAny} />
         </section>
@@ -619,7 +547,7 @@ export function PropertyForm({
       {/* ════════════════════════════════════════════════════════════ */}
       {/* PESTAÑA 3 — FEATURES                                           */}
       {/* ════════════════════════════════════════════════════════════ */}
-      <div className={hide('features')}>
+      <div>
         <section className={sectionClass}>
           <FeaturesTab initialProperty={ipAny} />
         </section>
@@ -628,7 +556,7 @@ export function PropertyForm({
       {/* ════════════════════════════════════════════════════════════ */}
       {/* PESTAÑA 4 — UBICACIÓN Y PROPIETARIO                            */}
       {/* ════════════════════════════════════════════════════════════ */}
-      <div className={`space-y-5 ${hide('location')}`}>
+      <div className="space-y-4">
         {/* Dirección — NO TOCAR la lógica */}
         <section className={sectionClass}>
           <h2 className={sectionTitle}>📍 {t('location.addressTitle')}</h2>
@@ -724,11 +652,26 @@ export function PropertyForm({
           <input type="hidden" name="location" defaultValue={getStr('location')} />
         </section>
 
-        {/* Propietario */}
+        {/* Propietario — inline. Se guarda en el listado de propietarios y se
+            vincula a esta propiedad al enviar. */}
         <section className={sectionClass}>
-          <h2 className={sectionTitle}>👤 {t('location.ownerTitle')}</h2>
-          <p className={sectionSubtitle}>{t('location.ownerSubtitle')}</p>
-          <OwnerPicker value={ownerId} onChange={(id) => setOwnerId(id)} />
+          <h2 className={sectionTitle}>👤 {t('owner.title')}</h2>
+          <p className={sectionSubtitle}>{t('owner.subtitle')}</p>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div>
+              <label className={labelClass}>{t('owner.name')}</label>
+              <input name="owner_name" className={inputClass} placeholder={t('owner.namePlaceholder')} />
+            </div>
+            <div>
+              <label className={labelClass}>{t('owner.phone')}</label>
+              <input name="owner_phone" type="tel" className={inputClass} placeholder="+34 600 000 000" />
+            </div>
+            <div>
+              <label className={labelClass}>{t('owner.email')}</label>
+              <input name="owner_email" type="email" className={inputClass} placeholder="email@ejemplo.com" />
+            </div>
+          </div>
+          <input type="hidden" name="owner_id" defaultValue={getStr('owner_id')} />
         </section>
       </div>
 
@@ -736,7 +679,7 @@ export function PropertyForm({
       {/* ════════════════════════════════════════════════════════════ */}
       {/* PESTAÑA 6 — GASTOS Y PORTALES                                  */}
       {/* ════════════════════════════════════════════════════════════ */}
-      <div className={`space-y-5 ${hide('costs')}`}>
+      <div className="space-y-4">
         {/* Community costs */}
         <section className={sectionClass}>
           <h2 className={sectionTitle}>🏘️ {t('costs.title')}</h2>
@@ -776,62 +719,20 @@ export function PropertyForm({
           </div>
         </section>
 
-        {/* Publicación en portales + Feeds XML */}
+        {/* Publicación en portales — de momento solo Idealista */}
         <section className={sectionClass}>
           <h2 className={sectionTitle}>🌐 {t('portals.title')}</h2>
           <p className={sectionSubtitle}>{t('portals.subtitle')}</p>
 
-          <div className="grid gap-2.5 sm:grid-cols-3">
-            <label className="flex cursor-pointer items-center gap-2.5 rounded-lg border border-white/10 bg-[#1C1C1C] px-3 py-2.5 text-sm text-[#F5F0E8] transition hover:border-[#C9A84C]/40">
-              <input
-                type="checkbox"
-                name="publish_sooprema"
-                defaultChecked={ipAny ? (ipAny.publish_sooprema as boolean) !== false : true}
-                className="h-4 w-4 accent-[#C9A84C]"
-              />
-              Sooprema
-            </label>
-            <label className="flex cursor-pointer items-center gap-2.5 rounded-lg border border-white/10 bg-[#1C1C1C] px-3 py-2.5 text-sm text-[#F5F0E8] transition hover:border-[#C9A84C]/40">
-              <input
-                type="checkbox"
-                name="publish_kyero"
-                defaultChecked={Boolean(ipAny?.publish_kyero)}
-                className="h-4 w-4 accent-[#C9A84C]"
-              />
-              Kyero
-            </label>
-            <label className="flex cursor-pointer items-center gap-2.5 rounded-lg border border-white/10 bg-[#1C1C1C] px-3 py-2.5 text-sm text-[#F5F0E8] transition hover:border-[#C9A84C]/40">
-              <input
-                type="checkbox"
-                name="publish_idealista"
-                defaultChecked={Boolean(ipAny?.publish_idealista)}
-                className="h-4 w-4 accent-[#C9A84C]"
-              />
-              Idealista
-            </label>
-          </div>
-
-          <h3 className="mb-3 mt-6 text-sm font-bold text-[#F5F0E8]">⚡ Feeds XML</h3>
-          <div className="grid gap-2.5 sm:grid-cols-3">
-            <label className="flex cursor-pointer items-center gap-2.5 rounded-lg border border-white/10 bg-[#1C1C1C] px-3 py-2.5 text-sm text-[#F5F0E8] transition hover:border-[#C9A84C]/40">
-              <input
-                type="checkbox"
-                name="xml_class_villas"
-                defaultChecked={Boolean(ipAny?.xml_class_villas)}
-                className="h-4 w-4 accent-[#C9A84C]"
-              />
-              Class and villas
-            </label>
-            <label className="flex cursor-pointer items-center gap-2.5 rounded-lg border border-white/10 bg-[#1C1C1C] px-3 py-2.5 text-sm text-[#F5F0E8] transition hover:border-[#C9A84C]/40">
-              <input
-                type="checkbox"
-                name="publish_imoluc"
-                defaultChecked={Boolean(ipAny?.publish_imoluc)}
-                className="h-4 w-4 accent-[#C9A84C]"
-              />
-              INMOLUK
-            </label>
-          </div>
+          <label className="flex cursor-pointer items-center gap-2.5 rounded-lg border border-white/10 bg-[#1C1C1C] px-3 py-2.5 text-sm text-[#F5F0E8] transition hover:border-[#C9A84C]/40 sm:max-w-xs">
+            <input
+              type="checkbox"
+              name="publish_idealista"
+              defaultChecked={Boolean(ipAny?.publish_idealista)}
+              className="h-4 w-4 accent-[#C9A84C]"
+            />
+            Idealista
+          </label>
         </section>
       </div>
 
