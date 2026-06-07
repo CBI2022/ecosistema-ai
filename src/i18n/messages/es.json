@@ -1600,7 +1600,8 @@
       "listTitleAll": "Propiedades",
       "listTitleMine": "Mis propiedades",
       "myPropertiesLink": "Mis propiedades",
-      "emptyMine": "Aún no has subido ninguna propiedad."
+      "emptyMine": "Aún no has subido ninguna propiedad.",
+      "backToUpload": "Volver a subir propiedad"
     },
     "social": {
       "title": "Centro de control de redes sociales",

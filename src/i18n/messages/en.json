@@ -1600,7 +1600,8 @@
       "listTitleAll": "Properties",
       "listTitleMine": "My Properties",
       "myPropertiesLink": "My properties",
-      "emptyMine": "You haven't uploaded any properties yet."
+      "emptyMine": "You haven't uploaded any properties yet.",
+      "backToUpload": "Back to upload"
     },
     "social": {
       "title": "Social Media Command Center",

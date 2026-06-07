@@ -44,9 +44,13 @@ export default async function MyPropertiesPage() {
         </h1>
         <Link
           href="/properties"
-          className="inline-flex items-center gap-1.5 rounded-full bg-[#C9A84C] px-4 py-2 text-[13px] font-bold text-black transition hover:bg-[#E8C96A]"
+          className="inline-flex items-center gap-1.5 rounded-full border border-[#C9A84C]/30 px-4 py-2 text-[13px] font-semibold text-[#C9A84C] transition hover:bg-[#C9A84C]/10"
         >
-          {t('newTitle')}
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5">
+            <line x1="19" y1="12" x2="5" y2="12" />
+            <polyline points="12 19 5 12 12 5" />
+          </svg>
+          {t('backToUpload')}
         </Link>
       </div>
 

@@ -1600,7 +1600,8 @@
       "listTitleAll": "Eigendommen",
       "listTitleMine": "Mijn eigendommen",
       "myPropertiesLink": "Mijn panden",
-      "emptyMine": "Je hebt nog geen panden geüpload."
+      "emptyMine": "Je hebt nog geen panden geüpload.",
+      "backToUpload": "Terug naar uploaden"
     },
     "social": {
       "title": "Social Media Command Center",
