@@ -29,6 +29,11 @@ export default async function PropertiesPage({ searchParams }: PropertiesPagePro
       ).then((r) => r.data)
     : null
 
+  // Al editar un borrador, prellenamos el propietario para no perder info.
+  const initialOwner = editProp?.owner_id
+    ? await admin.from('owners').select('full_name, phone, email').eq('id', editProp.owner_id).maybeSingle().then((r) => r.data)
+    : null
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-3">

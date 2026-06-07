@@ -99,6 +99,32 @@ export async function saveProperty(formData: FormData, publish = false) {
   // Para elevated users, usamos admin client para bypassear RLS de UPDATE/DELETE
   const writeClient = isElevated ? adminClient : supabase
 
+  // Propietario inline → se guarda en el listado de propietarios (CRM) y se
+  // vincula a la propiedad. Vale tanto para borrador como para envío (así el
+  // borrador conserva TODA la info). Upsert: si ya hay owner_id, lo actualiza;
+  // si no, crea uno nuevo. Sin buscador.
+  const ownerName = str(formData, 'owner_name')
+  if (ownerName) {
+    const ownerPayload = {
+      full_name: ownerName,
+      first_name: ownerName,
+      phone: str(formData, 'owner_phone'),
+      email: str(formData, 'owner_email'),
+      updated_at: new Date().toISOString(),
+    }
+    const existingOwnerId = str(formData, 'owner_id')
+    if (existingOwnerId) {
+      await adminClient.from('owners').update(ownerPayload).eq('id', existingOwnerId)
+    } else {
+      const { data: newOwner } = await adminClient
+        .from('owners')
+        .insert({ ...ownerPayload, created_by: user.id })
+        .select('id')
+        .single()
+      if (newOwner?.id) formData.set('owner_id', newOwner.id)
+    }
+  }
+
   const zone = str(formData, 'zone') || 'Altea'
   const reference = str(formData, 'reference') || (await generateReference(supabase, zone))
 
@@ -447,30 +473,8 @@ export async function saveProperty(formData: FormData, publish = false) {
 // ──────────────────────────────────────────────────────────────────────
 
 export async function submitProperty(formData: FormData) {
-  // Propietario inline: si se escribió un nombre, se crea/guarda en el listado
-  // de propietarios (CRM) y se vincula a esta propiedad. Sin buscador.
-  const ownerName = String(formData.get('owner_name') || '').trim()
-  if (ownerName) {
-    const supabaseAuth = await createClient()
-    const { data: { user } } = await supabaseAuth.auth.getUser()
-    if (user) {
-      const ownersClient = createAdminClient()
-      const { data: newOwner } = await ownersClient
-        .from('owners')
-        .insert({
-          full_name: ownerName,
-          first_name: ownerName,
-          phone: String(formData.get('owner_phone') || '').trim() || null,
-          email: String(formData.get('owner_email') || '').trim() || null,
-          created_by: user.id,
-        })
-        .select('id')
-        .single()
-      if (newOwner?.id) formData.set('owner_id', newOwner.id)
-    }
-  }
-
-  // Persistir el formulario completo SIN automation (publish=false → sin suprema_jobs)
+  // Persistir el formulario completo SIN automation (publish=false → sin suprema_jobs).
+  // El propietario inline lo gestiona saveProperty (crea/actualiza + vincula).
   const saved = await saveProperty(formData, false)
   if ('error' in saved && saved.error) return saved
   const propertyId = (saved as { propertyId?: string }).propertyId

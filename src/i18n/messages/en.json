@@ -1159,7 +1159,8 @@
       "savingDraft": "Saving...",
       "saveDraft": "Save draft",
       "submitting": "Sending...",
-      "submitProperty": "Send property"
+      "submitProperty": "Send property",
+      "draftShort": "Draft"
     },
     "price": {
       "title": "Price",

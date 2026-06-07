@@ -1159,7 +1159,8 @@
       "savingDraft": "Opslaan...",
       "saveDraft": "Concept opslaan",
       "submitting": "Versturen...",
-      "submitProperty": "Woning versturen"
+      "submitProperty": "Woning versturen",
+      "draftShort": "Concept"
     },
     "price": {
       "title": "Prijs",

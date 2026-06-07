@@ -47,6 +47,7 @@ interface PropertyFormProps {
   availablePhotos?: AgentPhoto[]
   storageBaseUrl?: string
   initialProperty?: Property | null
+  initialOwner?: { full_name?: string | null; phone?: string | null; email?: string | null } | null
   agentOptions?: AgentOption[] | null
   defaultAgentId?: string | null
   prefilledFromShoot?: PrefilledFromShoot | null
@@ -79,6 +80,7 @@ function NumberSelect({
 
 export function PropertyForm({
   initialProperty = null,
+  initialOwner = null,
 }: PropertyFormProps = {}) {
   const t = useTranslations('properties')
   const [isPending, startTransition] = useTransition()
@@ -660,15 +662,15 @@ export function PropertyForm({
           <div className="grid gap-3 sm:grid-cols-3">
             <div>
               <label className={labelClass}>{t('owner.name')}</label>
-              <input name="owner_name" className={inputClass} placeholder={t('owner.namePlaceholder')} />
+              <input name="owner_name" defaultValue={initialOwner?.full_name ?? ''} className={inputClass} placeholder={t('owner.namePlaceholder')} />
             </div>
             <div>
               <label className={labelClass}>{t('owner.phone')}</label>
-              <input name="owner_phone" type="tel" className={inputClass} placeholder="+34 600 000 000" />
+              <input name="owner_phone" type="tel" defaultValue={initialOwner?.phone ?? ''} className={inputClass} placeholder="+34 600 000 000" />
             </div>
             <div>
               <label className={labelClass}>{t('owner.email')}</label>
-              <input name="owner_email" type="email" className={inputClass} placeholder="email@ejemplo.com" />
+              <input name="owner_email" type="email" defaultValue={initialOwner?.email ?? ''} className={inputClass} placeholder="email@ejemplo.com" />
             </div>
           </div>
           <input type="hidden" name="owner_id" defaultValue={getStr('owner_id')} />
@@ -746,26 +748,26 @@ export function PropertyForm({
         </p>
       )}
 
-      {/* Botones — sticky bottom */}
-      <div
-        className="pb-safe sticky bottom-[calc(64px+env(safe-area-inset-bottom))] z-30 -mx-6 flex flex-col gap-2 border-t border-[#C9A84C]/15 bg-[#0A0A0A]/95 px-4 pt-3 backdrop-blur-xl sm:flex-row sm:px-6 sm:py-3 md:bottom-0"
-      >
-        <button
-          type="button"
-          onClick={handleSaveDraft}
-          disabled={isPending}
-          className="w-full rounded-xl border border-white/15 bg-white/5 px-6 py-3.5 text-sm font-bold uppercase tracking-[0.06em] text-[#F5F0E8] transition active:scale-[0.98] hover:bg-white/10 disabled:opacity-50 sm:w-auto sm:flex-1"
-        >
-          {isPending ? `⏳ ${t('form.savingDraft')}` : `💾 ${t('form.saveDraft')}`}
-        </button>
-        <button
-          type="button"
-          onClick={handleSubmit}
-          disabled={isPending}
-          className="w-full rounded-xl bg-[#C9A84C] px-6 py-3.5 text-sm font-bold uppercase tracking-[0.06em] text-black transition active:scale-[0.98] hover:bg-[#E8C96A] disabled:opacity-50 sm:w-auto sm:flex-[2]"
-        >
-          {isPending ? `⏳ ${t('form.submitting')}` : `📨 ${t('form.submitProperty')}`}
-        </button>
+      {/* Control sticky — segmento conectado: Borrador (sutil) | Enviar (dorado) */}
+      <div className="pb-safe sticky bottom-[calc(64px+env(safe-area-inset-bottom))] z-30 -mx-6 border-t border-[#C9A84C]/15 bg-[#0A0A0A]/95 px-4 pt-3 backdrop-blur-xl sm:px-6 sm:py-3 md:bottom-0">
+        <div className="flex overflow-hidden rounded-2xl border border-[#C9A84C]/40 shadow-[0_4px_20px_rgba(201,168,76,0.18)]">
+          <button
+            type="button"
+            onClick={handleSaveDraft}
+            disabled={isPending}
+            className="flex-1 border-r border-[#C9A84C]/30 bg-white/[0.04] px-4 py-3.5 text-sm font-semibold text-[#9A9080] transition active:scale-[0.99] hover:bg-white/[0.08] hover:text-[#F5F0E8] disabled:opacity-50"
+          >
+            {isPending ? t('form.savingDraft') : t('form.draftShort')}
+          </button>
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={isPending}
+            className="flex-[2] bg-[#C9A84C] px-4 py-3.5 text-sm font-bold text-black transition active:scale-[0.99] hover:bg-[#E8C96A] disabled:opacity-50"
+          >
+            {isPending ? t('form.submitting') : t('form.submitProperty')}
+          </button>
+        </div>
       </div>
     </form>
   )

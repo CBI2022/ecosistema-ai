@@ -1159,7 +1159,8 @@
       "savingDraft": "Guardando...",
       "saveDraft": "Guardar borrador",
       "submitting": "Enviando...",
-      "submitProperty": "Enviar propiedad"
+      "submitProperty": "Enviar propiedad",
+      "draftShort": "Borrador"
     },
     "price": {
       "title": "Precio",
