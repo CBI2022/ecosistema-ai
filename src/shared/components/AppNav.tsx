@@ -322,6 +322,9 @@ export function AppNav({ role }: AppNavProps) {
             ? DC_TABS
             : AGENT_TABS
 
+  // Una sola sección (o ninguna) → no tiene sentido mostrar barra de navegación.
+  const hasNav = tabs.length > 1
+
   // ─── Lógica del BOTTOM NAV MÓVIL ───
   // Separamos el grupo (Admin) de los tabs sueltos. El grupo, si existe,
   // ocupa siempre uno de los 4 slots fijos del bottom nav (slot 4) — no se
@@ -386,6 +389,7 @@ export function AppNav({ role }: AppNavProps) {
       )}
 
       {/* ───────── DESKTOP: top tab bar ───────── */}
+      {hasNav && (
       <nav ref={desktopNavRef} className="sticky top-[73px] z-40 hidden items-center justify-center gap-0.5 border-b border-[#C9A84C]/12 bg-[#0A0A0A]/98 px-6 py-2 backdrop-blur-xl md:flex">
         {tabs.map((entry) => {
           if (isGroup(entry)) {
@@ -484,8 +488,10 @@ export function AppNav({ role }: AppNavProps) {
           )
         })}
       </nav>
+      )}
 
       {/* ───────── MOBILE: bottom tab bar ───────── */}
+      {hasNav && (
       <nav
         className="pb-safe fixed inset-x-0 bottom-0 z-40 border-t border-[#C9A84C]/15 bg-[#0A0A0A]/96 backdrop-blur-xl md:hidden"
         aria-label={t('primaryNav')}
@@ -585,6 +591,7 @@ export function AppNav({ role }: AppNavProps) {
           )}
         </div>
       </nav>
+      )}
 
       {/* ───────── MOBILE: overflow sheet — portal al body para escapar
            del containing block del bottom-nav (backdrop-filter) ───────── */}

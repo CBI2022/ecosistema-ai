@@ -773,7 +773,7 @@ export function PropertyForm({
       )}
 
       {/* Barra de acción FIJA abajo — minimalista, segmento conectado */}
-      <div className="pb-safe fixed inset-x-0 bottom-[calc(64px+env(safe-area-inset-bottom))] z-40 border-t border-white/[0.06] bg-[#0A0A0A]/95 px-3 pt-2.5 backdrop-blur-xl sm:px-6 md:bottom-0 md:pb-2.5 lg:px-8">
+      <div className="pb-safe fixed inset-x-0 bottom-[calc(var(--cbi-nav-h,64px)+env(safe-area-inset-bottom))] z-40 border-t border-white/[0.06] bg-[#0A0A0A]/95 px-3 pt-2.5 backdrop-blur-xl sm:px-6 md:bottom-0 md:pb-2.5 lg:px-8">
         <div className="mx-auto max-w-[1400px]">
           {!canSubmit && (
             <p className="mb-2 text-center text-[12px] text-[#C9A84C]/90">{t('form.fillAll')}</p>

@@ -64,8 +64,15 @@ export default async function MainLayout({
     ? viewAs
     : profile.role) as typeof profile.role
 
+  // Roles con una sola sección no muestran barra de navegación (sobra). La var
+  // --cbi-nav-h ajusta el offset de las barras de acción fijas.
+  const hasBottomNav = !['agent', 'secretary', 'dc'].includes(effectiveRole)
+
   return (
-    <div className="min-h-screen bg-[#0A0A0A]">
+    <div
+      className="min-h-screen bg-[#0A0A0A]"
+      style={{ ['--cbi-nav-h' as string]: hasBottomNav ? '64px' : '0px' }}
+    >
       <AppHeader profile={profile} notifCount={notifCount} initialNotifications={initialNotifications} viewAs={isAdmin ? effectiveRole : undefined} />
       <AppNav role={effectiveRole} notifCount={notifCount} />
       <main className="mx-auto max-w-[1400px] px-3 py-4 pb-bottom-nav sm:px-6 sm:py-6 md:pb-6 lg:px-8">
