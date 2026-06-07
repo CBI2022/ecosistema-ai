@@ -1164,7 +1164,8 @@
       "saveDraft": "Save draft",
       "submitting": "Sending...",
       "submitProperty": "Send property",
-      "draftShort": "Draft"
+      "draftShort": "Draft",
+      "fillAll": "Fill in all the fields to upload the property"
     },
     "price": {
       "title": "Price",

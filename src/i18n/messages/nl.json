@@ -1164,7 +1164,8 @@
       "saveDraft": "Concept opslaan",
       "submitting": "Versturen...",
       "submitProperty": "Woning versturen",
-      "draftShort": "Concept"
+      "draftShort": "Concept",
+      "fillAll": "Vul alle velden in om het pand te uploaden"
     },
     "price": {
       "title": "Prijs",

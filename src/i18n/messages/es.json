@@ -1164,7 +1164,8 @@
       "saveDraft": "Guardar borrador",
       "submitting": "Enviando...",
       "submitProperty": "Enviar propiedad",
-      "draftShort": "Borrador"
+      "draftShort": "Borrador",
+      "fillAll": "Rellena todos los datos para subir la propiedad"
     },
     "price": {
       "title": "Precio",

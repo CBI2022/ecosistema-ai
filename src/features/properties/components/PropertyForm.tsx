@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition, useEffect, useMemo } from 'react'
+import { useState, useTransition, useEffect, useMemo, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
 import { saveProperty, submitProperty } from '@/actions/properties'
 import { AddressPicker } from './AddressPicker'
@@ -122,6 +122,24 @@ export function PropertyForm({
     return { commission, ownerReceives }
   }, [salePrice, commissionPct])
 
+  // ── Validación: "Enviar propiedad" solo se activa con los datos completos ──
+  const [canSubmit, setCanSubmit] = useState(false)
+  const checkComplete = useCallback(() => {
+    const form = document.getElementById('propForm') as HTMLFormElement | null
+    if (!form) { setCanSubmit(false); return }
+    const fd = new FormData(form)
+    const filled = (n: string) => String(fd.get(n) || '').trim().length > 0
+    const required = [
+      'views', 'build_area_m2', 'bedrooms', 'bathrooms',
+      'street_name', 'street_number', 'city', 'postal_code',
+      'owner_name', 'owner_phone', 'owner_email',
+    ]
+    let ok = salePrice > 0 && required.every(filled)
+    if (ok && !plotOptional) ok = filled('plot_area_m2')
+    setCanSubmit(ok)
+  }, [salePrice, plotOptional])
+  useEffect(() => { checkComplete() }, [checkComplete])
+
 
   useEffect(() => {
     if (isEditing) {
@@ -194,7 +212,13 @@ export function PropertyForm({
   }
 
   return (
-    <form id="propForm" onSubmit={(e) => e.preventDefault()} className="space-y-4">
+    <form
+      id="propForm"
+      onSubmit={(e) => e.preventDefault()}
+      onInput={checkComplete}
+      onChange={checkComplete}
+      className="space-y-4 pb-28"
+    >
       {initialProperty?.id && <input type="hidden" name="id" value={initialProperty.id} />}
 
       {/* Banner edición */}
@@ -748,25 +772,30 @@ export function PropertyForm({
         </p>
       )}
 
-      {/* Control sticky — segmento conectado: Borrador (sutil) | Enviar (dorado) */}
-      <div className="pb-safe sticky bottom-[calc(64px+env(safe-area-inset-bottom))] z-30 -mx-6 border-t border-[#C9A84C]/15 bg-[#0A0A0A]/95 px-4 pt-3 backdrop-blur-xl sm:px-6 sm:py-3 md:bottom-0">
-        <div className="flex overflow-hidden rounded-2xl border border-[#C9A84C]/40 shadow-[0_4px_20px_rgba(201,168,76,0.18)]">
-          <button
-            type="button"
-            onClick={handleSaveDraft}
-            disabled={isPending}
-            className="flex-1 border-r border-[#C9A84C]/30 bg-white/[0.04] px-4 py-3.5 text-sm font-semibold text-[#9A9080] transition active:scale-[0.99] hover:bg-white/[0.08] hover:text-[#F5F0E8] disabled:opacity-50"
-          >
-            {isPending ? t('form.savingDraft') : t('form.draftShort')}
-          </button>
-          <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={isPending}
-            className="flex-[2] bg-[#C9A84C] px-4 py-3.5 text-sm font-bold text-black transition active:scale-[0.99] hover:bg-[#E8C96A] disabled:opacity-50"
-          >
-            {isPending ? t('form.submitting') : t('form.submitProperty')}
-          </button>
+      {/* Barra de acción FIJA abajo — minimalista, segmento conectado */}
+      <div className="pb-safe fixed inset-x-0 bottom-[calc(64px+env(safe-area-inset-bottom))] z-40 border-t border-white/[0.06] bg-[#0A0A0A]/95 px-3 pt-2.5 backdrop-blur-xl sm:px-6 md:bottom-0 md:pb-2.5 lg:px-8">
+        <div className="mx-auto max-w-[1400px]">
+          {!canSubmit && (
+            <p className="mb-2 text-center text-[12px] text-[#C9A84C]/90">{t('form.fillAll')}</p>
+          )}
+          <div className="flex overflow-hidden rounded-2xl border border-[#C9A84C]/40 shadow-[0_4px_20px_rgba(201,168,76,0.18)]">
+            <button
+              type="button"
+              onClick={handleSaveDraft}
+              disabled={isPending}
+              className="flex-1 border-r border-[#C9A84C]/30 bg-white/[0.04] px-4 py-3.5 text-sm font-semibold text-[#9A9080] transition active:scale-[0.99] hover:bg-white/[0.08] hover:text-[#F5F0E8] disabled:opacity-50"
+            >
+              {isPending ? t('form.savingDraft') : t('form.draftShort')}
+            </button>
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={isPending || !canSubmit}
+              className="flex-[2] bg-[#C9A84C] px-4 py-3.5 text-sm font-bold text-black transition active:scale-[0.99] hover:bg-[#E8C96A] disabled:cursor-not-allowed disabled:bg-[#C9A84C]/30 disabled:text-black/50"
+            >
+              {isPending ? t('form.submitting') : t('form.submitProperty')}
+            </button>
+          </div>
         </div>
       </div>
     </form>
