@@ -279,7 +279,6 @@ export function AppNav({ role }: AppNavProps) {
   // Secciones que aún NO rediseñamos — accesibles solo para admin en el menú
   // "Opciones antiguas". No se borran, solo se agrupan aquí.
   const LEGACY_SUBITEMS: NavTab[] = [
-    { href: '/dashboard', label: t('dashboard'), icon: 'home' },
     { href: '/valuation', label: t('valuation'), icon: 'file' },
     { href: '/contracts', label: t('contracts'), icon: 'signature' },
     { href: '/invoice', label: t('invoice'), icon: 'receipt' },

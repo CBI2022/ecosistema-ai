@@ -58,7 +58,7 @@ export function AppHeader({ profile, notifCount = 0, initialNotifications = [], 
     <header className="pt-safe sticky top-0 z-50 border-b border-[#C9A84C]/12 bg-[#0A0A0A]/96 backdrop-blur-xl">
       {/* ───────── MOBILE HEADER (< md) ───────── */}
       <div className="flex h-14 items-center justify-between gap-2 px-3 md:hidden">
-        <Link href="/dashboard" className="flex items-center gap-2" aria-label={t('dashboardAria')}>
+        <Link href="/properties" className="flex items-center gap-2" aria-label={t('dashboardAria')}>
           <img
             src="/logo-cbi.png"
             alt="CBI"
@@ -91,7 +91,7 @@ export function AppHeader({ profile, notifCount = 0, initialNotifications = [], 
       {/* ───────── DESKTOP HEADER (md+) ───────── */}
       <div className="hidden items-center justify-between gap-4 px-6 py-4 md:flex md:px-8">
         <div className="flex min-w-0 items-center gap-4">
-          <Link href="/dashboard" className="flex items-center">
+          <Link href="/properties" className="flex items-center">
             <img
               src="/logo-cbi.png"
               alt="Costa Blanca Investments"

@@ -24,5 +24,6 @@ export default async function HomePage() {
   if (profile?.role === 'agent' || profile?.role === 'admin') redirect('/properties')
   // Director Comercial: rol sin definir todavía → solo su cuenta.
   if (profile?.role === 'dc') redirect('/dc')
-  redirect('/dashboard')
+  // Foco actual: toda la app gira en torno a publicar propiedades.
+  redirect('/properties')
 }
