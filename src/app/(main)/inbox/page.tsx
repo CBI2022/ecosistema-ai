@@ -14,7 +14,7 @@ export default async function InboxPage() {
 
   const adminClient = createAdminClient()
   const { data: profile } = await adminClient.from('profiles').select('role').eq('id', user.id).single()
-  if (profile?.role !== 'secretary' && profile?.role !== 'admin') redirect('/dashboard')
+  if (profile?.role !== 'secretary' && profile?.role !== 'admin') redirect('/properties')
 
   // Propiedades enviadas por los agentes (pendientes + ya subidas)
   const { data: props } = await adminClient

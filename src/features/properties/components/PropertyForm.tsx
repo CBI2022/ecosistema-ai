@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition, useEffect, useMemo, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { saveProperty, submitProperty } from '@/actions/properties'
 import { AddressPicker } from './AddressPicker'
@@ -109,6 +110,7 @@ export function PropertyForm({
   initialOwner = null,
 }: PropertyFormProps = {}) {
   const t = useTranslations('properties')
+  const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
@@ -260,8 +262,14 @@ export function PropertyForm({
 
     startTransition(async () => {
       const res = await submitProperty(fd)
-      if (res && 'error' in res && res.error) setError(res.error)
-      else setSuccess(`✅ ${t('form.submitted')}`)
+      if (res && 'error' in res && res.error) {
+        setError(res.error)
+        return
+      }
+      // Enviada con éxito → llevar al agente a "Mis propiedades", donde verá
+      // la propiedad recién enviada con su estado ("Enviada a la oficina").
+      setSuccess(`✅ ${t('form.submitted')}`)
+      router.push('/properties/mine')
     })
   }
 
