@@ -43,23 +43,34 @@ export function NotificationsPanel({ pendingUsers: initialPending, notifications
   const [notifications, setNotifications] = useState(initialNotifs)
   const [rejectingId, setRejectingId] = useState<string | null>(null)
   const [rejectReason, setRejectReason] = useState('')
+  const [actionError, setActionError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
   const [activeTab, setActiveTab] = useState<'registrations' | 'activity'>('registrations')
 
   const unreadCount = notifications.filter((n) => !n.is_read).length
 
   function handleApprove(userId: string) {
+    setActionError(null)
     startTransition(async () => {
-      await approveUser(userId)
+      const res = await approveUser(userId)
+      // Solo retiramos al usuario de la lista si el servidor confirmó el acceso.
+      if (res?.error) {
+        setActionError(`No se pudo dar acceso: ${res.error}`)
+        return
+      }
       setPendingUsers((prev) => prev.filter((u) => u.id !== userId))
       onChange?.()
     })
   }
 
   function handleReject(userId: string) {
-    if (!rejectReason.trim()) return
+    setActionError(null)
     startTransition(async () => {
-      await rejectUser(userId, rejectReason)
+      const res = await rejectUser(userId, rejectReason || undefined)
+      if (res?.error) {
+        setActionError(`No se pudo rechazar: ${res.error}`)
+        return
+      }
       setPendingUsers((prev) => prev.filter((u) => u.id !== userId))
       setRejectingId(null)
       setRejectReason('')
@@ -118,6 +129,11 @@ export function NotificationsPanel({ pendingUsers: initialPending, notifications
       {/* Registrations tab */}
       {activeTab === 'registrations' && (
         <div className="space-y-4">
+          {actionError && (
+            <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+              {actionError}
+            </div>
+          )}
           {pendingUsers.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-white/10 bg-[#131313] p-12 text-center">
               <div className="mb-3 text-4xl opacity-30">✅</div>
