@@ -55,19 +55,45 @@ interface PropertyFormProps {
 
 const Req = () => <span className="text-red-400"> *</span>
 
+// Nombres legibles de los campos obligatorios (para avisar cuál falta).
+const REQUIRED_LABELS: Record<string, string> = {
+  price: 'Precio de venta',
+  views: 'Vistas',
+  build_area_m2: 'm² construidos',
+  plot_area_m2: 'm² de parcela',
+  bedrooms: 'Dormitorios',
+  bathrooms: 'Baños',
+  street_name: 'Calle',
+  street_number: 'Número',
+  city: 'Ciudad',
+  postal_code: 'Código postal',
+  owner_name: 'Nombre del propietario',
+  owner_phone: 'Teléfono del propietario',
+  owner_email: 'Email del propietario',
+}
+
 function NumberSelect({
   name,
   defaultValue,
   max = 10,
   emoji,
+  error,
+  id,
 }: {
   name: string
   defaultValue?: string
   max?: number
   emoji?: string
+  error?: boolean
+  id?: string
 }) {
   return (
-    <select name={name} className={inputClass} defaultValue={defaultValue ?? ''}>
+    <select
+      id={id}
+      name={name}
+      className={`${inputClass}${error ? ' border-red-500 ring-2 ring-red-500' : ''}`}
+      defaultValue={defaultValue ?? ''}
+    >
       <option value="">{emoji ? `${emoji} —` : '—'}</option>
       {Array.from({ length: max + 1 }, (_, i) => (
         <option key={i} value={String(i)}>
@@ -122,23 +148,39 @@ export function PropertyForm({
     return { commission, ownerReceives }
   }, [salePrice, commissionPct])
 
-  // ── Validación: "Enviar propiedad" solo se activa con los datos completos ──
+  // ── Validación: el botón "Enviar" SIEMPRE se puede pulsar. Si faltan campos
+  //    obligatorios, los marcamos en rojo y decimos exactamente cuáles. ──
   const [canSubmit, setCanSubmit] = useState(false)
-  const checkComplete = useCallback(() => {
+  const [missing, setMissing] = useState<string[]>([])
+  const [showErrors, setShowErrors] = useState(false)
+
+  const computeMissing = useCallback((): string[] => {
     const form = document.getElementById('propForm') as HTMLFormElement | null
-    if (!form) { setCanSubmit(false); return }
-    const fd = new FormData(form)
-    const filled = (n: string) => String(fd.get(n) || '').trim().length > 0
-    const required = [
+    const fd = form ? new FormData(form) : null
+    const filled = (n: string) => !!fd && String(fd.get(n) || '').trim().length > 0
+    const miss: string[] = []
+    if (!(salePrice > 0)) miss.push('price')
+    for (const n of [
       'views', 'build_area_m2', 'bedrooms', 'bathrooms',
       'street_name', 'street_number', 'city', 'postal_code',
       'owner_name', 'owner_phone', 'owner_email',
-    ]
-    let ok = salePrice > 0 && required.every(filled)
-    if (ok && !plotOptional) ok = filled('plot_area_m2')
-    setCanSubmit(ok)
+    ]) {
+      if (!filled(n)) miss.push(n)
+    }
+    if (!plotOptional && !filled('plot_area_m2')) miss.push('plot_area_m2')
+    return miss
   }, [salePrice, plotOptional])
+
+  const checkComplete = useCallback(() => {
+    const miss = computeMissing()
+    setMissing(miss)
+    setCanSubmit(miss.length === 0)
+  }, [computeMissing])
   useEffect(() => { checkComplete() }, [checkComplete])
+
+  // Clase de error (borde + halo rojo) para un campo concreto cuando falta.
+  const fieldErr = (n: string) =>
+    showErrors && missing.includes(n) ? ' border-red-500 ring-2 ring-red-500' : ''
 
 
   useEffect(() => {
@@ -201,6 +243,18 @@ export function PropertyForm({
     setError(null)
     setSuccess(null)
 
+    // Validamos en el momento del click (lectura fresca del formulario).
+    const miss = computeMissing()
+    if (miss.length > 0) {
+      setMissing(miss)
+      setShowErrors(true)
+      setCanSubmit(false)
+      const labels = miss.map((n) => REQUIRED_LABELS[n] ?? n).join(', ')
+      setError(`Faltan estos campos obligatorios (marcados en rojo): ${labels}`)
+      document.getElementById(`req-${miss[0]}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      return
+    }
+
     const fd = buildFormData('hidden')
     if (!fd) return
 
@@ -257,9 +311,10 @@ export function PropertyForm({
               </label>
               <input
                 type="number"
+                id="req-price"
                 value={salePrice || ''}
                 onChange={(e) => setSalePrice(Number(e.target.value) || 0)}
-                className={inputClass}
+                className={`${inputClass}${fieldErr('price')}`}
                 placeholder="400000"
               />
             </div>
@@ -329,7 +384,7 @@ export function PropertyForm({
               <label className={labelClass}>
                 {t('general.views')}<Req />
               </label>
-              <select name="views" className={inputClass} defaultValue={initialProperty?.views ?? ''}>
+              <select id="req-views" name="views" className={`${inputClass}${fieldErr('views')}`} defaultValue={initialProperty?.views ?? ''}>
                 <option value="">—</option>
                 {VIEWS_OPTIONS.map((v) => (
                   <option key={v} value={v}>
@@ -355,10 +410,11 @@ export function PropertyForm({
                     {t('sizes.builtSize')}<Req />
                   </label>
                   <input
+                    id="req-build_area_m2"
                     name="build_area_m2"
                     type="number"
                     defaultValue={getNum('build_area_m2')}
-                    className={inputClass}
+                    className={`${inputClass}${fieldErr('build_area_m2')}`}
                     placeholder="0"
                   />
                 </div>
@@ -367,10 +423,11 @@ export function PropertyForm({
                     {t('sizes.plotSize')}{!plotOptional && <Req />}
                   </label>
                   <input
+                    id="req-plot_area_m2"
                     name="plot_area_m2"
                     type="number"
                     defaultValue={getNum('plot_area_m2')}
-                    className={inputClass}
+                    className={`${inputClass}${fieldErr('plot_area_m2')}`}
                     placeholder="0"
                   />
                   <p className="mt-1 text-[10px] text-[#9A9080]">
@@ -414,11 +471,11 @@ export function PropertyForm({
             <div className="space-y-3">
               <div>
                 <label className={labelClass}>{t('rooms.bedrooms')}</label>
-                <NumberSelect name="bedrooms" defaultValue={getNum('bedrooms')} max={15} />
+                <NumberSelect name="bedrooms" defaultValue={getNum('bedrooms')} max={15} error={!!fieldErr('bedrooms')} id="req-bedrooms" />
               </div>
               <div>
                 <label className={labelClass}>{t('rooms.bathrooms')}</label>
-                <NumberSelect name="bathrooms" defaultValue={getNum('bathrooms')} max={10} />
+                <NumberSelect name="bathrooms" defaultValue={getNum('bathrooms')} max={10} error={!!fieldErr('bathrooms')} id="req-bathrooms" />
               </div>
               <div>
                 <label className={labelClass}>{t('rooms.guestToilet')}</label>
@@ -604,6 +661,8 @@ export function PropertyForm({
               setVal('postal_code', d.postal_code)
               setVal('city', d.city)
               setVal('location', d.location)
+              // El buscador rellena por código (sin disparar input) → revalidar.
+              checkComplete()
             }}
           />
 
@@ -613,9 +672,10 @@ export function PropertyForm({
                 {t('location.street')} <span className="text-red-400">*</span>
               </label>
               <input
+                id="req-street_name"
                 name="street_name"
                 defaultValue={getStr('street_name')}
-                className={inputClass}
+                className={`${inputClass}${fieldErr('street_name')}`}
                 placeholder="Carrer Barro"
               />
             </div>
@@ -624,9 +684,10 @@ export function PropertyForm({
                 {t('location.number')} <span className="text-red-400">*</span>
               </label>
               <input
+                id="req-street_number"
                 name="street_number"
                 defaultValue={getStr('street_number')}
-                className={inputClass}
+                className={`${inputClass}${fieldErr('street_number')}`}
                 placeholder="7"
               />
             </div>
@@ -656,9 +717,10 @@ export function PropertyForm({
                 {t('location.city')} <span className="text-red-400">*</span>
               </label>
               <input
+                id="req-city"
                 name="city"
                 defaultValue={getStr('city')}
-                className={inputClass}
+                className={`${inputClass}${fieldErr('city')}`}
                 placeholder={t('location.cityPlaceholder')}
               />
             </div>
@@ -667,9 +729,10 @@ export function PropertyForm({
                 {t('location.postalCode')} <span className="text-red-400">*</span>
               </label>
               <input
+                id="req-postal_code"
                 name="postal_code"
                 defaultValue={getStr('postal_code')}
-                className={inputClass}
+                className={`${inputClass}${fieldErr('postal_code')}`}
                 placeholder="03590"
               />
             </div>
@@ -686,15 +749,15 @@ export function PropertyForm({
           <div className="grid gap-3 sm:grid-cols-3">
             <div>
               <label className={labelClass}>{t('owner.name')}</label>
-              <input name="owner_name" defaultValue={initialOwner?.full_name ?? ''} className={inputClass} placeholder={t('owner.namePlaceholder')} />
+              <input id="req-owner_name" name="owner_name" defaultValue={initialOwner?.full_name ?? ''} className={`${inputClass}${fieldErr('owner_name')}`} placeholder={t('owner.namePlaceholder')} />
             </div>
             <div>
               <label className={labelClass}>{t('owner.phone')}</label>
-              <input name="owner_phone" type="tel" defaultValue={initialOwner?.phone ?? ''} className={inputClass} placeholder="+34 600 000 000" />
+              <input id="req-owner_phone" name="owner_phone" type="tel" defaultValue={initialOwner?.phone ?? ''} className={`${inputClass}${fieldErr('owner_phone')}`} placeholder="+34 600 000 000" />
             </div>
             <div>
               <label className={labelClass}>{t('owner.email')}</label>
-              <input name="owner_email" type="email" defaultValue={initialOwner?.email ?? ''} className={inputClass} placeholder="email@ejemplo.com" />
+              <input id="req-owner_email" name="owner_email" type="email" defaultValue={initialOwner?.email ?? ''} className={`${inputClass}${fieldErr('owner_email')}`} placeholder="email@ejemplo.com" />
             </div>
           </div>
           <input type="hidden" name="owner_id" defaultValue={getStr('owner_id')} />
@@ -776,9 +839,13 @@ export function PropertyForm({
           MISMO ancho/margen que las tarjetas del formulario (px del contenedor). */}
       <div className="fixed inset-x-0 bottom-[calc(var(--cbi-nav-h,64px)+env(safe-area-inset-bottom))] z-40 border-t border-white/10 bg-[#0C0C0C]/95 backdrop-blur-xl md:bottom-0">
         <div className="mx-auto max-w-[1400px] px-3 py-3 sm:px-6 lg:px-8">
-          {!canSubmit && (
+          {showErrors && missing.length > 0 ? (
+            <p className="mb-2.5 text-center text-[12px] font-semibold text-red-400">
+              Faltan: {missing.map((n) => REQUIRED_LABELS[n] ?? n).join(', ')}
+            </p>
+          ) : !canSubmit ? (
             <p className="mb-2.5 text-center text-[12px] text-[#9A9080]">{t('form.fillAll')}</p>
-          )}
+          ) : null}
           <div className="flex gap-2.5">
             <button
               type="button"
@@ -791,8 +858,8 @@ export function PropertyForm({
             <button
               type="button"
               onClick={handleSubmit}
-              disabled={isPending || !canSubmit}
-              className="flex-1 rounded-xl bg-[#C9A84C] px-5 py-3 text-[13px] font-bold text-black transition active:scale-[0.98] hover:bg-[#E8C96A] disabled:cursor-not-allowed disabled:bg-white/[0.05] disabled:text-[#6E665A]"
+              disabled={isPending}
+              className="flex-1 rounded-xl bg-[#C9A84C] px-5 py-3 text-[13px] font-bold text-black transition active:scale-[0.98] hover:bg-[#E8C96A] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isPending ? t('form.submitting') : t('form.submitProperty')}
             </button>
